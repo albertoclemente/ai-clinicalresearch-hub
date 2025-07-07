@@ -231,7 +231,7 @@ class FeedProcessor:
                     You are a clinical research expert. You MUST provide ALL THREE of the following for this article:
                     1. A relevance score (0-5, where 5 is most relevant to clinical research professionals)
                     2. A 60-word summary focusing on key clinical research insights
-                    3. A 50-word insightful comment that stimulates deeper thinking by:
+                    3. A 70-word insightful comment that stimulates deeper thinking by:
                        - Connecting the news to broader industry trends or challenges
                        - Posing thought-provoking questions that highlight implications
                        - Identifying tensions or contradictions worth exploring
@@ -241,11 +241,17 @@ class FeedProcessor:
                     Article Title: {entry['title']}
                     Article Description: {entry['description'][:500]}
                     
+                    IMPORTANT INSTRUCTIONS FOR COMMENT:
+                    - Your comment MUST be complete, not cut off mid-thought
+                    - Express complete ideas in 70 words or less
+                    - Avoid trailing fragments that would be cut off
+                    - Don't end with "..." or incomplete sentences
+                    
                     You MUST respond in this exact JSON format with ALL THREE fields:
                     {{
                         "score": 0.0,
                         "summary": "Your 60-word summary here",
-                        "comment": "Your 50-word insightful comment here"
+                        "comment": "Your complete 70-word insightful comment here"
                     }}
                     
                     IMPORTANT: All three fields (score, summary, comment) are REQUIRED. Do not omit any field.
@@ -274,7 +280,7 @@ class FeedProcessor:
                             
                             # Ensure word limits
                             entry['summary'] = self._limit_words(entry['summary'], 60)
-                            entry['comment'] = self._limit_words(entry['comment'], 50)
+                            entry['comment'] = self._limit_words(entry['comment'], 70)
                             
                             scored_entries.append(entry)
                             break  # Success, break out of retry loop
@@ -321,10 +327,31 @@ class FeedProcessor:
         return True
     
     def _limit_words(self, text: str, max_words: int) -> str:
-        """Limit text to specified number of words."""
+        """Limit text to specified number of words with smarter truncation."""
         words = text.split()
         if len(words) > max_words:
-            return ' '.join(words[:max_words]) + '...'
+            # Try to find a sentence-ending punctuation within the last few words
+            # to avoid cutting off mid-thought
+            truncated_text = ' '.join(words[:max_words])
+            
+            # If we already have a complete sentence, we're good
+            if truncated_text.rstrip().endswith(('.', '!', '?')):
+                return truncated_text
+                
+            # Otherwise check if there's a sentence break in the last 15 words
+            last_sentence_break = max(
+                truncated_text.rfind('.'), 
+                truncated_text.rfind('!'),
+                truncated_text.rfind('?')
+            )
+            
+            if last_sentence_break > len(truncated_text) - 30:
+                # Found a recent sentence break, use it
+                return truncated_text[:last_sentence_break + 1]
+            
+            # No good break point found, add ellipsis
+            return truncated_text + '...'
+            
         return text
     
     def select_top_items(self, entries: List[Dict]) -> List[Dict]:
