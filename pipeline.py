@@ -194,7 +194,12 @@ class FeedProcessor:
                     You are a clinical research expert. You MUST provide ALL THREE of the following for this article:
                     1. A relevance score (0-5, where 5 is most relevant to clinical research professionals)
                     2. A 60-word summary focusing on key clinical research insights
-                    3. A 30-word comment explaining why this matters to clinical research
+                    3. A 50-word insightful comment that stimulates deeper thinking by:
+                       - Connecting the news to broader industry trends or challenges
+                       - Posing thought-provoking questions that highlight implications
+                       - Identifying tensions or contradictions worth exploring
+                       - Suggesting new perspectives or angles that aren't immediately obvious
+                       - Sparking the reader's curiosity to learn more about the subject
                     
                     Article Title: {entry['title']}
                     Article Description: {entry['description'][:500]}
@@ -203,7 +208,7 @@ class FeedProcessor:
                     {{
                         "score": 0.0,
                         "summary": "Your 60-word summary here",
-                        "comment": "Your 30-word comment here"
+                        "comment": "Your 50-word insightful comment here"
                     }}
                     
                     IMPORTANT: All three fields (score, summary, comment) are REQUIRED. Do not omit any field.
@@ -232,7 +237,7 @@ class FeedProcessor:
                             
                             # Ensure word limits
                             entry['summary'] = self._limit_words(entry['summary'], 60)
-                            entry['comment'] = self._limit_words(entry['comment'], 30)
+                            entry['comment'] = self._limit_words(entry['comment'], 50)
                             
                             scored_entries.append(entry)
                             break  # Success, break out of retry loop
