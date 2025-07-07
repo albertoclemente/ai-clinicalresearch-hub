@@ -1,0 +1,121 @@
+name: Clinical Research Daily Brief
+
+on:
+  # Run Monday-Friday at 05:00 UTC (06:00 CET)
+  schedule:
+    - cron: '0 5 * * 1-5'
+  
+  # Allow manual triggering
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  generate-brief:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Set up Miniconda
+      uses: conda-incubator/setup-miniconda@v3
+      with:
+        auto-update-conda: true
+        python-version: 3.12
+        environment-file: environment.yml
+        activate-environment: clinical-research-brief
+        
+    - name: Create required directories
+      run: |
+        mkdir -p site
+        mkdir -p briefs
+        mkdir -p logs
+        
+    - name: Run pipeline
+      env:
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        MAX_ENTRIES_PER_FEED: 5  # Limit articles per feed for cost control
+      run: |
+        conda activate clinical-research-brief
+        python pipeline.py
+      shell: bash -l {0}
+        
+    - name: Verify outputs
+      run: |
+        echo "Checking generated files..."
+        ls -la site/
+        ls -la briefs/
+        ls -la logs/
+        
+        # Check if HTML was generated
+        if [ ! -f "site/index.html" ]; then
+          echo "Error: HTML file not generated"
+          exit 1
+        fi
+        
+        # Check if JSON was generated
+        BRIEF_DATE=$(date +%Y-%m-%d)
+        if [ ! -f "briefs/${BRIEF_DATE}.json" ]; then
+          echo "Error: JSON file not generated"
+          exit 1
+        fi
+        
+        # Check if PDF was generated
+        if [ ! -f "briefs/${BRIEF_DATE}.pdf" ]; then
+          echo "Error: PDF file not generated"
+          exit 1
+        fi
+        
+        echo "All files generated successfully!"
+        
+    - name: Commit and push changes
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        
+        # Add generated files
+        git add site/index.html
+        git add briefs/
+        git add logs/
+        
+        # Check if there are changes to commit
+        if git diff --staged --quiet; then
+          echo "No changes to commit"
+        else
+          git commit -m "Daily brief: $(date +%Y-%m-%d)"
+          git push
+        fi
+        
+    - name: Setup Pages
+      uses: actions/configure-pages@v4
+      
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: './site'
+        
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
+      
+    - name: Send notification on failure
+      if: failure()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: `Pipeline failed: ${new Date().toISOString().split('T')[0]}`,
+            body: `The daily brief pipeline failed on ${new Date().toISOString()}.\n\nPlease check the workflow logs for details.`,
+            labels: ['pipeline-failure', 'urgent']
+          })

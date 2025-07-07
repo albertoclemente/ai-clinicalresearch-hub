@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clinical Research Daily Brief - {{ brief_date }}</title>
+    <meta name="description" content="Daily digest of clinical research news, curated and ranked by AI">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- Custom styles -->
+    <style>
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .search-highlight {
+            background-color: yellow;
+            font-weight: bold;
+        }
+        
+        @media (max-width: 320px) {
+            .card-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen" x-data="clinicalBrief()">
+    <!-- Sticky Header -->
+    <header class="sticky top-0 z-50 bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo -->
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <h1 class="text-xl font-bold text-gray-900">Clinical Research Daily Brief</h1>
+                    </div>
+                </div>
+                
+                <!-- Search Bar -->
+                <div class="flex-1 max-w-lg mx-4">
+                    <div class="relative">
+                        <input 
+                            type="text" 
+                            placeholder="Search articles..." 
+                            class="w-full px-4 py-2 pl-10 pr-4 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            x-model="searchQuery"
+                            @input="performSearch"
+                        >
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Filter and Download -->
+                <div class="flex items-center space-x-4">
+                    <!-- Filter Button -->
+                    <button 
+                        @click="showFilters = !showFilters"
+                        class="p-2 text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg"
+                        aria-label="Toggle filters"
+                    >
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
+                        </svg>
+                    </button>
+                    
+                    <!-- Download PDF Button -->
+                    <a 
+                        href="briefs/{{ brief_date }}.pdf" 
+                        download
+                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        aria-label="Download PDF archive"
+                    >
+                        <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        Download PDF
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Filters Panel -->
+        <div 
+            x-show="showFilters"
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0 transform scale-95"
+            x-transition:enter-end="opacity-100 transform scale-100"
+            x-transition:leave="transition ease-in duration-150"
+            x-transition:leave-start="opacity-100 transform scale-100"
+            x-transition:leave-end="opacity-0 transform scale-95"
+            class="border-t bg-gray-50 px-4 py-4"
+        >
+            <div class="max-w-7xl mx-auto">
+                <div class="flex flex-wrap gap-4">
+                    <!-- Source Filter -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Source</label>
+                        <select 
+                            x-model="sourceFilter"
+                            @change="performSearch"
+                            class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        >
+                            <option value="">All Sources</option>
+                            <option value="ClinicalTrials.gov">ClinicalTrials.gov</option>
+                            <option value="FDA">FDA</option>
+                            <option value="NIH">NIH</option>
+                            <option value="Nature Medicine">Nature Medicine</option>
+                            <option value="NEJM">NEJM</option>
+                            <option value="BioPharma Dive">BioPharma Dive</option>
+                            <option value="RAPS">RAPS</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Keyword Filter -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Keywords</label>
+                        <select 
+                            x-model="keywordFilter"
+                            @change="performSearch"
+                            class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        >
+                            <option value="">All Keywords</option>
+                            <option value="Phase III">Phase III</option>
+                            <option value="Phase II">Phase II</option>
+                            <option value="Phase I">Phase I</option>
+                            <option value="FDA approval">FDA Approval</option>
+                            <option value="oncology">Oncology</option>
+                            <option value="cardiovascular">Cardiovascular</option>
+                            <option value="neurology">Neurology</option>
+                            <option value="immunology">Immunology</option>
+                            <option value="rare disease">Rare Disease</option>
+                            <option value="biosimilar">Biosimilar</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Clear Filters -->
+                    <div class="flex items-end">
+                        <button 
+                            @click="clearFilters"
+                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        >
+                            Clear Filters
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Brief Header -->
+        <div class="text-center mb-8">
+            <h2 class="text-3xl font-bold text-gray-900 mb-2">{{ brief_date }}</h2>
+            <p class="text-lg text-gray-600">{{ total_items }} articles curated from clinical research sources</p>
+            <p class="text-sm text-gray-500 mt-1">Generated on {{ generated_at[:10] }} at {{ generated_at[11:16] }} UTC</p>
+        </div>
+        
+        <!-- Results Summary -->
+        <div class="mb-6" x-show="searchQuery || sourceFilter || keywordFilter">
+            <p class="text-sm text-gray-600">
+                Showing <span x-text="filteredItems.length"></span> of {{ total_items }} articles
+                <span x-show="searchQuery">matching "<span x-text="searchQuery"></span>"</span>
+            </p>
+        </div>
+        
+        <!-- No Results Message -->
+        <div 
+            x-show="filteredItems.length === 0 && (searchQuery || sourceFilter || keywordFilter)"
+            class="text-center py-12"
+        >
+            <div class="max-w-md mx-auto">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.5-.9-6.08-2.371m15.08 2.371A7.962 7.962 0 0112 15c2.34 0 4.5-.9 6.08-2.371M15 9.75a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+                <h3 class="mt-2 text-sm font-medium text-gray-900">No results found</h3>
+                <p class="mt-1 text-sm text-gray-500">Try adjusting your search terms or filters.</p>
+            </div>
+        </div>
+        
+        <!-- Articles Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 card-grid">
+            <template x-for="item in filteredItems" :key="item.id">
+                <article class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 card-hover transition-all duration-200">
+                    <!-- Article Header -->
+                    <div class="mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2 leading-tight">
+                            <a 
+                                :href="item.link" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                class="hover:text-blue-600 transition-colors"
+                                x-html="highlightText(item.title)"
+                            ></a>
+                        </h3>
+                        
+                        <!-- Score Badge -->
+                        <div class="flex items-center mb-2">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                Score: <span x-text="item.score.toFixed(1)"></span>/5
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <!-- Summary -->
+                    <div class="mb-4">
+                        <p class="text-sm text-gray-700 leading-relaxed" x-html="highlightText(item.summary)"></p>
+                    </div>
+                    
+                    <!-- Comment -->
+                    <div class="mb-4">
+                        <p class="text-sm text-gray-600 italic border-l-2 border-gray-200 pl-3" x-html="highlightText(item.comment)"></p>
+                    </div>
+                    
+                    <!-- Footer -->
+                    <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+                        <div class="flex items-center text-sm text-gray-500">
+                            <span class="font-medium">Source: </span>
+                            <span x-text="item.source"></span>
+                        </div>
+                        <a :href="item.link" target="_blank" rel="noopener noreferrer" 
+                           class="text-xs text-blue-600 hover:text-blue-800 font-medium">
+                            Read Full Article →
+                        </a>
+                    </div>
+                </article>
+            </template>
+        </div>
+        
+        <!-- Error Banner -->
+        <div 
+            x-show="error" 
+            class="mt-8 bg-red-50 border border-red-200 rounded-md p-4"
+            role="alert"
+        >
+            <div class="flex">
+                <svg class="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16c-.77.833.192 2.5 1.732 2.5z"></path>
+                </svg>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-red-800">
+                        An error occurred
+                    </h3>
+                    <p class="mt-1 text-sm text-red-700" x-text="error"></p>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Footer -->
+    <footer class="bg-white border-t mt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="text-center">
+                <p class="text-sm text-gray-500">
+                    Clinical Research Daily Brief - Automated curation of clinical research news
+                </p>
+                <p class="text-xs text-gray-400 mt-2">
+                    Content sourced from public RSS feeds and ranked by AI
+                </p>
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        function clinicalBrief() {
+            return {
+                // Data
+                items: {{ items | tojson }},
+                filteredItems: {{ items | tojson }},
+                
+                // State
+                searchQuery: '',
+                sourceFilter: '',
+                keywordFilter: '',
+                showFilters: false,
+                error: null,
+                
+                // Initialize
+                init() {
+                    this.filteredItems = this.items;
+                },
+                
+                // Search functionality
+                performSearch() {
+                    try {
+                        let filtered = this.items;
+                        
+                        // Text search
+                        if (this.searchQuery) {
+                            const query = this.searchQuery.toLowerCase();
+                            filtered = filtered.filter(item => 
+                                item.title.toLowerCase().includes(query) ||
+                                item.summary.toLowerCase().includes(query) ||
+                                item.comment.toLowerCase().includes(query)
+                            );
+                        }
+                        
+                        // Source filter
+                        if (this.sourceFilter) {
+                            filtered = filtered.filter(item => item.source === this.sourceFilter);
+                        }
+                        
+                        // Keyword filter
+                        if (this.keywordFilter) {
+                            const keyword = this.keywordFilter.toLowerCase();
+                            filtered = filtered.filter(item => 
+                                item.title.toLowerCase().includes(keyword) ||
+                                item.summary.toLowerCase().includes(keyword) ||
+                                item.comment.toLowerCase().includes(keyword)
+                            );
+                        }
+                        
+                        this.filteredItems = filtered;
+                        this.error = null;
+                    } catch (err) {
+                        this.error = 'Search failed. Please try again.';
+                        console.error('Search error:', err);
+                    }
+                },
+                
+                // Clear all filters
+                clearFilters() {
+                    this.searchQuery = '';
+                    this.sourceFilter = '';
+                    this.keywordFilter = '';
+                    this.filteredItems = this.items;
+                    this.error = null;
+                },
+                
+                // Highlight search terms
+                highlightText(text) {
+                    if (!this.searchQuery) return text;
+                    
+                    const regex = new RegExp(`(${this.searchQuery})`, 'gi');
+                    return text.replace(regex, '<mark class="search-highlight">$1</mark>');
+                },
+                
+                // Format date
+                formatDate(dateString) {
+                    try {
+                        const date = new Date(dateString);
+                        return date.toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric'
+                        });
+                    } catch {
+                        return 'Unknown date';
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>
