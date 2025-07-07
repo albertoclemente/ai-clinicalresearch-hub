@@ -48,6 +48,19 @@ class FeedProcessor:
         "https://acrpnet.org/feed"
     ]
     
+    # Source-specific limits for adaptive feed fetching
+    SOURCE_LIMITS = {
+        'ClinicalTrials.gov': 10,  # High-value official registry
+        'FDA': 8,                  # Important regulatory source
+        'NIH': 8,                  # Important research source
+        'Nature Medicine': 7,      # Top-tier journal
+        'NEJM': 7,                 # Top-tier journal
+        'Endpoints News': 6,       # Specialized news source
+        'BioPharma Dive': 6,       # Industry-focused news
+        'Clinical Trials Arena': 6 # Trials-focused news
+        # Default for others: 4
+    }
+    
     def __init__(self, openai_api_key: str, log_file: str):
         """Initialize the feed processor."""
         self.openai_client = openai.OpenAI(api_key=openai_api_key)
@@ -92,15 +105,20 @@ class FeedProcessor:
         
         return clean_text
     
-    def fetch_feeds(self, max_entries_per_feed: int = 5) -> List[Dict]:
-        """Fetch and parse all RSS feeds, limiting entries per feed and filtering recent articles."""
+    def fetch_feeds(self, default_max: int = 4) -> List[Dict]:
+        """Fetch and parse all RSS feeds, with adaptive limits per source and filtering recent articles."""
         all_entries = []
+        total_fetched = 0
         
         # Only consider articles from the last 7 days
         cutoff_date = datetime.now(timezone.utc) - timedelta(days=7)
         
         for feed_url in self.RSS_FEEDS:
             timestamp = datetime.now(timezone.utc).isoformat()
+            source_name = self._get_source_name(feed_url)
+            
+            # Get source-specific limit or use default
+            max_entries = self.SOURCE_LIMITS.get(source_name, default_max)
             
             try:
                 feed = feedparser.parse(feed_url)
@@ -110,12 +128,14 @@ class FeedProcessor:
                 self._log_feed_request(feed_url, status, timestamp)
                 
                 # Limit entries per feed and sort by publication date (newest first)
-                entries = feed.entries[:max_entries_per_feed * 2]  # Get extra to sort properly
+                entries = feed.entries[:max_entries * 2]  # Get extra to sort properly
                 
                 # Sort by publication date (newest first) and take only the latest ones
                 sorted_entries = sorted(entries, 
                                       key=lambda x: self._parse_date(x.get('published', '')), 
-                                      reverse=True)[:max_entries_per_feed]
+                                      reverse=True)[:max_entries]
+                
+                source_fetched = 0
                 
                 for entry in sorted_entries:
                     # Parse publication date
@@ -133,16 +153,33 @@ class FeedProcessor:
                         'description': self._sanitize_text(entry.get('description', '')),
                         'link': entry.get('link', ''),
                         'pub_date': pub_date,
-                        'source': self._get_source_name(feed_url),
+                        'source': source_name,
                         'brief_date': self.brief_date
                     }
                     
                     if entry_data['title'] and entry_data['link']:
                         all_entries.append(entry_data)
+                        source_fetched += 1
+                
+                # Log how many articles were fetched from this source
+                self.logger.info(json.dumps({
+                    "timestamp": timestamp,
+                    "source": source_name,
+                    "articles_fetched": source_fetched,
+                    "max_allowed": max_entries
+                }))
+                
+                total_fetched += source_fetched
                         
             except Exception as e:
                 self._log_feed_request(feed_url, 0, timestamp, str(e))
                 continue
+        
+        self.logger.info(json.dumps({
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "total_articles_fetched": total_fetched,
+            "sources_processed": len(self.RSS_FEEDS)
+        }))
                 
         return all_entries
     
@@ -374,8 +411,8 @@ def main():
     if not openai_api_key:
         raise ValueError("OPENAI_API_KEY environment variable is required")
     
-    # Configuration: Max entries per feed (adjust to control volume and cost)
-    max_entries_per_feed = int(os.environ.get('MAX_ENTRIES_PER_FEED', '5'))
+    # Configuration: Default max entries for sources without specific limits
+    default_max_entries = int(os.environ.get('DEFAULT_MAX_ENTRIES', '4'))
     
     brief_date = datetime.now(timezone.utc).strftime('%Y-%m-%d')
     log_file = f"logs/{brief_date}.log"
@@ -389,10 +426,10 @@ def main():
     
     print(f"Starting Clinical Research Daily Brief pipeline for {brief_date}")
     
-    # Step 1: Fetch feeds (limit to latest entries per feed)
-    print("Fetching RSS feeds...")
-    entries = feed_processor.fetch_feeds(max_entries_per_feed=max_entries_per_feed)
-    print(f"Fetched {len(entries)} entries from {len(feed_processor.RSS_FEEDS)} RSS feeds (max {max_entries_per_feed} per feed)")
+    # Step 1: Fetch feeds with adaptive limits per source
+    print("Fetching RSS feeds with adaptive source limits...")
+    entries = feed_processor.fetch_feeds(default_max=default_max_entries)
+    print(f"Fetched {len(entries)} entries from {len(feed_processor.RSS_FEEDS)} RSS feeds (with adaptive source limits)")
     
     # Step 2: Score with LLM
     print("Scoring entries with OpenAI...")
