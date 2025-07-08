@@ -48,17 +48,23 @@ class FeedProcessor:
         "https://acrpnet.org/feed"
     ]
     
-    # Source-specific limits for adaptive feed fetching
+    # Source-specific limits for AI content discovery - increased for better coverage
     SOURCE_LIMITS = {
-        'ClinicalTrials.gov': 10,  # High-value official registry
-        'FDA': 8,                  # Important regulatory source
-        'NIH': 8,                  # Important research source
-        'Nature Medicine': 7,      # Top-tier journal
-        'NEJM': 7,                 # Top-tier journal
-        'Endpoints News': 6,       # Specialized news source
-        'BioPharma Dive': 6,       # Industry-focused news
-        'Clinical Trials Arena': 6 # Trials-focused news
-        # Default for others: 4
+        'ClinicalTrials.gov': 15,      # Increased for more trial data
+        'FDA': 12,                     # Increased for regulatory AI news
+        'NIH': 12,                     # Increased for research insights
+        'Nature Medicine': 10,         # Increased for academic papers
+        'NEJM': 10,                   # Increased for clinical studies
+        'BioPharma Dive': 8,          # Industry AI news
+        'Endpoints News': 8,          # Biotech AI developments
+        'Clinical Trials Arena': 8,   # Trial technology news
+        'RAPS': 6,                    # Regulatory perspective
+        'Clinical Research News': 6,  # Research updates
+        'CenterWatch Weekly': 6,      # Trial management
+        'Applied Clinical Trials': 6, # Methodology advances
+        'Outsourcing-Pharma': 6,     # Industry trends
+        'ACRP Blog': 6               # Professional insights
+        # Default for others: 5
     }
     
     def __init__(self, openai_api_key: str, log_file: str):
@@ -110,8 +116,8 @@ class FeedProcessor:
         all_entries = []
         total_fetched = 0
         
-        # Only consider articles from the last 14 days (bi-weekly)
-        cutoff_date = datetime.now(timezone.utc) - timedelta(days=14)
+        # Only consider articles from the last 30 days (bi-weekly with broader coverage)
+        cutoff_date = datetime.now(timezone.utc) - timedelta(days=30)
         
         for feed_url in self.RSS_FEEDS:
             timestamp = datetime.now(timezone.utc).isoformat()
@@ -142,7 +148,7 @@ class FeedProcessor:
                     pub_date = self._parse_date(entry.get('published', ''))
                     pub_datetime = datetime.fromisoformat(pub_date.replace('Z', '+00:00'))
                     
-                    # Skip articles older than 14 days
+                    # Skip articles older than 30 days
                     if pub_datetime < cutoff_date:
                         continue
                     
@@ -228,48 +234,84 @@ class FeedProcessor:
             for attempt in range(3):
                 try:
                     prompt = f"""
-                    You are an expert in AI applications in clinical research. Analyze this article to determine if it discusses AI/ML/technology in clinical research contexts.
+                    You are an AI and clinical research expert. Analyze this article to determine if it relates to AI in clinical research.
+
+                    AI in clinical research includes:
+                    - Machine learning in drug discovery/development
+                    - AI for patient recruitment and trial optimization
+                    - Natural language processing for clinical data
+                    - Computer vision for medical imaging in trials
+                    - Predictive analytics for clinical outcomes
+                    - Digital biomarkers and wearable technology
+                    - AI-powered diagnostic tools in clinical settings
+                    - Robotic process automation in clinical operations
+                    - Large language models for clinical decision support
+                    - AI for regulatory submissions and compliance
+                    - Digital therapeutics and AI-based interventions
+                    - Real-world evidence collection using AI
+                    - AI ethics in clinical research
+                    - Computational biology and bioinformatics
                     
                     Article Title: {entry['title']}
                     Article Description: {entry['description'][:500]}
                     
-                    You MUST provide ALL THREE of the following:
-                    1. is_ai_related: true/false - Does this article discuss AI, machine learning, digital health tools, or computational methods in clinical research?
-                    2. A 60-word summary focusing on the AI/technology aspects in clinical research
-                    3. A 70-word insightful comment about the AI implications, challenges, or opportunities mentioned
+                    You MUST provide ALL FIVE of the following:
+                    1. is_ai_related: true/false - Does this discuss AI/ML/advanced computational methods in clinical research?
+                    2. A 60-word summary focusing on AI applications in clinical research
+                    3. A 100-word insightful comment about implications, challenges, opportunities, or future directions
+                    4. A 60-word resources section suggesting specific websites, tools, databases, or further reading
+                    5. ai_tag: One specific category from the list below
                     
-                    AI-related topics include but are not limited to:
-                    - Machine learning in drug discovery
-                    - AI for clinical trial design or patient recruitment
-                    - Digital health tools and apps
-                    - AI-powered diagnostics or imaging
-                    - Natural language processing for clinical data
-                    - Predictive analytics in healthcare
-                    - AI ethics in clinical research
-                    - Computational biology and bioinformatics
-                    - Digital therapeutics
-                    - AI in regulatory processes
+                    AI Tags (choose the most appropriate one):
+                    - "Machine Learning"
+                    - "Natural Language Processing" 
+                    - "Computer Vision"
+                    - "Predictive Analytics"
+                    - "Digital Biomarkers"
+                    - "AI Diagnostics"
+                    - "Clinical Decision Support"
+                    - "Drug Discovery AI"
+                    - "Trial Optimization"
+                    - "Regulatory AI"
+                    - "Digital Therapeutics"
+                    - "AI Ethics"
                     
-                    IMPORTANT INSTRUCTIONS:
-                    - Only mark is_ai_related as true if AI/ML/digital technology is a central theme
-                    - Your comment MUST be complete, not cut off mid-thought
-                    - Express complete ideas within word limits
+                    ENHANCED INSTRUCTIONS FOR HIGH-QUALITY OUTPUT:
+                    
+                    For the COMMENT field (100 words), be deeply insightful by:
+                    - Analyzing the BROADER IMPLICATIONS: What does this mean for the future of clinical research?
+                    - Identifying KEY CHALLENGES: What obstacles need to be overcome?
+                    - Highlighting OPPORTUNITIES: What new possibilities does this create?
+                    - Discussing STAKEHOLDER IMPACT: How does this affect patients, researchers, regulators?
+                    - Connecting to EMERGING TRENDS: How does this fit into the larger AI revolution in healthcare?
+                    - Raising THOUGHT-PROVOKING QUESTIONS: What should researchers be considering?
+                    
+                    For the RESOURCES field (60 words), provide SPECIFIC and ACTIONABLE suggestions:
+                    - Name actual databases (e.g., "ClinicalTrials.gov AI studies", "PubMed query: 'machine learning clinical trials'")
+                    - Cite specific tools (e.g., "TensorFlow Healthcare", "FHIR API documentation")
+                    - Reference key organizations (e.g., "FDA AI/ML guidance", "HL7 FHIR community")
+                    - Suggest concrete learning paths (e.g., "Coursera's Clinical Data Science", "Google Cloud Healthcare APIs")
+                    - Include relevant conferences/communities (e.g., "HIMSS AI in Healthcare", "ML4H workshop")
+                    
+                    Make resources IMMEDIATELY USEFUL - readers should be able to search/visit these right away.
                     
                     You MUST respond in this exact JSON format:
                     {{
                         "is_ai_related": true/false,
                         "summary": "Your 60-word summary focusing on AI aspects",
-                        "comment": "Your complete 70-word comment about AI implications"
+                        "comment": "Your 100-word deeply insightful comment about AI implications, challenges, and opportunities",
+                        "resources": "Your 60-word resources with specific, searchable tools/databases/websites/communities",
+                        "ai_tag": "One of the specific tags from the list above"
                     }}
                     
-                    IMPORTANT: All three fields are REQUIRED. Do not omit any field.
+                    CRITICAL: All five fields are REQUIRED. Comments must be intellectually stimulating. Resources must be specific and actionable.
                     """
                     
                     response = self.openai_client.chat.completions.create(
                         model="gpt-4o-mini",
                         messages=[{"role": "user", "content": prompt}],
                         temperature=0.3,
-                        max_tokens=400
+                        max_tokens=500
                     )
                     
                     # Parse the JSON response
@@ -287,10 +329,13 @@ class FeedProcessor:
                                 entry['is_ai_related'] = True
                                 entry['summary'] = self._sanitize_text(result.get('summary', ''))
                                 entry['comment'] = self._sanitize_text(result.get('comment', ''))
+                                entry['resources'] = self._sanitize_text(result.get('resources', ''))
+                                entry['ai_tag'] = self._sanitize_text(result.get('ai_tag', 'AI Research'))
                                 
                                 # Ensure word limits
                                 entry['summary'] = self._limit_words(entry['summary'], 60)
-                                entry['comment'] = self._limit_words(entry['comment'], 70)
+                                entry['comment'] = self._limit_words(entry['comment'], 100)
+                                entry['resources'] = self._limit_words(entry['resources'], 60)
                                 
                                 ai_entries.append(entry)
                             break  # Success, break out of retry loop
@@ -312,7 +357,7 @@ class FeedProcessor:
     
     def _validate_ai_response(self, result: Dict) -> bool:
         """Validate that LLM response contains all required fields for AI identification."""
-        required_fields = ['is_ai_related', 'summary', 'comment']
+        required_fields = ['is_ai_related', 'summary', 'comment', 'resources', 'ai_tag']
         
         for field in required_fields:
             if field not in result:
@@ -325,9 +370,9 @@ class FeedProcessor:
                 if not isinstance(value, bool):
                     return False
             
-            # Validate summary and comment
-            elif field in ['summary', 'comment']:
-                if not isinstance(value, str) or len(value.strip()) < 10:
+            # Validate text fields
+            elif field in ['summary', 'comment', 'resources', 'ai_tag']:
+                if not isinstance(value, str) or len(value.strip()) < 5:
                     return False
         
         return True
