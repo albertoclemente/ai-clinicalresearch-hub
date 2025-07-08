@@ -129,6 +129,10 @@ logs/*.log
 *.pdf
 *.json
 
+# Test files
+test_*.py
+debug_*.py
+
 # Keep directory structure
 !logs/.gitkeep
 !briefs/.gitkeep
