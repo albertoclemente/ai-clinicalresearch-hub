@@ -286,25 +286,26 @@ class FeedProcessor:
                     - Connecting to EMERGING TRENDS: How does this fit into the larger AI revolution in healthcare?
                     - Raising THOUGHT-PROVOKING QUESTIONS: What should researchers be considering?
                     
-                    For the RESOURCES field (60 words), provide SPECIFIC and ACTIONABLE suggestions:
-                    - Name actual databases (e.g., "ClinicalTrials.gov AI studies", "PubMed query: 'machine learning clinical trials'")
-                    - Cite specific tools (e.g., "TensorFlow Healthcare", "FHIR API documentation")
-                    - Reference key organizations (e.g., "FDA AI/ML guidance", "HL7 FHIR community")
-                    - Suggest concrete learning paths (e.g., "Coursera's Clinical Data Science", "Google Cloud Healthcare APIs")
-                    - Include relevant conferences/communities (e.g., "HIMSS AI in Healthcare", "ML4H workshop")
+                    For the RESOURCES field (60 words), provide ARTICLE-SPECIFIC and ACTIONABLE suggestions:
+                    - Suggest RELATED PAPERS: "PubMed: '[specific search terms from this article]'" or "Similar studies: [specific keywords]"
+                    - Cite RELEVANT TOOLS/PLATFORMS: Based on the specific AI method mentioned (e.g., if NLP mentioned: "spaCy clinical models", if ML: "scikit-learn medical datasets")
+                    - Reference SPECIFIC DATASETS: Related to the disease/condition/method discussed
+                    - Suggest TARGETED SEARCHES: "Google Scholar: '[author name] + [specific technique]'" or "ClinicalTrials.gov: '[specific condition] + AI'"
+                    - Include RELATED ORGANIZATIONS: Specific to the research area (e.g., if cancer AI: "NCI AI initiatives", if rare diseases: "NORD AI programs")
+                    - Recommend FOCUSED LEARNING: Courses/resources specific to the AI technique or medical area discussed
                     
-                    Make resources IMMEDIATELY USEFUL - readers should be able to search/visit these right away.
+                    CRITICAL: Resources must be DIRECTLY RELATED to this specific article's content, not generic AI resources.
                     
                     You MUST respond in this exact JSON format:
                     {{
                         "is_ai_related": true/false,
                         "summary": "Your 60-word summary focusing on AI aspects",
                         "comment": "Your 100-word deeply insightful comment about AI implications, challenges, and opportunities",
-                        "resources": "Your 60-word resources with specific, searchable tools/databases/websites/communities",
+                        "resources": "Your 60-word article-specific resources with targeted searches, related papers, and relevant tools/datasets",
                         "ai_tag": "One of the specific tags from the list above"
                     }}
                     
-                    CRITICAL: All five fields are REQUIRED. Comments must be intellectually stimulating. Resources must be specific and actionable.
+                    CRITICAL: All five fields are REQUIRED. Resources must be DIRECTLY RELATED to this specific article's content, authors, methods, or medical area.
                     """
                     
                     response = self.openai_client.chat.completions.create(
