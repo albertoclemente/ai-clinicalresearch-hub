@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clinical Research Daily Brief - {{ brief_date }}</title>
-    <meta name="description" content="Daily digest of clinical research news, curated and ranked by AI">
+    <title>AI in Clinical Research Bi-Weekly Brief - {{ brief_date }}</title>
+    <meta name="description" content="Bi-weekly digest of AI applications in clinical research, curated and analyzed by AI">
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -39,7 +39,7 @@
                 <!-- Logo -->
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
-                        <h1 class="text-xl font-bold text-gray-900">Clinical Research Daily Brief</h1>
+                        <h1 class="text-xl font-bold text-gray-900">AI in Clinical Research Bi-Weekly Brief</h1>
                     </div>
                 </div>
                 
@@ -163,7 +163,7 @@
         <!-- Brief Header -->
         <div class="text-center mb-8">
             <h2 class="text-3xl font-bold text-gray-900 mb-2">{{ brief_date }}</h2>
-            <p class="text-lg text-gray-600">{{ total_items }} articles curated from clinical research sources</p>
+            <p class="text-lg text-gray-600">{{ total_items }} AI-related articles in clinical research</p>
             <p class="text-sm text-gray-500 mt-1">Generated on {{ generated_at[:10] }} at {{ generated_at[11:16] }} UTC</p>
         </div>
         
@@ -205,10 +205,10 @@
                             ></a>
                         </h3>
                         
-                        <!-- Score Badge -->
+                        <!-- AI Tag -->
                         <div class="flex items-center mb-2">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                Score: <span x-text="item.score.toFixed(1)"></span>/5
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                🤖 AI in Clinical Research
                             </span>
                         </div>
                     </div>
@@ -263,7 +263,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div class="text-center">
                 <p class="text-sm text-gray-500">
-                    Clinical Research Daily Brief - Automated curation of clinical research news
+                    AI in Clinical Research Bi-Weekly Brief - Automated curation of AI applications in clinical research
                 </p>
                 <p class="text-xs text-gray-400 mt-2">
                     Content sourced from public RSS feeds and ranked by AI

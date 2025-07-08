@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Clinical Research Daily Brief Pipeline
-Processes RSS feeds, ranks content with OpenAI, generates HTML and PDF output.
+AI in Clinical Research Bi-Weekly Brief Pipeline
+Processes RSS feeds, identifies AI-related content, generates HTML and PDF output.
 """
 
 import json
@@ -16,7 +16,7 @@ import re
 import feedparser
 import openai
 from jinja2 import Environment, FileSystemLoader
-import weasyprint
+# import weasyprint  # Temporarily disabled due to dependency issues
 import bleach
 from dateutil import parser as date_parser
 from dotenv import load_dotenv
@@ -26,7 +26,7 @@ load_dotenv()
 
 
 class FeedProcessor:
-    """Handles RSS feed processing and content ranking."""
+    """Handles RSS feed processing and AI content identification."""
     
     # RSS feed URLs - expanded with additional clinical research sources
     RSS_FEEDS = [
@@ -110,8 +110,8 @@ class FeedProcessor:
         all_entries = []
         total_fetched = 0
         
-        # Only consider articles from the last 7 days
-        cutoff_date = datetime.now(timezone.utc) - timedelta(days=7)
+        # Only consider articles from the last 14 days (bi-weekly)
+        cutoff_date = datetime.now(timezone.utc) - timedelta(days=14)
         
         for feed_url in self.RSS_FEEDS:
             timestamp = datetime.now(timezone.utc).isoformat()
@@ -142,7 +142,7 @@ class FeedProcessor:
                     pub_date = self._parse_date(entry.get('published', ''))
                     pub_datetime = datetime.fromisoformat(pub_date.replace('Z', '+00:00'))
                     
-                    # Skip articles older than 7 days
+                    # Skip articles older than 14 days
                     if pub_datetime < cutoff_date:
                         continue
                     
@@ -219,42 +219,50 @@ class FeedProcessor:
         
         return 'Unknown'
     
-    def score_with_llm(self, entries: List[Dict]) -> List[Dict]:
-        """Score entries using OpenAI API with temperature 0.3."""
-        scored_entries = []
+    def identify_ai_content(self, entries: List[Dict]) -> List[Dict]:
+        """Identify AI-related articles and tag them using OpenAI API."""
+        ai_entries = []
         
         for entry in entries:
             # Try up to 3 times to ensure we get all required fields
             for attempt in range(3):
                 try:
                     prompt = f"""
-                    You are a clinical research expert. You MUST provide ALL THREE of the following for this article:
-                    1. A relevance score (0-5, where 5 is most relevant to clinical research professionals)
-                    2. A 60-word summary focusing on key clinical research insights
-                    3. A 70-word insightful comment that stimulates deeper thinking by:
-                       - Connecting the news to broader industry trends or challenges
-                       - Posing thought-provoking questions that highlight implications
-                       - Identifying tensions or contradictions worth exploring
-                       - Suggesting new perspectives or angles that aren't immediately obvious
-                       - Sparking the reader's curiosity to learn more about the subject
+                    You are an expert in AI applications in clinical research. Analyze this article to determine if it discusses AI/ML/technology in clinical research contexts.
                     
                     Article Title: {entry['title']}
                     Article Description: {entry['description'][:500]}
                     
-                    IMPORTANT INSTRUCTIONS FOR COMMENT:
-                    - Your comment MUST be complete, not cut off mid-thought
-                    - Express complete ideas in 70 words or less
-                    - Avoid trailing fragments that would be cut off
-                    - Don't end with "..." or incomplete sentences
+                    You MUST provide ALL THREE of the following:
+                    1. is_ai_related: true/false - Does this article discuss AI, machine learning, digital health tools, or computational methods in clinical research?
+                    2. A 60-word summary focusing on the AI/technology aspects in clinical research
+                    3. A 70-word insightful comment about the AI implications, challenges, or opportunities mentioned
                     
-                    You MUST respond in this exact JSON format with ALL THREE fields:
+                    AI-related topics include but are not limited to:
+                    - Machine learning in drug discovery
+                    - AI for clinical trial design or patient recruitment
+                    - Digital health tools and apps
+                    - AI-powered diagnostics or imaging
+                    - Natural language processing for clinical data
+                    - Predictive analytics in healthcare
+                    - AI ethics in clinical research
+                    - Computational biology and bioinformatics
+                    - Digital therapeutics
+                    - AI in regulatory processes
+                    
+                    IMPORTANT INSTRUCTIONS:
+                    - Only mark is_ai_related as true if AI/ML/digital technology is a central theme
+                    - Your comment MUST be complete, not cut off mid-thought
+                    - Express complete ideas within word limits
+                    
+                    You MUST respond in this exact JSON format:
                     {{
-                        "score": 0.0,
-                        "summary": "Your 60-word summary here",
-                        "comment": "Your complete 70-word insightful comment here"
+                        "is_ai_related": true/false,
+                        "summary": "Your 60-word summary focusing on AI aspects",
+                        "comment": "Your complete 70-word comment about AI implications"
                     }}
                     
-                    IMPORTANT: All three fields (score, summary, comment) are REQUIRED. Do not omit any field.
+                    IMPORTANT: All three fields are REQUIRED. Do not omit any field.
                     """
                     
                     response = self.openai_client.chat.completions.create(
@@ -273,16 +281,18 @@ class FeedProcessor:
                         result = json.loads(json_match.group())
                         
                         # Validate all required fields are present and valid
-                        if self._validate_llm_response(result):
-                            entry['score'] = float(result.get('score', 0))
-                            entry['summary'] = self._sanitize_text(result.get('summary', ''))
-                            entry['comment'] = self._sanitize_text(result.get('comment', ''))
-                            
-                            # Ensure word limits
-                            entry['summary'] = self._limit_words(entry['summary'], 60)
-                            entry['comment'] = self._limit_words(entry['comment'], 70)
-                            
-                            scored_entries.append(entry)
+                        if self._validate_ai_response(result):
+                            # Only include AI-related articles
+                            if result.get('is_ai_related', False):
+                                entry['is_ai_related'] = True
+                                entry['summary'] = self._sanitize_text(result.get('summary', ''))
+                                entry['comment'] = self._sanitize_text(result.get('comment', ''))
+                                
+                                # Ensure word limits
+                                entry['summary'] = self._limit_words(entry['summary'], 60)
+                                entry['comment'] = self._limit_words(entry['comment'], 70)
+                                
+                                ai_entries.append(entry)
                             break  # Success, break out of retry loop
                         else:
                             self.logger.warning(f"Invalid LLM response for entry {entry['id']}, attempt {attempt + 1}: {result}")
@@ -294,15 +304,15 @@ class FeedProcessor:
                             self.logger.error(f"Failed to extract JSON from LLM response for entry {entry['id']} after 3 attempts")
                 
                 except Exception as e:
-                    self.logger.error(f"Error scoring entry {entry['id']}, attempt {attempt + 1}: {str(e)}")
+                    self.logger.error(f"Error processing entry {entry['id']}, attempt {attempt + 1}: {str(e)}")
                     if attempt == 2:  # Last attempt
                         continue
         
-        return scored_entries
+        return ai_entries
     
-    def _validate_llm_response(self, result: Dict) -> bool:
-        """Validate that LLM response contains all required fields with valid content."""
-        required_fields = ['score', 'summary', 'comment']
+    def _validate_ai_response(self, result: Dict) -> bool:
+        """Validate that LLM response contains all required fields for AI identification."""
+        required_fields = ['is_ai_related', 'summary', 'comment']
         
         for field in required_fields:
             if field not in result:
@@ -310,13 +320,9 @@ class FeedProcessor:
             
             value = result[field]
             
-            # Validate score
-            if field == 'score':
-                try:
-                    score = float(value)
-                    if not (0 <= score <= 5):
-                        return False
-                except (ValueError, TypeError):
+            # Validate is_ai_related
+            if field == 'is_ai_related':
+                if not isinstance(value, bool):
                     return False
             
             # Validate summary and comment
@@ -354,20 +360,17 @@ class FeedProcessor:
             
         return text
     
-    def select_top_items(self, entries: List[Dict]) -> List[Dict]:
-        """Select top 8-10 items with score >= 3, tie-break by pub_date."""
-        # Filter by minimum score
-        filtered = [entry for entry in entries if entry.get('score', 0) >= 3.0]
-        
-        # Sort by score (descending) then by pub_date (descending)
+    def select_articles(self, entries: List[Dict]) -> List[Dict]:
+        """Select and sort AI-related articles by publication date."""
+        # Sort by publication date (descending) to show newest first
         sorted_entries = sorted(
-            filtered,
-            key=lambda x: (x.get('score', 0), x.get('pub_date', '')),
+            entries,
+            key=lambda x: x.get('pub_date', ''),
             reverse=True
         )
         
-        # Return top 8-10 items
-        return sorted_entries[:10]
+        # Return all AI-related articles (already filtered in identify_ai_content)
+        return sorted_entries
     
     def save_brief_data(self, entries: List[Dict], output_file: str):
         """Save brief data to JSON file."""
@@ -428,7 +431,8 @@ class SiteGenerator:
         
         # Generate PDF
         Path(output_file).parent.mkdir(parents=True, exist_ok=True)
-        weasyprint.HTML(string=html_content).write_pdf(output_file)
+        # weasyprint.HTML(string=html_content).write_pdf(output_file)  # Temporarily disabled
+        print(f"PDF generation temporarily disabled due to dependency issues")
 
 
 def main():
@@ -451,26 +455,26 @@ def main():
     feed_processor = FeedProcessor(openai_api_key, log_file)
     site_generator = SiteGenerator()
     
-    print(f"Starting Clinical Research Daily Brief pipeline for {brief_date}")
+    print(f"Starting AI in Clinical Research Bi-Weekly Brief pipeline for {brief_date}")
     
     # Step 1: Fetch feeds with adaptive limits per source
     print("Fetching RSS feeds with adaptive source limits...")
     entries = feed_processor.fetch_feeds(default_max=default_max_entries)
     print(f"Fetched {len(entries)} entries from {len(feed_processor.RSS_FEEDS)} RSS feeds (with adaptive source limits)")
     
-    # Step 2: Score with LLM
-    print("Scoring entries with OpenAI...")
-    scored_entries = feed_processor.score_with_llm(entries)
-    print(f"Scored {len(scored_entries)} entries")
+    # Step 2: Identify AI-related content
+    print("Identifying AI-related articles with OpenAI...")
+    ai_entries = feed_processor.identify_ai_content(entries)
+    print(f"Identified {len(ai_entries)} AI-related articles")
     
-    # Step 3: Select top items
-    print("Selecting top items...")
-    top_items = feed_processor.select_top_items(scored_entries)
-    print(f"Selected {len(top_items)} top items")
+    # Step 3: Select and sort articles
+    print("Selecting and sorting articles...")
+    selected_articles = feed_processor.select_articles(ai_entries)
+    print(f"Selected {len(selected_articles)} articles for the brief")
     
     # Step 4: Save brief data
     print("Saving brief data...")
-    feed_processor.save_brief_data(top_items, json_file)
+    feed_processor.save_brief_data(selected_articles, json_file)
     
     # Step 5: Generate HTML
     print("Generating HTML...")
@@ -480,7 +484,8 @@ def main():
     
     # Step 6: Generate PDF
     print("Generating PDF...")
-    site_generator.generate_pdf(brief_data, pdf_file)
+    # site_generator.generate_pdf(brief_data, pdf_file)  # Temporarily disabled
+    print("PDF generation temporarily disabled due to dependency issues")
     
     print(f"Pipeline completed successfully!")
     print(f"- Brief data: {json_file}")
