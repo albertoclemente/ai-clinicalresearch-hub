@@ -16,7 +16,7 @@ import re
 import feedparser
 import openai
 from jinja2 import Environment, FileSystemLoader
-# import weasyprint  # Temporarily disabled due to dependency issues
+import weasyprint
 import bleach
 from dateutil import parser as date_parser
 from dotenv import load_dotenv
@@ -28,43 +28,48 @@ load_dotenv()
 class FeedProcessor:
     """Handles RSS feed processing and AI content identification."""
     
-    # RSS feed URLs - expanded with additional clinical research sources
+    # RSS feed URLs - focused on high-quality AI and clinical research sources
     RSS_FEEDS = [
-        # Original 7 feeds
-        "https://clinicaltrials.gov/ct2/results/rss.xml",
-        "https://www.fda.gov/about-fda/contact-fda/stay-informed/rss-feeds/drug-safety-communications/rss.xml",
-        "https://clinicalcenter.nih.gov/rss/news.xml",
-        "https://www.nature.com/nm.rss",
-        "https://www.nejm.org/action/showFeed?type=etoc&feed=rss",
-        "https://www.biopharmadive.com/feeds/news/",
-        "https://www.raps.org/news-and-articles/news-articles.rss",
-        # Additional clinical research sources
-        "https://www.clinicalresearchnewsonline.com/rss",
-        "https://endpts.com/channel/news-briefing/feed",
-        "https://www.centerwatch.com/rss",
-        "https://appliedclinicaltrialsonline.com/rss/full/site",
-        "https://www.clinicaltrialsarena.com/feed",
-        "https://www.outsourcing-pharma.com/rss",
-        "https://acrpnet.org/feed"
+        # Preprint servers for latest AI research
+        "https://connect.medrxiv.org/relate/content/181",  # medRxiv AI/ML papers
+        "https://arxiv.org/rss/cs.LG",  # arXiv Machine Learning
+        "https://arxiv.org/rss/cs.AI",  # arXiv Artificial Intelligence
+        "https://arxiv.org/rss/q-bio.QM",  # arXiv Quantitative Biology/Methods
+        # Nature AI and ML feeds
+        "https://www.nature.com/subjects/artificial-intelligence.rss",  # Nature AI
+        "https://www.nature.com/subjects/machine-learning.rss",  # Nature ML
+        # Clinical research journals
+        "https://www.nejm.org/action/showFeed?type=etoc&feed=rss",  # NEJM
+        # Health IT and AI in healthcare
+        "https://www.healthitanalytics.com/rss",  # HealthITAnalytics
+        "https://www.clinicalresearchnewsonline.com/rss/ecliniqua_clinical_news_and_analysis.aspx",  # Clinical Research News
+        # Industry and biotech AI coverage
+        "https://www.fiercebiotech.com/rss",  # Fierce Biotech
+        "https://www.biopharmadive.com/feeds/news/",  # BioPharma Dive
+        "https://endpts.com/channel/news-briefing/feed",  # Endpoints News
+        "https://venturebeat.com/ai/feed/"  # VentureBeat AI
     ]
     
-    # Source-specific limits for AI content discovery - increased for better coverage
+    # Source-specific limits for focused AI content discovery
     SOURCE_LIMITS = {
-        'ClinicalTrials.gov': 15,      # Increased for more trial data
-        'FDA': 12,                     # Increased for regulatory AI news
-        'NIH': 12,                     # Increased for research insights
-        'Nature Medicine': 10,         # Increased for academic papers
-        'NEJM': 10,                   # Increased for clinical studies
-        'BioPharma Dive': 8,          # Industry AI news
-        'Endpoints News': 8,          # Biotech AI developments
-        'Clinical Trials Arena': 8,   # Trial technology news
-        'RAPS': 6,                    # Regulatory perspective
-        'Clinical Research News': 6,  # Research updates
-        'CenterWatch Weekly': 6,      # Trial management
-        'Applied Clinical Trials': 6, # Methodology advances
-        'Outsourcing-Pharma': 6,     # Industry trends
-        'ACRP Blog': 6               # Professional insights
-        # Default for others: 5
+        # Preprint servers (high-quality AI research)
+        'medRxiv': 15,               # Latest AI/ML in medicine
+        'arXiv ML': 12,              # ML preprints
+        'arXiv AI': 12,              # AI preprints
+        'arXiv Bio': 10,             # Computational biology
+        # Nature publications
+        'Nature AI': 12,             # AI research papers
+        'Nature ML': 12,             # ML research papers
+        # Clinical journals
+        'NEJM': 10,                  # Clinical studies
+        # Health IT and industry
+        'HealthITAnalytics': 10,     # Health IT insights
+        'Clinical Research News': 8, # Clinical research updates
+        'FierceBiotech': 8,          # Biotech developments
+        'BioPharma Dive': 8,         # Industry AI news
+        'Endpoints News': 8,         # Biotech AI developments
+        'VentureBeat': 8             # AI industry news
+        # Default for others: 8
     }
     
     def __init__(self, openai_api_key: str, log_file: str):
@@ -111,7 +116,7 @@ class FeedProcessor:
         
         return clean_text
     
-    def fetch_feeds(self, default_max: int = 4) -> List[Dict]:
+    def fetch_feeds(self, default_max: int = 8) -> List[Dict]:
         """Fetch and parse all RSS feeds, with adaptive limits per source and filtering recent articles."""
         all_entries = []
         total_fetched = 0
@@ -203,20 +208,23 @@ class FeedProcessor:
     def _get_source_name(self, feed_url: str) -> str:
         """Extract source name from feed URL."""
         source_mapping = {
-            'clinicaltrials.gov': 'ClinicalTrials.gov',
-            'fda.gov': 'FDA',
-            'nih.gov': 'NIH',
-            'nature.com': 'Nature Medicine',
+            # Preprint servers
+            'connect.medrxiv.org': 'medRxiv',
+            'arxiv.org/rss/cs.LG': 'arXiv ML',
+            'arxiv.org/rss/cs.AI': 'arXiv AI',
+            'arxiv.org/rss/q-bio.QM': 'arXiv Bio',
+            # Nature publications
+            'nature.com/subjects/artificial-intelligence': 'Nature AI',
+            'nature.com/subjects/machine-learning': 'Nature ML',
+            # Clinical journals
             'nejm.org': 'NEJM',
-            'biopharmadive.com': 'BioPharma Dive',
-            'raps.org': 'RAPS',
+            # Health IT and industry
+            'healthitanalytics.com': 'HealthITAnalytics',
             'clinicalresearchnewsonline.com': 'Clinical Research News',
+            'fiercebiotech.com': 'FierceBiotech',
+            'biopharmadive.com': 'BioPharma Dive',
             'endpts.com': 'Endpoints News',
-            'centerwatch.com': 'CenterWatch Weekly',
-            'appliedclinicaltrialsonline.com': 'Applied Clinical Trials',
-            'clinicaltrialsarena.com': 'Clinical Trials Arena',
-            'outsourcing-pharma.com': 'Outsourcing-Pharma',
-            'acrpnet.org': 'ACRP Blog'
+            'venturebeat.com/ai': 'VentureBeat'
         }
         
         for domain, name in source_mapping.items():
@@ -234,9 +242,9 @@ class FeedProcessor:
             for attempt in range(3):
                 try:
                     prompt = f"""
-                    You are an AI and clinical research expert. Analyze this article to determine if it relates to AI in clinical research.
+                    You are an AI and clinical research expert. Analyze this article to determine if it relates to AI in clinical research, including Generative AI.
 
-                    AI in clinical research includes:
+                    AI in clinical research includes (but is not limited to):
                     - Machine learning in drug discovery/development
                     - AI for patient recruitment and trial optimization
                     - Natural language processing for clinical data
@@ -245,21 +253,26 @@ class FeedProcessor:
                     - Digital biomarkers and wearable technology
                     - AI-powered diagnostic tools in clinical settings
                     - Robotic process automation in clinical operations
-                    - Large language models for clinical decision support
+                    - Large language models (LLMs) and Generative AI for clinical decision support, documentation, or synthetic data generation
+                    - Generative models for molecule/drug design (e.g., protein folding, drug synthesis)
                     - AI for regulatory submissions and compliance
                     - Digital therapeutics and AI-based interventions
                     - Real-world evidence collection using AI
                     - AI ethics in clinical research
                     - Computational biology and bioinformatics
+                    - Generative AI for protocol writing, patient communication, or trial simulation
+                    - Synthetic data generation for clinical research
+                    - AI-powered chatbots for patient engagement
+                    - Foundation models adapted for healthcare
                     
                     Article Title: {entry['title']}
                     Article Description: {entry['description'][:500]}
                     
                     You MUST provide ALL FIVE of the following:
-                    1. is_ai_related: true/false - Does this discuss AI/ML/advanced computational methods in clinical research?
-                    2. A 60-word summary focusing on AI applications in clinical research
+                    1. is_ai_related: true/false - Does this discuss AI/ML/Generative AI/advanced computational methods in clinical research?
+                    2. A 60-word summary focusing on AI (including Generative AI) applications in clinical research
                     3. A 100-word insightful comment about implications, challenges, opportunities, or future directions
-                    4. A 60-word resources section suggesting specific websites, tools, databases, or further reading
+                    4. A 60-word resources section suggesting specific websites, tools, datasets, or further reading
                     5. ai_tag: One specific category from the list below
                     
                     AI Tags (choose the most appropriate one):
@@ -275,6 +288,7 @@ class FeedProcessor:
                     - "Regulatory AI"
                     - "Digital Therapeutics"
                     - "AI Ethics"
+                    - "Generative AI"
                     
                     ENHANCED INSTRUCTIONS FOR HIGH-QUALITY OUTPUT:
                     
@@ -286,26 +300,35 @@ class FeedProcessor:
                     - Connecting to EMERGING TRENDS: How does this fit into the larger AI revolution in healthcare?
                     - Raising THOUGHT-PROVOKING QUESTIONS: What should researchers be considering?
                     
-                    For the RESOURCES field (60 words), provide ARTICLE-SPECIFIC and ACTIONABLE suggestions:
-                    - Suggest RELATED PAPERS: "PubMed: '[specific search terms from this article]'" or "Similar studies: [specific keywords]"
-                    - Cite RELEVANT TOOLS/PLATFORMS: Based on the specific AI method mentioned (e.g., if NLP mentioned: "spaCy clinical models", if ML: "scikit-learn medical datasets")
-                    - Reference SPECIFIC DATASETS: Related to the disease/condition/method discussed
-                    - Suggest TARGETED SEARCHES: "Google Scholar: '[author name] + [specific technique]'" or "ClinicalTrials.gov: '[specific condition] + AI'"
-                    - Include RELATED ORGANIZATIONS: Specific to the research area (e.g., if cancer AI: "NCI AI initiatives", if rare diseases: "NORD AI programs")
-                    - Recommend FOCUSED LEARNING: Courses/resources specific to the AI technique or medical area discussed
+                    For the RESOURCES field, provide 2-3 ARTICLE-SPECIFIC resources in this EXACT format:
+                    • [Brief description]: [Actual URL or specific search instruction]
+                    • [Brief description]: [Actual URL or specific search instruction]
+                    • [Brief description]: [Actual URL or specific search instruction]
                     
-                    CRITICAL: Resources must be DIRECTLY RELATED to this specific article's content, not generic AI resources.
+                    Resource types to include:
+                    - RELATED RESEARCH: "PubMed search for '[specific terms]': https://pubmed.ncbi.nlm.nih.gov/?term=[encoded_terms]"
+                    - RELEVANT TOOLS: "Tool name for [specific use]": https://actual-tool-url.com"
+                    - DATASETS: "Dataset for [specific purpose]": https://dataset-url.com"
+                    - ORGANIZATIONS: "Organization working on [specific area]": https://org-website.com"
+                    - LEARNING RESOURCES: "Course on [specific topic]": https://course-url.com"
+                    
+                    Example format:
+                    • Related research on LLM clinical applications: https://pubmed.ncbi.nlm.nih.gov/?term=LLM+clinical+decision+support
+                    • Hugging Face medical transformers: https://huggingface.co/models?pipeline_tag=text-classification&domain=medical
+                    • NIH Bridge2AI initiative: https://bridge2ai.nih.gov/
+                    
+                    CRITICAL: Provide REAL, working URLs when possible. For searches, use actual search URLs with encoded terms.
                     
                     You MUST respond in this exact JSON format:
                     {{
                         "is_ai_related": true/false,
                         "summary": "Your 60-word summary focusing on AI aspects",
                         "comment": "Your 100-word deeply insightful comment about AI implications, challenges, and opportunities",
-                        "resources": "Your 60-word article-specific resources with targeted searches, related papers, and relevant tools/datasets",
+                        "resources": "2-3 resources in bullet format with descriptions and links as specified above",
                         "ai_tag": "One of the specific tags from the list above"
                     }}
                     
-                    CRITICAL: All five fields are REQUIRED. Resources must be DIRECTLY RELATED to this specific article's content, authors, methods, or medical area.
+                    CRITICAL: All five fields are REQUIRED. Resources must include brief descriptions and actual URLs/links when possible.
                     """
                     
                     response = self.openai_client.chat.completions.create(
@@ -318,10 +341,27 @@ class FeedProcessor:
                     # Parse the JSON response
                     content = response.choices[0].message.content.strip()
                     
+                    # Debug: Log the raw response
+                    self.logger.info(json.dumps({
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
+                        "entry_id": entry['id'],
+                        "entry_title": entry['title'][:50],
+                        "raw_llm_response": content[:200],
+                        "attempt": attempt + 1
+                    }))
+                    
                     # Extract JSON from response
                     json_match = re.search(r'\{.*\}', content, re.DOTALL)
                     if json_match:
                         result = json.loads(json_match.group())
+                        
+                        # Debug: Log the parsed result
+                        self.logger.info(json.dumps({
+                            "timestamp": datetime.now(timezone.utc).isoformat(),
+                            "entry_id": entry['id'],
+                            "parsed_result": result,
+                            "is_ai_related": result.get('is_ai_related', False)
+                        }))
                         
                         # Validate all required fields are present and valid
                         if self._validate_ai_response(result):
@@ -336,7 +376,7 @@ class FeedProcessor:
                                 # Ensure word limits
                                 entry['summary'] = self._limit_words(entry['summary'], 60)
                                 entry['comment'] = self._limit_words(entry['comment'], 100)
-                                entry['resources'] = self._limit_words(entry['resources'], 60)
+                                entry['resources'] = self._limit_words(entry['resources'], 120)  # Increased for URLs and descriptions
                                 
                                 ai_entries.append(entry)
                             break  # Success, break out of retry loop
@@ -372,8 +412,22 @@ class FeedProcessor:
                     return False
             
             # Validate text fields
-            elif field in ['summary', 'comment', 'resources', 'ai_tag']:
+            elif field in ['summary', 'comment', 'ai_tag']:
                 if not isinstance(value, str) or len(value.strip()) < 5:
+                    return False
+            
+            # Validate resources field (can be string or list)
+            elif field == 'resources':
+                if isinstance(value, list):
+                    # Convert list to string format
+                    if len(value) == 0:
+                        return False
+                    # Join list items with newlines
+                    result[field] = '\n'.join(value)
+                elif isinstance(value, str):
+                    if len(value.strip()) < 5:
+                        return False
+                else:
                     return False
         
         return True
@@ -477,8 +531,8 @@ class SiteGenerator:
         
         # Generate PDF
         Path(output_file).parent.mkdir(parents=True, exist_ok=True)
-        # weasyprint.HTML(string=html_content).write_pdf(output_file)  # Temporarily disabled
-        print(f"PDF generation temporarily disabled due to dependency issues")
+        weasyprint.HTML(string=html_content).write_pdf(output_file)
+        print(f"PDF generated successfully: {output_file}")
 
 
 def main():
@@ -488,8 +542,8 @@ def main():
     if not openai_api_key:
         raise ValueError("OPENAI_API_KEY environment variable is required")
     
-    # Configuration: Default max entries for sources without specific limits
-    default_max_entries = int(os.environ.get('DEFAULT_MAX_ENTRIES', '4'))
+    # Configuration: Default max entries for sources without specific limits (increased for broader coverage)
+    default_max_entries = int(os.environ.get('DEFAULT_MAX_ENTRIES', '8'))
     
     brief_date = datetime.now(timezone.utc).strftime('%Y-%m-%d')
     log_file = f"logs/{brief_date}.log"
@@ -530,8 +584,7 @@ def main():
     
     # Step 6: Generate PDF
     print("Generating PDF...")
-    # site_generator.generate_pdf(brief_data, pdf_file)  # Temporarily disabled
-    print("PDF generation temporarily disabled due to dependency issues")
+    site_generator.generate_pdf(brief_data, pdf_file)
     
     print(f"Pipeline completed successfully!")
     print(f"- Brief data: {json_file}")
