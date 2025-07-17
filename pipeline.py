@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-AI in Clinical Research Bi-Weekly Brief Pipeline
-Processes RSS feeds, identifies AI-related content, generates HTML and PDF output.
+AI in Clinical Research Brief Pipeline
+Processes RSS feeds, identifies AI-specific content in clinical research, generates HTML and PDF output.
 """
 
 import json
@@ -26,57 +26,105 @@ load_dotenv()
 
 
 class FeedProcessor:
-    """Handles RSS feed processing and AI content identification."""
+    """Handles RSS feed processing and AI content identification in clinical research."""
     
-    # RSS feed URLs - focused on high-quality AI and clinical research sources
+    # RSS feed URLs - focused on AI applications in clinical research and trials
     RSS_FEEDS = [
-        # Preprint servers for latest AI research
-        "https://connect.medrxiv.org/relate/content/181",  # medRxiv AI/ML papers
-        "https://arxiv.org/rss/cs.LG",  # arXiv Machine Learning
-        "https://arxiv.org/rss/cs.AI",  # arXiv Artificial Intelligence
-        "https://arxiv.org/rss/q-bio.QM",  # arXiv Quantitative Biology/Methods
-        # Nature AI and ML feeds
+        # AI and Healthcare Research (High Priority)
+        "https://www.nature.com/subjects/machine-learning.rss",  # Nature Machine Learning
         "https://www.nature.com/subjects/artificial-intelligence.rss",  # Nature AI
-        "https://www.nature.com/subjects/machine-learning.rss",  # Nature ML
-        # Clinical research journals
-        "https://www.nejm.org/action/showFeed?type=etoc&feed=rss",  # NEJM
-        # Health IT and AI in healthcare
-        "https://www.healthitanalytics.com/rss",  # HealthITAnalytics
-        "https://www.clinicalresearchnewsonline.com/rss/ecliniqua_clinical_news_and_analysis.aspx",  # Clinical Research News
-        # Industry and biotech AI coverage
-        "https://www.fiercebiotech.com/rss",  # Fierce Biotech
-        "https://www.biopharmadive.com/feeds/news/",  # BioPharma Dive
-        "https://endpts.com/channel/news-briefing/feed",  # Endpoints News
-        "https://venturebeat.com/ai/feed/"  # VentureBeat AI
+        "https://www.nature.com/ndigital.rss",  # Nature Digital Medicine
+        "https://www.nature.com/subjects/medical-research.rss",  # Nature Medical Research
+        "https://www.nature.com/npjdigitalmed.rss",  # NPJ Digital Medicine
+        # Generative AI and Clinical Focus
+        "https://www.statnews.com/tag/artificial-intelligence/feed/",  # STAT AI Coverage
+        "https://www.statnews.com/tag/generative-ai/feed/",  # STAT Generative AI
+        "https://www.mobihealthnews.com/feeds/news",  # Digital Health & AI News
+        "https://venturebeat.com/ai/feed/",  # VentureBeat AI (includes healthcare AI)
+        "https://www.healthcareitnews.com/rss.xml",  # Healthcare IT News (AI applications)
+        "https://www.healthcarefinancenews.com/rss.xml",  # Healthcare Finance News (AI investments)
+        # Academic and Research Sources (Expanded)
+        "https://arxiv.org/rss/cs.AI",  # arXiv AI (includes biomedical AI)
+        "https://arxiv.org/rss/cs.LG",  # arXiv Machine Learning
+        "https://arxiv.org/rss/cs.CL",  # arXiv Computational Linguistics (LLMs)
+        "https://arxiv.org/rss/cs.HC",  # arXiv Human-Computer Interaction (clinical AI)
+        "https://arxiv.org/rss/q-bio.QM",  # arXiv Quantitative Biology
+        "https://connect.medrxiv.org/relate/content/181",  # medRxiv AI/ML papers
+        # AI in Drug Discovery and Clinical Trials
+        "https://www.drugdiscoverytoday.com/rss",  # Drug Discovery Today (AI focus)
+        "https://www.clinicaltrialsarena.com/rss",  # Clinical Trials Arena
+        "https://www.appliedclinicaltrialsonline.com/rss",  # Applied Clinical Trials
+        # Industry and Clinical AI (Enhanced)
+        "https://www.fiercehealthcare.com/rss",  # Fierce Healthcare (includes AI)
+        "https://www.modernhealthcare.com/rss",  # Modern Healthcare
+        "https://www.healthleadersmedia.com/rss",  # Health Leaders (AI in healthcare)
+        "https://www.beckersspine.com/rss",  # Becker's Healthcare (AI coverage)
+        # AI and Regulatory
+        "https://www.fda.gov/about-fda/contact-fda/fda-rss-feeds",  # FDA RSS (regulatory AI)
+        "https://www.raps.org/RSS",  # RAPS Regulatory Affairs (AI regulatory)
+        # Specialized AI/ML Healthcare Sources
+        "https://hai.stanford.edu/news/rss.xml",  # Stanford HAI (Human-Centered AI)
+        "https://www.microsoft.com/en-us/research/feed/",  # Microsoft Research (healthcare AI)
+        # General clinical sources (backup)
+        "https://endpts.com/feed/",  # Endpoints News
+        "https://www.biopharmadive.com/feeds/news",  # BioPharma Dive
     ]
     
-    # Source-specific limits for focused AI content discovery
+    # Source-specific limits for AI in clinical research content discovery
     SOURCE_LIMITS = {
-        # Preprint servers (high-quality AI research)
-        'medRxiv': 15,               # Latest AI/ML in medicine
-        'arXiv ML': 12,              # ML preprints
-        'arXiv AI': 12,              # AI preprints
-        'arXiv Bio': 10,             # Computational biology
-        # Nature publications
-        'Nature AI': 12,             # AI research papers
-        'Nature ML': 12,             # ML research papers
-        # Clinical journals
-        'NEJM': 10,                  # Clinical studies
-        # Health IT and industry
-        'HealthITAnalytics': 10,     # Health IT insights
-        'Clinical Research News': 8, # Clinical research updates
-        'FierceBiotech': 8,          # Biotech developments
-        'BioPharma Dive': 8,         # Industry AI news
-        'Endpoints News': 8,         # Biotech AI developments
-        'VentureBeat': 8             # AI industry news
+        # AI and Healthcare Research (High Priority)
+        'Nature ML': 15,                # Nature Machine Learning
+        'Nature AI': 15,                # Nature AI
+        'Nature Digital Medicine': 12,  # Nature Digital Medicine
+        'Nature Medical Research': 10,  # Nature Medical Research
+        'NPJ Digital Medicine': 12,     # NPJ Digital Medicine
+        # Generative AI and Clinical Focus
+        'STAT AI': 15,                  # STAT AI Coverage
+        'STAT Generative AI': 12,       # STAT Generative AI
+        'MobiHealthNews': 12,           # Digital Health & AI News
+        'VentureBeat AI': 10,           # VentureBeat AI
+        'Healthcare IT News': 12,       # Healthcare IT News
+        'Healthcare Finance News': 8,   # Healthcare Finance News
+        # Academic and Research (Expanded)
+        'arXiv AI': 12,                 # AI preprints
+        'arXiv ML': 12,                 # ML preprints
+        'arXiv CL': 10,                 # Computational Linguistics (LLMs)
+        'arXiv HC': 8,                  # Human-Computer Interaction
+        'arXiv Bio': 10,                # Computational biology
+        'medRxiv': 15,                  # Medical AI preprints
+        # AI in Drug Discovery and Clinical Trials
+        'Drug Discovery Today': 10,     # Drug discovery AI
+        'Clinical Trials Arena': 12,    # Clinical trials
+        'Applied Clinical Trials': 10,  # Applied clinical trials
+        # Industry and Clinical AI (Enhanced)
+        'Fierce Healthcare': 12,        # Healthcare industry
+        'Modern Healthcare': 10,        # Healthcare news
+        'Health Leaders': 10,           # Healthcare leadership
+        'Beckers Healthcare': 8,        # Healthcare technology
+        # AI and Regulatory
+        'FDA RSS': 8,                   # FDA regulatory
+        'RAPS Regulatory': 8,           # Regulatory affairs
+        # Specialized AI/ML Healthcare
+        'Stanford HAI': 10,             # Human-centered AI
+        'Microsoft Research': 8,        # Microsoft healthcare AI
+        # Backup sources
+        'Endpoints News': 10,           # Industry coverage
+        'BioPharma Dive': 10,           # Biotech/pharma news
         # Default for others: 8
     }
     
-    def __init__(self, openai_api_key: str, log_file: str):
-        """Initialize the feed processor."""
+    def __init__(self, openai_api_key: str, log_file: str, days_back: int = 60):
+        """Initialize the feed processor.
+        
+        Args:
+            openai_api_key: OpenAI API key for content analysis
+            log_file: Path to log file
+            days_back: Number of days back to consider articles (default: 60)
+        """
         self.openai_client = openai.OpenAI(api_key=openai_api_key)
         self.logger = self._setup_logging(log_file)
         self.brief_date = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+        self.days_back = days_back
         
     def _setup_logging(self, log_file: str) -> logging.Logger:
         """Set up JSON logging as specified in PRD."""
@@ -121,8 +169,15 @@ class FeedProcessor:
         all_entries = []
         total_fetched = 0
         
-        # Only consider articles from the last 30 days (bi-weekly with broader coverage)
-        cutoff_date = datetime.now(timezone.utc) - timedelta(days=30)
+        # Use configurable timeframe instead of fixed 30 days
+        cutoff_date = datetime.now(timezone.utc) - timedelta(days=self.days_back)
+        
+        self.logger.info(json.dumps({
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "days_back": self.days_back,
+            "cutoff_date": cutoff_date.isoformat(),
+            "message": f"Fetching articles from the last {self.days_back} days"
+        }))
         
         for feed_url in self.RSS_FEEDS:
             timestamp = datetime.now(timezone.utc).isoformat()
@@ -153,7 +208,7 @@ class FeedProcessor:
                     pub_date = self._parse_date(entry.get('published', ''))
                     pub_datetime = datetime.fromisoformat(pub_date.replace('Z', '+00:00'))
                     
-                    # Skip articles older than 30 days
+                    # Skip articles older than the configured timeframe
                     if pub_datetime < cutoff_date:
                         continue
                     
@@ -208,23 +263,44 @@ class FeedProcessor:
     def _get_source_name(self, feed_url: str) -> str:
         """Extract source name from feed URL."""
         source_mapping = {
-            # Preprint servers
-            'connect.medrxiv.org': 'medRxiv',
-            'arxiv.org/rss/cs.LG': 'arXiv ML',
-            'arxiv.org/rss/cs.AI': 'arXiv AI',
-            'arxiv.org/rss/q-bio.QM': 'arXiv Bio',
-            # Nature publications
-            'nature.com/subjects/artificial-intelligence': 'Nature AI',
+            # AI and Healthcare Research (High Priority)
             'nature.com/subjects/machine-learning': 'Nature ML',
-            # Clinical journals
-            'nejm.org': 'NEJM',
-            # Health IT and industry
-            'healthitanalytics.com': 'HealthITAnalytics',
-            'clinicalresearchnewsonline.com': 'Clinical Research News',
-            'fiercebiotech.com': 'FierceBiotech',
-            'biopharmadive.com': 'BioPharma Dive',
+            'nature.com/subjects/artificial-intelligence': 'Nature AI',
+            'nature.com/ndigital': 'Nature Digital Medicine',
+            'nature.com/subjects/medical-research': 'Nature Medical Research',
+            'nature.com/npjdigitalmed': 'NPJ Digital Medicine',
+            # Generative AI and Clinical Focus
+            'statnews.com/tag/artificial-intelligence': 'STAT AI',
+            'statnews.com/tag/generative-ai': 'STAT Generative AI',
+            'mobihealthnews.com': 'MobiHealthNews',
+            'venturebeat.com/ai': 'VentureBeat AI',
+            'healthcareitnews.com': 'Healthcare IT News',
+            'healthcarefinancenews.com': 'Healthcare Finance News',
+            # Academic and Research (Expanded)
+            'arxiv.org/rss/cs.AI': 'arXiv AI',
+            'arxiv.org/rss/cs.LG': 'arXiv ML',
+            'arxiv.org/rss/cs.CL': 'arXiv CL',
+            'arxiv.org/rss/cs.HC': 'arXiv HC',
+            'arxiv.org/rss/q-bio.QM': 'arXiv Bio',
+            'connect.medrxiv.org': 'medRxiv',
+            # AI in Drug Discovery and Clinical Trials
+            'drugdiscoverytoday.com': 'Drug Discovery Today',
+            'clinicaltrialsarena.com': 'Clinical Trials Arena',
+            'appliedclinicaltrialsonline.com': 'Applied Clinical Trials',
+            # Industry and Clinical AI (Enhanced)
+            'fiercehealthcare.com': 'Fierce Healthcare',
+            'modernhealthcare.com': 'Modern Healthcare',
+            'healthleadersmedia.com': 'Health Leaders',
+            'beckersspine.com': 'Beckers Healthcare',
+            # AI and Regulatory
+            'fda.gov': 'FDA RSS',
+            'raps.org': 'RAPS Regulatory',
+            # Specialized AI/ML Healthcare
+            'hai.stanford.edu': 'Stanford HAI',
+            'microsoft.com/en-us/research': 'Microsoft Research',
+            # Backup sources
             'endpts.com': 'Endpoints News',
-            'venturebeat.com/ai': 'VentureBeat'
+            'biopharmadive.com': 'BioPharma Dive'
         }
         
         for domain, name in source_mapping.items():
@@ -234,7 +310,7 @@ class FeedProcessor:
         return 'Unknown'
     
     def identify_ai_content(self, entries: List[Dict]) -> List[Dict]:
-        """Identify AI-related articles and tag them using OpenAI API."""
+        """Identify articles specifically about AI applications in clinical research and tag them using OpenAI API."""
         ai_entries = []
         
         for entry in entries:
@@ -242,37 +318,50 @@ class FeedProcessor:
             for attempt in range(3):
                 try:
                     prompt = f"""
-                    You are an AI and clinical research expert. Analyze this article to determine if it relates to AI in clinical research, including Generative AI.
+                    You are an AI and clinical research expert. Analyze this article to determine if it SPECIFICALLY relates to AI, Machine Learning, or Generative AI being used in clinical research or clinical trials contexts.
 
-                    AI in clinical research includes (but is not limited to):
-                    - Machine learning in drug discovery/development
-                    - AI for patient recruitment and trial optimization
-                    - Natural language processing for clinical data
-                    - Computer vision for medical imaging in trials
+                    PRIORITIZE GENERATIVE AI applications and ONLY classify as AI-related if the article explicitly discusses:
+                    
+                    GENERATIVE AI IN CLINICAL RESEARCH (HIGH PRIORITY):
+                    - Large Language Models (LLMs) for clinical decision support, documentation, or patient communication
+                    - Generative AI for synthetic clinical data generation
+                    - AI-powered chatbots for patient engagement in clinical trials
+                    - Generative models for drug design and molecular discovery
+                    - LLMs for clinical protocol writing and trial design
+                    - Generative AI for medical image synthesis in clinical studies
+                    - Foundation models adapted for healthcare and clinical applications
+                    - AI assistants for clinical researchers and trial coordinators
+                    
+                    OTHER AI/ML IN CLINICAL RESEARCH:
+                    - Machine learning algorithms in drug discovery/development
+                    - AI systems for patient recruitment and trial optimization
+                    - Natural language processing for clinical data analysis
+                    - Computer vision for medical imaging in clinical trials
                     - Predictive analytics for clinical outcomes
-                    - Digital biomarkers and wearable technology
+                    - Digital biomarkers using AI/ML technology
                     - AI-powered diagnostic tools in clinical settings
-                    - Robotic process automation in clinical operations
-                    - Large language models (LLMs) and Generative AI for clinical decision support, documentation, or synthetic data generation
-                    - Generative models for molecule/drug design (e.g., protein folding, drug synthesis)
-                    - AI for regulatory submissions and compliance
-                    - Digital therapeutics and AI-based interventions
-                    - Real-world evidence collection using AI
-                    - AI ethics in clinical research
-                    - Computational biology and bioinformatics
-                    - Generative AI for protocol writing, patient communication, or trial simulation
-                    - Synthetic data generation for clinical research
-                    - AI-powered chatbots for patient engagement
-                    - Foundation models adapted for healthcare
+                    - Real-world evidence collection using AI/ML
+                    - AI ethics specifically in clinical research contexts
+                    - Computational biology and bioinformatics with AI/ML methods
+
+                    EXCLUDE articles that only discuss:
+                    - General AI research without clinical applications
+                    - Traditional clinical trial results without AI/ML components
+                    - Standard medical devices or procedures
+                    - General healthcare policy without AI focus
+                    - Basic digital health tools without AI/ML
+                    - Traditional statistical analysis or research methods
                     
                     Article Title: {entry['title']}
                     Article Description: {entry['description'][:500]}
                     
+                    CRITICAL: Only set is_ai_related to true if the article explicitly mentions AI, machine learning, artificial intelligence, neural networks, deep learning, NLP, computer vision, LLMs, generative AI, or other advanced computational methods SPECIFICALLY in clinical research or clinical trials contexts.
+                    
                     You MUST provide ALL FIVE of the following:
-                    1. is_ai_related: true/false - Does this discuss AI/ML/Generative AI/advanced computational methods in clinical research?
-                    2. A 60-word summary focusing on AI (including Generative AI) applications in clinical research
-                    3. A 100-word insightful comment about implications, challenges, opportunities, or future directions
-                    4. A 60-word resources section suggesting specific websites, tools, datasets, or further reading
+                    1. is_ai_related: true/false - Does this EXPLICITLY discuss AI/ML/Generative AI/advanced computational methods in clinical research?
+                    2. A 60-word summary focusing on the specific AI/ML applications in clinical research
+                    3. A 100-word insightful comment about AI implications, challenges, opportunities, or future directions
+                    4. A 60-word resources section suggesting AI-specific websites, tools, datasets, or further reading
                     5. ai_tag: One specific category from the list below
                     
                     AI Tags (choose the most appropriate one):
@@ -411,24 +500,37 @@ class FeedProcessor:
                 if not isinstance(value, bool):
                     return False
             
-            # Validate text fields
-            elif field in ['summary', 'comment', 'ai_tag']:
+            # For non-AI articles, we don't need complete resources and ai_tag
+            elif field in ['summary', 'comment']:
                 if not isinstance(value, str) or len(value.strip()) < 5:
                     return False
             
+            # For AI-related articles, require complete ai_tag
+            elif field == 'ai_tag':
+                if result.get('is_ai_related', False):
+                    if not isinstance(value, str) or len(value.strip()) < 5:
+                        return False
+                # For non-AI articles, ai_tag can be empty
+            
             # Validate resources field (can be string or list)
             elif field == 'resources':
-                if isinstance(value, list):
-                    # Convert list to string format
-                    if len(value) == 0:
-                        return False
-                    # Join list items with newlines
-                    result[field] = '\n'.join(value)
-                elif isinstance(value, str):
-                    if len(value.strip()) < 5:
+                if result.get('is_ai_related', False):
+                    # For AI articles, require resources
+                    if isinstance(value, list):
+                        if len(value) == 0:
+                            return False
+                        result[field] = '\n'.join(value)
+                    elif isinstance(value, str):
+                        if len(value.strip()) < 5:
+                            return False
+                    else:
                         return False
                 else:
-                    return False
+                    # For non-AI articles, resources can be empty
+                    if isinstance(value, list):
+                        result[field] = '\n'.join(value) if value else ""
+                    elif not isinstance(value, str):
+                        return False
         
         return True
     
@@ -461,7 +563,7 @@ class FeedProcessor:
         return text
     
     def select_articles(self, entries: List[Dict]) -> List[Dict]:
-        """Select and sort AI-related articles by publication date."""
+        """Select and sort AI-specific clinical research articles by publication date."""
         # Sort by publication date (descending) to show newest first
         sorted_entries = sorted(
             entries,
@@ -469,7 +571,7 @@ class FeedProcessor:
             reverse=True
         )
         
-        # Return all AI-related articles (already filtered in identify_ai_content)
+        # Return all AI-specific articles (already filtered in identify_ai_content)
         return sorted_entries
     
     def save_brief_data(self, entries: List[Dict], output_file: str):
@@ -542,8 +644,11 @@ def main():
     if not openai_api_key:
         raise ValueError("OPENAI_API_KEY environment variable is required")
     
-    # Configuration: Default max entries for sources without specific limits (increased for broader coverage)
+    # Configuration: Default max entries for sources without specific limits
     default_max_entries = int(os.environ.get('DEFAULT_MAX_ENTRIES', '8'))
+    
+    # Configuration: Timeframe for article collection (configurable via environment)
+    days_back = int(os.environ.get('DAYS_BACK', '60'))  # Default to 60 days
     
     brief_date = datetime.now(timezone.utc).strftime('%Y-%m-%d')
     log_file = f"logs/{brief_date}.log"
@@ -552,20 +657,21 @@ def main():
     pdf_file = f"briefs/{brief_date}.pdf"
     
     # Initialize processors
-    feed_processor = FeedProcessor(openai_api_key, log_file)
+    feed_processor = FeedProcessor(openai_api_key, log_file, days_back)
     site_generator = SiteGenerator()
     
-    print(f"Starting AI in Clinical Research Bi-Weekly Brief pipeline for {brief_date}")
+    print(f"Starting AI in Clinical Research Brief pipeline for {brief_date}")
+    print(f"Collecting articles from the last {days_back} days")
     
     # Step 1: Fetch feeds with adaptive limits per source
     print("Fetching RSS feeds with adaptive source limits...")
     entries = feed_processor.fetch_feeds(default_max=default_max_entries)
     print(f"Fetched {len(entries)} entries from {len(feed_processor.RSS_FEEDS)} RSS feeds (with adaptive source limits)")
     
-    # Step 2: Identify AI-related content
-    print("Identifying AI-related articles with OpenAI...")
+    # Step 2: Identify AI-specific content in clinical research
+    print("Identifying AI-specific articles in clinical research with OpenAI...")
     ai_entries = feed_processor.identify_ai_content(entries)
-    print(f"Identified {len(ai_entries)} AI-related articles")
+    print(f"Identified {len(ai_entries)} AI-specific clinical research articles")
     
     # Step 3: Select and sort articles
     print("Selecting and sorting articles...")
