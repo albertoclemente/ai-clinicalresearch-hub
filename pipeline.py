@@ -7,16 +7,19 @@ Processes RSS feeds, identifies AI-specific content in clinical research, genera
 import json
 import logging
 import os
+import time
 import uuid
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 import re
+import requests
+from urllib.parse import quote_plus
 
 import feedparser
 import openai
+from bs4 import BeautifulSoup
 from jinja2 import Environment, FileSystemLoader
-import weasyprint
 import bleach
 from dateutil import parser as date_parser
 from dotenv import load_dotenv
@@ -26,105 +29,52 @@ load_dotenv()
 
 
 class FeedProcessor:
-    """Handles RSS feed processing and AI content identification in clinical research."""
+    """Handles web search and AI content identification in clinical research."""
     
-    # RSS feed URLs - focused on AI applications in clinical research and trials
-    RSS_FEEDS = [
-        # AI and Healthcare Research (High Priority)
-        "https://www.nature.com/subjects/machine-learning.rss",  # Nature Machine Learning
-        "https://www.nature.com/subjects/artificial-intelligence.rss",  # Nature AI
-        "https://www.nature.com/ndigital.rss",  # Nature Digital Medicine
-        "https://www.nature.com/subjects/medical-research.rss",  # Nature Medical Research
-        "https://www.nature.com/npjdigitalmed.rss",  # NPJ Digital Medicine
-        # Generative AI and Clinical Focus
-        "https://www.statnews.com/tag/artificial-intelligence/feed/",  # STAT AI Coverage
-        "https://www.statnews.com/tag/generative-ai/feed/",  # STAT Generative AI
-        "https://www.mobihealthnews.com/feeds/news",  # Digital Health & AI News
-        "https://venturebeat.com/ai/feed/",  # VentureBeat AI (includes healthcare AI)
-        "https://www.healthcareitnews.com/rss.xml",  # Healthcare IT News (AI applications)
-        "https://www.healthcarefinancenews.com/rss.xml",  # Healthcare Finance News (AI investments)
-        # Academic and Research Sources (Expanded)
-        "https://arxiv.org/rss/cs.AI",  # arXiv AI (includes biomedical AI)
-        "https://arxiv.org/rss/cs.LG",  # arXiv Machine Learning
-        "https://arxiv.org/rss/cs.CL",  # arXiv Computational Linguistics (LLMs)
-        "https://arxiv.org/rss/cs.HC",  # arXiv Human-Computer Interaction (clinical AI)
-        "https://arxiv.org/rss/q-bio.QM",  # arXiv Quantitative Biology
-        "https://connect.medrxiv.org/relate/content/181",  # medRxiv AI/ML papers
-        # AI in Drug Discovery and Clinical Trials
-        "https://www.drugdiscoverytoday.com/rss",  # Drug Discovery Today (AI focus)
-        "https://www.clinicaltrialsarena.com/rss",  # Clinical Trials Arena
-        "https://www.appliedclinicaltrialsonline.com/rss",  # Applied Clinical Trials
-        # Industry and Clinical AI (Enhanced)
-        "https://www.fiercehealthcare.com/rss",  # Fierce Healthcare (includes AI)
-        "https://www.modernhealthcare.com/rss",  # Modern Healthcare
-        "https://www.healthleadersmedia.com/rss",  # Health Leaders (AI in healthcare)
-        "https://www.beckersspine.com/rss",  # Becker's Healthcare (AI coverage)
-        # AI and Regulatory
-        "https://www.fda.gov/about-fda/contact-fda/fda-rss-feeds",  # FDA RSS (regulatory AI)
-        "https://www.raps.org/RSS",  # RAPS Regulatory Affairs (AI regulatory)
-        # Specialized AI/ML Healthcare Sources
-        "https://hai.stanford.edu/news/rss.xml",  # Stanford HAI (Human-Centered AI)
-        "https://www.microsoft.com/en-us/research/feed/",  # Microsoft Research (healthcare AI)
-        # General clinical sources (backup)
-        "https://endpts.com/feed/",  # Endpoints News
-        "https://www.biopharmadive.com/feeds/news",  # BioPharma Dive
+    # Highly targeted search queries for Generative AI in clinical trials
+    SEARCH_QUERIES = [
+        '"generative AI" "clinical trials" pharmaceutical research',
+        '"ChatGPT" "clinical research" drug development study',
+        '"large language model" "clinical trials" healthcare research',
+        '"synthetic data" "clinical trials" pharmaceutical study',
+        '"AI chatbot" "patient recruitment" clinical research',
+        '"foundation models" "clinical trials" drug discovery',
+        '"generative AI" "protocol writing" clinical research',
+        '"LLM" "clinical documentation" pharmaceutical study',
+        '"conversational AI" "clinical trials" patient engagement',
+        '"generative models" "drug discovery" clinical research'
     ]
     
-    # Source-specific limits for AI in clinical research content discovery
+    # RSS feeds removed - using web search and PubMed only
+    RSS_FEEDS = []
+    
+    # Source-specific limits for content discovery
     SOURCE_LIMITS = {
-        # AI and Healthcare Research (High Priority)
-        'Nature ML': 15,                # Nature Machine Learning
-        'Nature AI': 15,                # Nature AI
-        'Nature Digital Medicine': 12,  # Nature Digital Medicine
-        'Nature Medical Research': 10,  # Nature Medical Research
-        'NPJ Digital Medicine': 12,     # NPJ Digital Medicine
-        # Generative AI and Clinical Focus
-        'STAT AI': 15,                  # STAT AI Coverage
-        'STAT Generative AI': 12,       # STAT Generative AI
-        'MobiHealthNews': 12,           # Digital Health & AI News
-        'VentureBeat AI': 10,           # VentureBeat AI
-        'Healthcare IT News': 12,       # Healthcare IT News
-        'Healthcare Finance News': 8,   # Healthcare Finance News
-        # Academic and Research (Expanded)
-        'arXiv AI': 12,                 # AI preprints
-        'arXiv ML': 12,                 # ML preprints
-        'arXiv CL': 10,                 # Computational Linguistics (LLMs)
-        'arXiv HC': 8,                  # Human-Computer Interaction
-        'arXiv Bio': 10,                # Computational biology
-        'medRxiv': 15,                  # Medical AI preprints
-        # AI in Drug Discovery and Clinical Trials
-        'Drug Discovery Today': 10,     # Drug discovery AI
-        'Clinical Trials Arena': 12,    # Clinical trials
-        'Applied Clinical Trials': 10,  # Applied clinical trials
-        # Industry and Clinical AI (Enhanced)
-        'Fierce Healthcare': 12,        # Healthcare industry
-        'Modern Healthcare': 10,        # Healthcare news
-        'Health Leaders': 10,           # Healthcare leadership
-        'Beckers Healthcare': 8,        # Healthcare technology
-        # AI and Regulatory
-        'FDA RSS': 8,                   # FDA regulatory
-        'RAPS Regulatory': 8,           # Regulatory affairs
-        # Specialized AI/ML Healthcare
-        'Stanford HAI': 10,             # Human-centered AI
-        'Microsoft Research': 8,        # Microsoft healthcare AI
-        # Backup sources
-        'Endpoints News': 10,           # Industry coverage
-        'BioPharma Dive': 10,           # Biotech/pharma news
-        # Default for others: 8
+        'Duke AI Health': 15,               # Duke AI Health (AI focus)
+        'STAT AI': 12,                      # STAT AI Coverage
+        'MedCity News': 10,                 # MedCity News
+        'Google Search': 5,                 # Per search query limit
+        'PubMed': 8,                        # Academic papers
+        # Default for others: 5
     }
     
-    def __init__(self, openai_api_key: str, log_file: str, days_back: int = 60):
+    def __init__(self, openai_api_key: str, log_file: str, days_back: int = 30):
         """Initialize the feed processor.
         
         Args:
             openai_api_key: OpenAI API key for content analysis
             log_file: Path to log file
-            days_back: Number of days back to consider articles (default: 60)
+            days_back: Number of days back to consider articles (default: 30)
         """
         self.openai_client = openai.OpenAI(api_key=openai_api_key)
         self.logger = self._setup_logging(log_file)
         self.brief_date = datetime.now(timezone.utc).strftime('%Y-%m-%d')
         self.days_back = days_back
+        
+        # Initialize search APIs
+        self.google_api_key = os.environ.get('GOOGLE_API_KEY')
+        self.google_cx = os.environ.get('GOOGLE_CX')  # Custom Search Engine ID
+        self.pubmed_base_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
         
     def _setup_logging(self, log_file: str) -> logging.Logger:
         """Set up JSON logging as specified in PRD."""
@@ -164,90 +114,333 @@ class FeedProcessor:
         
         return clean_text
     
-    def fetch_feeds(self, default_max: int = 8) -> List[Dict]:
-        """Fetch and parse all RSS feeds, with adaptive limits per source and filtering recent articles."""
+    def _extract_title_from_webpage(self, url: str) -> str:
+        """Extract the actual title from a webpage by scraping it."""
+        try:
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            }
+            response = requests.get(url, headers=headers, timeout=10)
+            response.raise_for_status()
+            
+            soup = BeautifulSoup(response.content, 'html.parser')
+            
+            # Try multiple title extraction methods in order of preference
+            title_sources = [
+                soup.find('meta', {'property': 'og:title'}),
+                soup.find('meta', {'name': 'twitter:title'}),
+                soup.find('meta', {'name': 'citation_title'}),  # Academic papers
+                soup.find('meta', {'name': 'dc.title'}),        # Dublin Core
+                soup.find('title'),
+                soup.find('h1'),
+                soup.find('h2'),  # Sometimes the main title is in h2
+            ]
+            
+            for source in title_sources:
+                if source:
+                    if source.name == 'meta':
+                        title = source.get('content', '')
+                    else:
+                        title = source.get_text(strip=True)
+                    
+                    # Clean and validate title
+                    if title:
+                        title = self._sanitize_text(title)
+                        # Skip generic titles or site names
+                        if (len(title) > 10 and 
+                            not title.endswith('...') and
+                            not title.lower() in ['nature medicine', 'nature', 'arxiv', 'pubmed', 'ncbi'] and
+                            not title.startswith('Error') and
+                            not title.startswith('404')):
+                            return title
+            
+        except Exception as e:
+            self.logger.warning(f"Failed to extract title from {url}: {str(e)}")
+        
+        return ""
+
+    def _extract_full_title(self, item: Dict) -> str:
+        """Extract full title from Google search result, trying multiple sources."""
+        # Try different title sources in order of preference
+        title_sources = [
+            item.get('title', ''),
+            item.get('pagemap', {}).get('metatags', [{}])[0].get('og:title', ''),
+            item.get('pagemap', {}).get('metatags', [{}])[0].get('twitter:title', ''),
+            item.get('pagemap', {}).get('article', [{}])[0].get('headline', ''),
+        ]
+        
+        for title in title_sources:
+            if title and len(title) > 10 and not title.endswith('...') and not title.lower() in ['nature medicine', 'nature', 'arxiv']:
+                return self._sanitize_text(title)
+        
+        # If all titles are truncated, generic, or missing, try scraping the webpage
+        link = item.get('link', '')
+        if link:
+            scraped_title = self._extract_title_from_webpage(link)
+            if scraped_title:
+                return scraped_title
+        
+        # Fallback to the first available title, even if truncated
+        fallback_title = self._sanitize_text(item.get('title', ''))
+        if fallback_title and fallback_title.lower() not in ['nature medicine', 'nature', 'arxiv']:
+            return fallback_title
+        
+        return "Untitled Article"
+
+    def search_google(self, query: str, max_results: int = 5) -> List[Dict]:
+        """Search Google for articles using Custom Search API."""
+        if not self.google_api_key or not self.google_cx:
+            self.logger.warning("Google API credentials not found. Skipping Google search.")
+            return []
+        
+        entries = []
+        try:
+            # Calculate date range for recent articles
+            end_date = datetime.now(timezone.utc)
+            start_date = end_date - timedelta(days=self.days_back)
+            
+            # Add site-specific searches for RSS feed domains to improve coverage
+            rss_domains = [
+                "site:aihealth.duke.edu",
+                "site:statnews.com", 
+                "site:medcitynews.com"
+            ]
+            
+            # Enhance query with RSS domains for better targeting
+            enhanced_query = f"{query} ({' OR '.join(rss_domains)})"
+            
+            url = "https://www.googleapis.com/customsearch/v1"
+            params = {
+                'key': self.google_api_key,
+                'cx': self.google_cx,
+                'q': enhanced_query,
+                'num': min(max_results, 10),  # Max 10 per request
+                'sort': 'date',  # Sort by date
+                'dateRestrict': f'd{self.days_back}',  # Restrict to last N days
+                'gl': 'us',  # Geographic location
+                'lr': 'lang_en',  # Language restriction
+                'safe': 'off',  # Don't filter results
+                'filter': '1',  # Enable duplicate filtering
+            }
+            
+            response = requests.get(url, params=params, timeout=30)
+            response.raise_for_status()
+            
+            data = response.json()
+            
+            for item in data.get('items', []):
+                # Skip general job sites, career pages, and irrelevant domains
+                link = item.get('link', '')
+                if any(domain in link.lower() for domain in [
+                    'linkedin.com', 'indeed.com', 'glassdoor.com', 'jobs.',
+                    'career', 'wikipedia.org', 'youtube.com', 'twitter.com',
+                    'facebook.com', 'reddit.com'
+                ]):
+                    continue
+                
+                title = self._extract_full_title(item)
+                
+                # Skip if title is too generic or contains job-related keywords
+                if any(keyword in title.lower() for keyword in [
+                    'job', 'career', 'hiring', 'position', 'vacancy',
+                    'employment', 'recruiter', 'hr ', 'human resources'
+                ]):
+                    continue
+                
+                entry_data = {
+                    'id': str(uuid.uuid4()),
+                    'title': title,
+                    'description': self._sanitize_text(item.get('snippet', '')),
+                    'link': link,
+                    'pub_date': self._parse_date(item.get('pagemap', {}).get('metatags', [{}])[0].get('article:published_time', '')),
+                    'source': self._extract_domain(link),
+                    'brief_date': self.brief_date,
+                    'search_query': query
+                }
+                
+                if entry_data['title'] and entry_data['link']:
+                    entries.append(entry_data)
+            
+            self.logger.info(json.dumps({
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "search_type": "google",
+                "query": query,
+                "results_found": len(entries),
+                "max_requested": max_results
+            }))
+            
+        except Exception as e:
+            self.logger.error(json.dumps({
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "search_type": "google",
+                "query": query,
+                "error": str(e)
+            }))
+        
+        return entries
+    
+    def search_pubmed(self, query: str, max_results: int = 8) -> List[Dict]:
+        """Search PubMed for recent research papers."""
+        entries = []
+        try:
+            # Calculate date range
+            end_date = datetime.now(timezone.utc)
+            start_date = end_date - timedelta(days=self.days_back)
+            
+            # Search PubMed
+            search_url = f"{self.pubmed_base_url}esearch.fcgi"
+            search_params = {
+                'db': 'pubmed',
+                'term': f'{query} AND ("{start_date.strftime("%Y/%m/%d")}"[Date - Publication] : "{end_date.strftime("%Y/%m/%d")}"[Date - Publication])',
+                'retmax': max_results,
+                'sort': 'date',
+                'retmode': 'json'
+            }
+            
+            search_response = requests.get(search_url, params=search_params, timeout=30)
+            search_response.raise_for_status()
+            search_data = search_response.json()
+            
+            pmids = search_data.get('esearchresult', {}).get('idlist', [])
+            
+            if pmids:
+                # Fetch details for found papers
+                fetch_url = f"{self.pubmed_base_url}esummary.fcgi"
+                fetch_params = {
+                    'db': 'pubmed',
+                    'id': ','.join(pmids),
+                    'retmode': 'json'
+                }
+                
+                fetch_response = requests.get(fetch_url, params=fetch_params, timeout=30)
+                fetch_response.raise_for_status()
+                fetch_data = fetch_response.json()
+                
+                for pmid, paper in fetch_data.get('result', {}).items():
+                    if pmid == 'uids':
+                        continue
+                    
+                    entry_data = {
+                        'id': str(uuid.uuid4()),
+                        'title': self._sanitize_text(paper.get('title', '')),
+                        'description': self._sanitize_text(paper.get('title', '') + ' - ' + str(paper.get('authors', ''))),
+                        'link': f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/",
+                        'pub_date': self._parse_pubmed_date(paper.get('pubdate', '')),
+                        'source': 'PubMed',
+                        'brief_date': self.brief_date,
+                        'search_query': query
+                    }
+                    
+                    if entry_data['title'] and entry_data['link']:
+                        entries.append(entry_data)
+            
+            self.logger.info(json.dumps({
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "search_type": "pubmed",
+                "query": query,
+                "results_found": len(entries),
+                "max_requested": max_results
+            }))
+            
+        except Exception as e:
+            self.logger.error(json.dumps({
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "search_type": "pubmed",
+                "query": query,
+                "error": str(e)
+            }))
+        
+        return entries
+    
+    def _extract_domain(self, url: str) -> str:
+        """Extract domain name from URL for source identification."""
+        try:
+            from urllib.parse import urlparse
+            domain = urlparse(url).netloc
+            # Clean up domain (remove www, etc.)
+            if domain.startswith('www.'):
+                domain = domain[4:]
+            return domain.title()
+        except:
+            return 'Unknown'
+    
+    def _parse_pubmed_date(self, date_str: str) -> str:
+        """Parse PubMed date format."""
+        if not date_str:
+            return datetime.now(timezone.utc).isoformat()
+        
+        try:
+            # PubMed dates are often in format "2024 Jul 15" or "2024 Jul"
+            if len(date_str.split()) >= 2:
+                # Try to parse with day
+                try:
+                    parsed_date = datetime.strptime(date_str, '%Y %b %d')
+                except:
+                    # Try to parse without day
+                    parsed_date = datetime.strptime(date_str, '%Y %b')
+                return parsed_date.replace(tzinfo=timezone.utc).isoformat()
+        except:
+            pass
+        
+        return datetime.now(timezone.utc).isoformat()
+    
+    def fetch_feeds(self, default_max: int = 5) -> List[Dict]:
+        """Fetch articles using web search APIs only (no RSS feeds)."""
         all_entries = []
         total_fetched = 0
-        
-        # Use configurable timeframe instead of fixed 30 days
-        cutoff_date = datetime.now(timezone.utc) - timedelta(days=self.days_back)
         
         self.logger.info(json.dumps({
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "days_back": self.days_back,
-            "cutoff_date": cutoff_date.isoformat(),
-            "message": f"Fetching articles from the last {self.days_back} days"
+            "message": f"Fetching articles from the last {self.days_back} days using web search APIs only"
         }))
         
-        for feed_url in self.RSS_FEEDS:
-            timestamp = datetime.now(timezone.utc).isoformat()
-            source_name = self._get_source_name(feed_url)
-            
-            # Get source-specific limit or use default
-            max_entries = self.SOURCE_LIMITS.get(source_name, default_max)
-            
-            try:
-                feed = feedparser.parse(feed_url)
+        # Phase 1: Web Search (Primary source)
+        if self.google_api_key and self.google_cx:
+            print("Searching web for Generative AI content...")
+            for query in self.SEARCH_QUERIES:
+                max_results = self.SOURCE_LIMITS.get('Google Search', default_max)
+                entries = self.search_google(query, max_results)
+                all_entries.extend(entries)
+                total_fetched += len(entries)
                 
-                # Log successful request
-                status = getattr(feed, 'status', 200)
-                self._log_feed_request(feed_url, status, timestamp)
-                
-                # Limit entries per feed and sort by publication date (newest first)
-                entries = feed.entries[:max_entries * 2]  # Get extra to sort properly
-                
-                # Sort by publication date (newest first) and take only the latest ones
-                sorted_entries = sorted(entries, 
-                                      key=lambda x: self._parse_date(x.get('published', '')), 
-                                      reverse=True)[:max_entries]
-                
-                source_fetched = 0
-                
-                for entry in sorted_entries:
-                    # Parse publication date
-                    pub_date = self._parse_date(entry.get('published', ''))
-                    pub_datetime = datetime.fromisoformat(pub_date.replace('Z', '+00:00'))
-                    
-                    # Skip articles older than the configured timeframe
-                    if pub_datetime < cutoff_date:
-                        continue
-                    
-                    # Extract and sanitize entry data
-                    entry_data = {
-                        'id': str(uuid.uuid4()),
-                        'title': self._sanitize_text(entry.get('title', '')),
-                        'description': self._sanitize_text(entry.get('description', '')),
-                        'link': entry.get('link', ''),
-                        'pub_date': pub_date,
-                        'source': source_name,
-                        'brief_date': self.brief_date
-                    }
-                    
-                    if entry_data['title'] and entry_data['link']:
-                        all_entries.append(entry_data)
-                        source_fetched += 1
-                
-                # Log how many articles were fetched from this source
-                self.logger.info(json.dumps({
-                    "timestamp": timestamp,
-                    "source": source_name,
-                    "articles_fetched": source_fetched,
-                    "max_allowed": max_entries
-                }))
-                
-                total_fetched += source_fetched
-                        
-            except Exception as e:
-                self._log_feed_request(feed_url, 0, timestamp, str(e))
-                continue
+                # Add small delay to respect API limits
+                time.sleep(0.1)
+        else:
+            print("Google API not configured. Skipping web search.")
+        
+        # Phase 2: PubMed Search (Academic papers)
+        print("Searching PubMed for research papers...")
+        pubmed_queries = [
+            "generative AI clinical trials",
+            "large language model clinical research",
+            "synthetic data clinical trials",
+            "AI chatbot clinical trials"
+        ]
+        
+        for query in pubmed_queries:
+            max_results = self.SOURCE_LIMITS.get('PubMed', default_max)
+            entries = self.search_pubmed(query, max_results)
+            all_entries.extend(entries)
+            total_fetched += len(entries)
+        
+        # Remove duplicates based on URL
+        unique_entries = []
+        seen_urls = set()
+        for entry in all_entries:
+            if entry['link'] not in seen_urls:
+                seen_urls.add(entry['link'])
+                unique_entries.append(entry)
         
         self.logger.info(json.dumps({
             "timestamp": datetime.now(timezone.utc).isoformat(),
-            "total_articles_fetched": total_fetched,
-            "sources_processed": len(self.RSS_FEEDS)
+            "total_articles_fetched": len(unique_entries),
+            "duplicates_removed": len(all_entries) - len(unique_entries),
+            "search_queries_used": len(self.SEARCH_QUERIES),
+            "search_apis_used": 2  # Google + PubMed
         }))
                 
-        return all_entries
+        return unique_entries
     
     def _parse_date(self, date_str: str) -> str:
         """Parse and normalize publication date."""
@@ -263,44 +456,9 @@ class FeedProcessor:
     def _get_source_name(self, feed_url: str) -> str:
         """Extract source name from feed URL."""
         source_mapping = {
-            # AI and Healthcare Research (High Priority)
-            'nature.com/subjects/machine-learning': 'Nature ML',
-            'nature.com/subjects/artificial-intelligence': 'Nature AI',
-            'nature.com/ndigital': 'Nature Digital Medicine',
-            'nature.com/subjects/medical-research': 'Nature Medical Research',
-            'nature.com/npjdigitalmed': 'NPJ Digital Medicine',
-            # Generative AI and Clinical Focus
+            'aihealth.duke.edu': 'Duke AI Health',
             'statnews.com/tag/artificial-intelligence': 'STAT AI',
-            'statnews.com/tag/generative-ai': 'STAT Generative AI',
-            'mobihealthnews.com': 'MobiHealthNews',
-            'venturebeat.com/ai': 'VentureBeat AI',
-            'healthcareitnews.com': 'Healthcare IT News',
-            'healthcarefinancenews.com': 'Healthcare Finance News',
-            # Academic and Research (Expanded)
-            'arxiv.org/rss/cs.AI': 'arXiv AI',
-            'arxiv.org/rss/cs.LG': 'arXiv ML',
-            'arxiv.org/rss/cs.CL': 'arXiv CL',
-            'arxiv.org/rss/cs.HC': 'arXiv HC',
-            'arxiv.org/rss/q-bio.QM': 'arXiv Bio',
-            'connect.medrxiv.org': 'medRxiv',
-            # AI in Drug Discovery and Clinical Trials
-            'drugdiscoverytoday.com': 'Drug Discovery Today',
-            'clinicaltrialsarena.com': 'Clinical Trials Arena',
-            'appliedclinicaltrialsonline.com': 'Applied Clinical Trials',
-            # Industry and Clinical AI (Enhanced)
-            'fiercehealthcare.com': 'Fierce Healthcare',
-            'modernhealthcare.com': 'Modern Healthcare',
-            'healthleadersmedia.com': 'Health Leaders',
-            'beckersspine.com': 'Beckers Healthcare',
-            # AI and Regulatory
-            'fda.gov': 'FDA RSS',
-            'raps.org': 'RAPS Regulatory',
-            # Specialized AI/ML Healthcare
-            'hai.stanford.edu': 'Stanford HAI',
-            'microsoft.com/en-us/research': 'Microsoft Research',
-            # Backup sources
-            'endpts.com': 'Endpoints News',
-            'biopharmadive.com': 'BioPharma Dive'
+            'medcitynews.com': 'MedCity News',
         }
         
         for domain, name in source_mapping.items():
@@ -318,106 +476,63 @@ class FeedProcessor:
             for attempt in range(3):
                 try:
                     prompt = f"""
-                    You are an AI and clinical research expert. Analyze this article to determine if it SPECIFICALLY relates to AI, Machine Learning, or Generative AI being used in clinical research or clinical trials contexts.
+                    You are a STRICT Generative AI and clinical trials expert. You must be HIGHLY SELECTIVE and only classify articles as AI-related if they EXPLICITLY mention specific AI technologies in clinical research contexts.
 
-                    PRIORITIZE GENERATIVE AI applications and ONLY classify as AI-related if the article explicitly discusses:
+                    STRICT CRITERIA - MUST EXPLICITLY MENTION ONE OF THESE IN CLINICAL/HEALTHCARE CONTEXT:
                     
-                    GENERATIVE AI IN CLINICAL RESEARCH (HIGH PRIORITY):
-                    - Large Language Models (LLMs) for clinical decision support, documentation, or patient communication
-                    - Generative AI for synthetic clinical data generation
-                    - AI-powered chatbots for patient engagement in clinical trials
-                    - Generative models for drug design and molecular discovery
-                    - LLMs for clinical protocol writing and trial design
-                    - Generative AI for medical image synthesis in clinical studies
-                    - Foundation models adapted for healthcare and clinical applications
-                    - AI assistants for clinical researchers and trial coordinators
+                    TIER 1 - GENERATIVE AI (HIGHEST PRIORITY):
+                    - Large Language Models (LLMs): ChatGPT, GPT-4, Claude, Llama, Gemini
+                    - Generative AI or "foundation models" for synthetic data generation
+                    - AI chatbots or conversational agents for patients/researchers
+                    - AI-powered writing tools for protocols, reports, documentation
+                    - Natural language generation for clinical content
+                    - Synthetic data generation using AI models
                     
-                    OTHER AI/ML IN CLINICAL RESEARCH:
-                    - Machine learning algorithms in drug discovery/development
-                    - AI systems for patient recruitment and trial optimization
-                    - Natural language processing for clinical data analysis
-                    - Computer vision for medical imaging in clinical trials
-                    - Predictive analytics for clinical outcomes
-                    - Digital biomarkers using AI/ML technology
-                    - AI-powered diagnostic tools in clinical settings
-                    - Real-world evidence collection using AI/ML
-                    - AI ethics specifically in clinical research contexts
-                    - Computational biology and bioinformatics with AI/ML methods
-
-                    EXCLUDE articles that only discuss:
-                    - General AI research without clinical applications
-                    - Traditional clinical trial results without AI/ML components
-                    - Standard medical devices or procedures
-                    - General healthcare policy without AI focus
-                    - Basic digital health tools without AI/ML
-                    - Traditional statistical analysis or research methods
+                    TIER 2 - APPLIED AI IN CLINICAL RESEARCH (MUST BE SPECIFIC):
+                    - Machine learning models for patient recruitment or stratification
+                    - Natural language processing for clinical text analysis
+                    - Computer vision AI for medical imaging analysis
+                    - Predictive AI models for clinical outcomes
+                    - AI-powered clinical decision support systems
+                    
+                    REJECT IMMEDIATELY IF:
+                    - Article is about general technology, business news, or career pages
+                    - Only mentions "AI" vaguely without specific applications
+                    - Discusses basic data analysis or statistics (not AI/ML)
+                    - Person profiles or company descriptions without AI research focus
+                    - Academic papers on non-AI topics (even if from AI institutions)
+                    - General health tech without explicit AI components
                     
                     Article Title: {entry['title']}
                     Article Description: {entry['description'][:500]}
                     
-                    CRITICAL: Only set is_ai_related to true if the article explicitly mentions AI, machine learning, artificial intelligence, neural networks, deep learning, NLP, computer vision, LLMs, generative AI, or other advanced computational methods SPECIFICALLY in clinical research or clinical trials contexts.
+                    CRITICAL ANALYSIS: 
+                    1. Does this article EXPLICITLY mention specific AI technologies by name?
+                    2. Is there a CLEAR connection to clinical research, clinical trials, or healthcare applications?
+                    3. Is this discussing ACTUAL AI implementation, not just general tech or business news?
                     
-                    You MUST provide ALL FIVE of the following:
-                    1. is_ai_related: true/false - Does this EXPLICITLY discuss AI/ML/Generative AI/advanced computational methods in clinical research?
-                    2. A 60-word summary focusing on the specific AI/ML applications in clinical research
-                    3. A 100-word insightful comment about AI implications, challenges, opportunities, or future directions
-                    4. A 60-word resources section suggesting AI-specific websites, tools, datasets, or further reading
-                    5. ai_tag: One specific category from the list below
-                    
-                    AI Tags (choose the most appropriate one):
-                    - "Machine Learning"
-                    - "Natural Language Processing" 
-                    - "Computer Vision"
-                    - "Predictive Analytics"
-                    - "Digital Biomarkers"
-                    - "AI Diagnostics"
-                    - "Clinical Decision Support"
-                    - "Drug Discovery AI"
-                    - "Trial Optimization"
-                    - "Regulatory AI"
-                    - "Digital Therapeutics"
-                    - "AI Ethics"
-                    - "Generative AI"
-                    
-                    ENHANCED INSTRUCTIONS FOR HIGH-QUALITY OUTPUT:
-                    
-                    For the COMMENT field (100 words), be deeply insightful by:
-                    - Analyzing the BROADER IMPLICATIONS: What does this mean for the future of clinical research?
-                    - Identifying KEY CHALLENGES: What obstacles need to be overcome?
-                    - Highlighting OPPORTUNITIES: What new possibilities does this create?
-                    - Discussing STAKEHOLDER IMPACT: How does this affect patients, researchers, regulators?
-                    - Connecting to EMERGING TRENDS: How does this fit into the larger AI revolution in healthcare?
-                    - Raising THOUGHT-PROVOKING QUESTIONS: What should researchers be considering?
-                    
-                    For the RESOURCES field, provide 2-3 ARTICLE-SPECIFIC resources in this EXACT format:
-                    • [Brief description]: [Actual URL or specific search instruction]
-                    • [Brief description]: [Actual URL or specific search instruction]
-                    • [Brief description]: [Actual URL or specific search instruction]
-                    
-                    Resource types to include:
-                    - RELATED RESEARCH: "PubMed search for '[specific terms]': https://pubmed.ncbi.nlm.nih.gov/?term=[encoded_terms]"
-                    - RELEVANT TOOLS: "Tool name for [specific use]": https://actual-tool-url.com"
-                    - DATASETS: "Dataset for [specific purpose]": https://dataset-url.com"
-                    - ORGANIZATIONS: "Organization working on [specific area]": https://org-website.com"
-                    - LEARNING RESOURCES: "Course on [specific topic]": https://course-url.com"
-                    
-                    Example format:
-                    • Related research on LLM clinical applications: https://pubmed.ncbi.nlm.nih.gov/?term=LLM+clinical+decision+support
-                    • Hugging Face medical transformers: https://huggingface.co/models?pipeline_tag=text-classification&domain=medical
-                    • NIH Bridge2AI initiative: https://bridge2ai.nih.gov/
-                    
-                    CRITICAL: Provide REAL, working URLs when possible. For searches, use actual search URLs with encoded terms.
-                    
-                    You MUST respond in this exact JSON format:
+                    BE STRICT: Only classify as AI-related if you can clearly identify SPECIFIC AI technologies and their DIRECT application in clinical research contexts.
+
+                    You MUST provide ALL FIVE fields:
+                    1. is_ai_related: true/false (BE STRICT - only true for explicit AI technology mentions)
+                    2. A 50-word summary of the SPECIFIC AI technology mentioned
+                    3. A 80-word comment on clinical trial implications
+                    4. Resources (2-3 specific GenAI clinical trial resources)
+                    5. ai_tag: Choose the most specific category
+
+                    For RESOURCES, use these templates:
+                    • PubMed search for 'generative AI clinical trials': https://pubmed.ncbi.nlm.nih.gov/?term=generative+AI+clinical+trials
+                    • FDA guidance on AI in clinical trials: https://www.fda.gov/regulatory-information/search-fda-guidance-documents/artificial-intelligence-and-machine-learning-software-medical-device
+                    • Clinical Trials Transformation Initiative AI resources: https://www.ctti-clinicaltrials.org/
+
+                    JSON format required:
                     {{
                         "is_ai_related": true/false,
-                        "summary": "Your 60-word summary focusing on AI aspects",
-                        "comment": "Your 100-word deeply insightful comment about AI implications, challenges, and opportunities",
-                        "resources": "2-3 resources in bullet format with descriptions and links as specified above",
-                        "ai_tag": "One of the specific tags from the list above"
+                        "summary": "50-word summary of SPECIFIC AI technology mentioned",
+                        "comment": "80-word comment on clinical trial implications",
+                        "resources": "2-3 resources in bullet format",
+                        "ai_tag": "Most specific category from: Generative AI, Machine Learning, Natural Language Processing, Computer Vision, Clinical Decision Support, Trial Optimization, AI Ethics"
                     }}
-                    
-                    CRITICAL: All five fields are REQUIRED. Resources must include brief descriptions and actual URLs/links when possible.
                     """
                     
                     response = self.openai_client.chat.completions.create(
@@ -590,7 +705,7 @@ class FeedProcessor:
 
 
 class SiteGenerator:
-    """Handles HTML and PDF generation using Jinja2 and WeasyPrint."""
+    """Handles HTML generation using Jinja2."""
     
     def __init__(self, templates_dir: str = "templates"):
         """Initialize the site generator."""
@@ -615,26 +730,6 @@ class SiteGenerator:
         Path(output_file).parent.mkdir(parents=True, exist_ok=True)
         with open(output_file, 'w', encoding='utf-8') as f:
             f.write(html_content)
-    
-    def generate_pdf(self, brief_data: Dict, output_file: str):
-        """Generate PDF using WeasyPrint."""
-        template = self.env.get_template('pdf.html')
-        
-        # Prepare template context
-        context = {
-            'brief_date': brief_data['brief_date'],
-            'generated_at': brief_data['generated_at'],
-            'items': brief_data['items'],
-            'total_items': brief_data['total_items']
-        }
-        
-        # Render template
-        html_content = template.render(**context)
-        
-        # Generate PDF
-        Path(output_file).parent.mkdir(parents=True, exist_ok=True)
-        weasyprint.HTML(string=html_content).write_pdf(output_file)
-        print(f"PDF generated successfully: {output_file}")
 
 
 def main():
@@ -648,13 +743,12 @@ def main():
     default_max_entries = int(os.environ.get('DEFAULT_MAX_ENTRIES', '8'))
     
     # Configuration: Timeframe for article collection (configurable via environment)
-    days_back = int(os.environ.get('DAYS_BACK', '60'))  # Default to 60 days
+    days_back = int(os.environ.get('DAYS_BACK', '30'))  # Default to 30 days
     
     brief_date = datetime.now(timezone.utc).strftime('%Y-%m-%d')
     log_file = f"logs/{brief_date}.log"
     json_file = f"briefs/{brief_date}.json"
     html_file = "site/index.html"
-    pdf_file = f"briefs/{brief_date}.pdf"
     
     # Initialize processors
     feed_processor = FeedProcessor(openai_api_key, log_file, days_back)
@@ -663,10 +757,10 @@ def main():
     print(f"Starting AI in Clinical Research Brief pipeline for {brief_date}")
     print(f"Collecting articles from the last {days_back} days")
     
-    # Step 1: Fetch feeds with adaptive limits per source
-    print("Fetching RSS feeds with adaptive source limits...")
+    # Step 1: Fetch feeds using web search APIs only
+    print("Fetching articles using web search APIs (no RSS)...")
     entries = feed_processor.fetch_feeds(default_max=default_max_entries)
-    print(f"Fetched {len(entries)} entries from {len(feed_processor.RSS_FEEDS)} RSS feeds (with adaptive source limits)")
+    print(f"Fetched {len(entries)} entries from web search APIs")
     
     # Step 2: Identify AI-specific content in clinical research
     print("Identifying AI-specific articles in clinical research with OpenAI...")
@@ -688,14 +782,9 @@ def main():
         brief_data = json.load(f)
     site_generator.generate_html(brief_data, html_file)
     
-    # Step 6: Generate PDF
-    print("Generating PDF...")
-    site_generator.generate_pdf(brief_data, pdf_file)
-    
     print(f"Pipeline completed successfully!")
     print(f"- Brief data: {json_file}")
     print(f"- HTML page: {html_file}")
-    print(f"- PDF archive: {pdf_file}")
     print(f"- Logs: {log_file}")
 
 
