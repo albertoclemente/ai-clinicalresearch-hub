@@ -329,35 +329,36 @@ class FeedProcessor:
             REQUIREMENTS:
             1. Keep queries SIMPLE and BROAD enough to find results
             2. Target SPECIFIC AI technologies: ChatGPT, GPT-4, Claude, Llama, foundation models, LLMs
-            3. Cover ALL PHASES of clinical trials: patient recruitment, trial design, monitoring, data analysis, regulatory
+            3. Focus EXCLUSIVELY on clinical trials and clinical research operations
             4. Use quotation marks sparingly - only for 2-3 word exact phrases
-            5. Mix brand names, technology types, and clinical applications
+            5. Mix brand names, technology types, and clinical trial applications
             6. Each query should be 3-8 words for optimal Google search performance
             7. Avoid complex boolean operators that might limit results
 
-            COMPREHENSIVE CLINICAL TRIAL AREAS TO COVER:
+            FOCUS ON CLINICAL TRIAL OPERATIONS ONLY:
             {', '.join(self.BASE_SEARCH_TOPICS)}
 
-            EFFECTIVE QUERY EXAMPLES:
+            EFFECTIVE QUERY EXAMPLES (CLINICAL TRIALS FOCUSED):
             ChatGPT clinical trials
-            generative AI healthcare
-            LLM drug discovery
-            "AI chatbot" patients
-            synthetic data trials
-            AI protocol writing
-            generative AI regulatory
+            "AI chatbot" patient recruitment
+            LLM trial protocol
+            generative AI clinical study
+            AI trial monitoring
+            synthetic data clinical trials
+            AI clinical research
             
-            Generate queries that balance specificity with broad appeal across these clinical trial areas:
-            - Patient recruitment and screening
-            - Trial design and protocol development
-            - Clinical data management and analysis
-            - Safety monitoring and pharmacovigilance
-            - Regulatory submissions and compliance
-            - Medical writing and documentation
-            - Site management and operations
-            - Biomarker discovery and outcomes analysis
+            Generate queries that target CLINICAL TRIAL OPERATIONS specifically:
+            - Patient recruitment and enrollment for trials
+            - Clinical trial protocol development
+            - Trial data management and analysis
+            - Clinical trial monitoring and compliance
+            - Regulatory submissions for trials
+            - Clinical research documentation
+            - Trial site management and operations
+            - Clinical study optimization
 
-            IMPORTANT: Keep queries simple and likely to return results. Cover the full spectrum of clinical trial operations.
+            CRITICAL: All queries must include "clinical trials", "clinical research", "clinical study", 
+            or similar trial-specific terms. Avoid general healthcare AI applications.
             
             Return ONLY the search queries, one per line, no numbering or explanations.
             """
@@ -791,19 +792,19 @@ class FeedProcessor:
         else:
             print("Google API not configured. Skipping web search.")
         
-        # Phase 2: PubMed Search (Academic papers) - Comprehensive coverage
-        print("Searching PubMed for research papers...")
+        # Phase 2: PubMed Search (Academic papers) - Clinical Trials Focus
+        print("Searching PubMed for clinical trials research papers...")
         pubmed_queries = [
             "generative AI clinical trials",
-            "large language model clinical research",
+            "large language model clinical trials",
+            "ChatGPT clinical trials",
+            "AI chatbot patient recruitment clinical trials",
+            "artificial intelligence clinical trial design",
+            "AI clinical trial monitoring",
             "synthetic data clinical trials",
-            "AI chatbot clinical trials",
-            "artificial intelligence protocol design",
+            "natural language processing clinical trial data",
             "AI clinical trial automation",
-            "generative artificial intelligence healthcare",
-            "AI clinical data management",
-            "natural language processing clinical trials",
-            "foundation models clinical research"
+            "generative AI clinical research protocol"
         ]
         
         for query in pubmed_queries:
@@ -867,37 +868,46 @@ class FeedProcessor:
                     prompt = f"""
                     You are a STRICT Generative AI and clinical trials expert. You must be HIGHLY SELECTIVE and only classify articles as AI-related if they EXPLICITLY mention specific AI technologies in clinical research contexts.
 
-                    STRICT CRITERIA - MUST EXPLICITLY MENTION ONE OF THESE IN CLINICAL/HEALTHCARE CONTEXT:
+                    STRICT CRITERIA - MUST EXPLICITLY MENTION CLINICAL TRIALS OR CLINICAL RESEARCH OPERATIONS:
                     
-                    TIER 1 - GENERATIVE AI (HIGHEST PRIORITY):
-                    - Large Language Models (LLMs): ChatGPT, GPT-4, Claude, Llama, Gemini
-                    - Generative AI or "foundation models" for synthetic data generation
-                    - AI chatbots or conversational agents for patients/researchers
-                    - AI-powered writing tools for protocols, reports, documentation
-                    - Natural language generation for clinical content
-                    - Synthetic data generation using AI models
+                    TIER 1 - GENERATIVE AI IN CLINICAL TRIALS (HIGHEST PRIORITY):
+                    - Large Language Models (LLMs): ChatGPT, GPT-4, Claude, Llama, Gemini used in clinical trial operations
+                    - AI chatbots for patient recruitment, enrollment, or trial engagement
+                    - AI-powered protocol writing, trial design, or regulatory submissions
+                    - Synthetic data generation specifically for clinical trials
+                    - Natural language generation for clinical trial documentation
+                    - AI scribes or documentation tools used in clinical research settings
                     
-                    TIER 2 - APPLIED AI IN CLINICAL RESEARCH (MUST BE SPECIFIC):
-                    - Natural language processing for clinical text analysis
-                    - Predictive AI models for clinical outcomes (non-ML approaches)
+                    TIER 2 - APPLIED AI IN CLINICAL TRIAL OPERATIONS:
+                    - Natural language processing for clinical trial data analysis
+                    - AI tools for clinical trial monitoring or safety assessment
+                    - AI-powered patient stratification or recruitment in trials
                     
                     REJECT IMMEDIATELY IF:
-                    - Article is about general technology, business news, or career pages
-                    - Only mentions "AI" vaguely without specific applications
-                    - Discusses basic data analysis or statistics (not AI/ML)
-                    - Person profiles or company descriptions without AI research focus
-                    - Academic papers on non-AI topics (even if from AI institutions)
-                    - General health tech without explicit AI components
+                    - General healthcare AI without clinical trial connection
+                    - Medical education or training (unless specifically for clinical trials)
+                    - Diagnostic AI tools (unless part of clinical trial operations)
+                    - General patient care AI (unless in trial context)
+                    - Research methodology reviews (unless about trial operations)
+                    - Healthcare system improvements (unless trial-specific)
+                    - Academic surveys or reviews without trial focus
+                    - AI ethics or explainability (unless trial-specific)
+                    
+                    CLINICAL TRIAL KEYWORDS REQUIRED:
+                    Must mention: "clinical trial", "clinical research", "trial design", "patient recruitment", 
+                    "trial protocol", "clinical study", "trial monitoring", "trial operations", "trial data",
+                    "regulatory compliance", "trial management", "clinical investigation"
                     
                     Article Title: {entry['title']}
                     Article Description: {entry['description'][:500]}
                     
                     CRITICAL ANALYSIS: 
-                    1. Does this article EXPLICITLY mention specific AI technologies by name?
-                    2. Is there a CLEAR connection to clinical research, clinical trials, or healthcare applications?
-                    3. Is this discussing ACTUAL AI implementation, not just general tech or business news?
+                    1. Does this article EXPLICITLY mention clinical trials or clinical research operations?
+                    2. Is the AI technology being used specifically in trial contexts (not general healthcare)?
+                    3. Does this discuss actual trial operations like recruitment, monitoring, data collection, or compliance?
                     
-                    BE STRICT: Only classify as AI-related if you can clearly identify SPECIFIC AI technologies and their DIRECT application in clinical research contexts.
+                    BE EXTREMELY STRICT: Only classify as AI-related if the article specifically discusses AI applications 
+                    in clinical trial operations, not general healthcare AI applications.
 
                     You MUST provide ALL FIVE fields:
                     1. is_ai_related: true/false (BE STRICT - only true for explicit AI technology mentions)
