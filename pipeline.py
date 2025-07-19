@@ -466,7 +466,13 @@ class FeedProcessor:
                 '| nature communications',
                 'nature communications',
                 '| nature',
-                'nature |'
+                'nature |',
+                'sales & marketing',
+                'sales and marketing',
+                'marketing |',
+                '| marketing',
+                'connecting with physicians',
+                'connecting with patients'
             ]
             
             for pattern in generic_patterns:
@@ -613,7 +619,9 @@ class FeedProcessor:
                     '| nature medicine', 'comment | nature', 'health forum',
                     'jama health forum', 'jama network', 'health sciences |',
                     '| nature communications', 'nature communications',
-                    '| nature', 'nature |'
+                    '| nature', 'nature |', 'sales & marketing',
+                    'sales and marketing', 'marketing |', '| marketing',
+                    'connecting with physicians', 'connecting with patients'
                 ]):
                     continue
                 
