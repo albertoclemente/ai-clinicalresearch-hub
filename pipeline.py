@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-AI in Clinical Research Brief Pipeline
+The GenAI Clinical Trials Watch Pipeline
 Processes RSS feeds, identifies AI-specific content in clinical research, generates HTML.
 """
 
@@ -30,6 +30,53 @@ load_dotenv()
 
 class FeedProcessor:
     """Handles web search and AI content identification in clinical research."""
+    
+    # Allowed domains for search results - must match CSE configuration
+    ALLOWED_DOMAINS = {
+        # Clinical Trials & Research
+        'clinicaltrials.gov',
+        'clinicaltrialsarena.com',
+        'appliedclinicaltrialsonline.com',
+        'clinicalresearchnewsonline.com',
+        
+        # Medical Journals & News
+        'nejm.org',
+        'ai.nejm.org',
+        'thelancet.com',
+        'bmj.com',
+        'nature.com',
+        'jamanetwork.com',
+        'statnews.com',
+        'medcitynews.com',
+        'fiercebiotech.com',
+        'biopharmadive.com',
+        'endpts.com',
+        
+        # AI & Healthcare Research
+        'jmir.org',
+        'aihealth.duke.edu',
+        'pubmed.ncbi.nlm.nih.gov',
+        
+        # Regulatory & Industry
+        'fda.gov',
+        'ema.europa.eu',
+        'pharmaphorum.com',
+        'globalforum.diaglobal.org',
+        
+        # Clinical Research Organizations
+        'acrpnet.org',
+        
+        # Academic & Research Institutions
+        'harvard.edu',
+        'stanford.edu',
+        'mayo.edu',
+        'nih.gov',
+        
+        # AI & Technology in Healthcare
+        'academic.oup.com',
+        'sciencedirect.com',
+        'arxiv.org'
+    }
     
     # Base topics for LLM-generated search queries - Comprehensive GenAI in Clinical Trials
     BASE_SEARCH_TOPICS = [
@@ -68,6 +115,10 @@ class FeedProcessor:
         "AI clinical data integration",
         "generative AI case report forms",
         "automated clinical data validation",
+        "AI EDC systems clinical trials",
+        "generative AI clinical data quality",
+        "AI clinical data warehousing",
+        "automated CRF processing clinical trials",
         
         # Safety & Monitoring
         "AI safety monitoring clinical trials",
@@ -159,6 +210,25 @@ class FeedProcessor:
             "error": error
         }
         self.logger.info(json.dumps(log_entry))
+    
+    def _is_domain_allowed(self, url: str) -> bool:
+        """Check if the URL domain is in our allowed domains list."""
+        try:
+            from urllib.parse import urlparse
+            domain = urlparse(url).netloc.lower()
+            
+            # Remove www prefix
+            if domain.startswith('www.'):
+                domain = domain[4:]
+            
+            # Check if domain or parent domain is allowed
+            for allowed_domain in self.ALLOWED_DOMAINS:
+                if domain == allowed_domain or domain.endswith('.' + allowed_domain):
+                    return True
+            
+            return False
+        except:
+            return False
     
     def _sanitize_text(self, text: str) -> str:
         """Sanitize and clean text input."""
@@ -583,8 +653,23 @@ class FeedProcessor:
             data = response.json()
             
             for item in data.get('items', []):
-                # Skip general job sites, career pages, and irrelevant domains
+                # Get the link first
                 link = item.get('link', '')
+                if not link:
+                    continue
+                
+                # CRITICAL: Filter by allowed domains only
+                if not self._is_domain_allowed(link):
+                    self.logger.info(json.dumps({
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
+                        "action": "domain_filtered",
+                        "url": link,
+                        "domain": self._extract_domain(link),
+                        "reason": "not in allowed domains list"
+                    }))
+                    continue
+                
+                # Skip general job sites, career pages, and irrelevant domains
                 if any(domain in link.lower() for domain in [
                     'linkedin.com', 'indeed.com', 'glassdoor.com', 'jobs.',
                     'career', 'wikipedia.org', 'youtube.com', 'twitter.com',
@@ -699,11 +784,18 @@ class FeedProcessor:
                     if pmid == 'uids':
                         continue
                     
+                    # Create PubMed URL
+                    pubmed_url = f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/"
+                    
+                    # Verify PubMed domain is allowed (it should be)
+                    if not self._is_domain_allowed(pubmed_url):
+                        continue
+                    
                     entry_data = {
                         'id': str(uuid.uuid4()),
                         'title': self._sanitize_text(paper.get('title', '')),
                         'description': self._sanitize_text(paper.get('title', '') + ' - ' + str(paper.get('authors', ''))),
-                        'link': f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/",
+                        'link': pubmed_url,
                         'pub_date': self._parse_pubmed_date(paper.get('pubdate', '')),
                         'source': 'PubMed',
                         'brief_date': self.brief_date,
@@ -816,18 +908,27 @@ class FeedProcessor:
         # Remove duplicates based on URL
         unique_entries = []
         seen_urls = set()
+        domains_found = {}
+        
         for entry in all_entries:
             if entry['link'] not in seen_urls:
                 seen_urls.add(entry['link'])
                 unique_entries.append(entry)
+                
+                # Track domains found
+                domain = self._extract_domain(entry['link']).lower()
+                domains_found[domain] = domains_found.get(domain, 0) + 1
         
+        # Log domain distribution
         self.logger.info(json.dumps({
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "total_articles_fetched": len(unique_entries),
             "duplicates_removed": len(all_entries) - len(unique_entries),
+            "domains_found": domains_found,
             "search_queries_used": len(search_queries) if 'search_queries' in locals() else len(self.FALLBACK_SEARCH_QUERIES),
             "search_apis_used": 2,  # Google + PubMed
-            "llm_query_generation": self._generated_queries_cache is not None
+            "llm_query_generation": self._generated_queries_cache is not None,
+            "domain_filtering_enabled": True
         }))
                 
         return unique_entries
@@ -866,68 +967,66 @@ class FeedProcessor:
             for attempt in range(3):
                 try:
                     prompt = f"""
-                    You are a STRICT Generative AI and clinical trials expert. You must be HIGHLY SELECTIVE and only classify articles as AI-related if they EXPLICITLY mention specific AI technologies in clinical research contexts.
+                    You are an expert in Generative AI and clinical trials operations. Your task is to determine if an article discusses the application of Generative AI technologies in clinical trial operations.
 
-                    STRICT CRITERIA - MUST EXPLICITLY MENTION CLINICAL TRIALS OR CLINICAL RESEARCH OPERATIONS:
+                    QUESTION: Does this article discuss the application of Generative AI in clinical trial operations? 
+
+                    WHAT COUNTS AS GENERATIVE AI IN CLINICAL TRIALS:
                     
-                    TIER 1 - GENERATIVE AI IN CLINICAL TRIALS (HIGHEST PRIORITY):
-                    - Large Language Models (LLMs): ChatGPT, GPT-4, Claude, Llama, Gemini used in clinical trial operations
-                    - AI chatbots for patient recruitment, enrollment, or trial engagement
-                    - AI-powered protocol writing, trial design, or regulatory submissions
-                    - Synthetic data generation specifically for clinical trials
-                    - Natural language generation for clinical trial documentation
-                    - AI scribes or documentation tools used in clinical research settings
+                    TIER 1 - GENERATIVE AI TECHNOLOGIES:
+                    - Large Language Models (LLMs): ChatGPT, GPT-4, Claude, Llama, Gemini, Bard
+                    - AI chatbots and conversational AI systems
+                    - Text generation and natural language generation tools
+                    - Synthetic data generation using AI
+                    - AI scribes and documentation automation
+                    - Foundation models and transformer-based systems
                     
-                    TIER 2 - APPLIED AI IN CLINICAL TRIAL OPERATIONS:
-                    - Natural language processing for clinical trial data analysis
-                    - AI tools for clinical trial monitoring or safety assessment
-                    - AI-powered patient stratification or recruitment in trials
+                    TIER 2 - CLINICAL TRIAL CONTEXTS (what these AI tools are used for):
+                    - Patient recruitment, enrollment, screening, or engagement
+                    - Protocol writing, trial design, or planning
+                    - Clinical documentation, data entry, or report generation
+                    - Clinical data management, data cleaning, and database operations
+                    - Electronic Data Capture (EDC) systems and data integration
+                    - Clinical data validation, quality control, and monitoring
+                    - Case Report Form (CRF) automation and processing
+                    - Clinical database management and data warehousing
+                    - Regulatory submissions and compliance
+                    - Trial monitoring, safety assessment, or quality control
+                    - Site selection and trial operations management
+                    - Data analysis, biomarker discovery, or predictive modeling
+                    - Patient education and informed consent processes
                     
-                    REJECT IMMEDIATELY IF:
-                    - General healthcare AI without clinical trial connection
-                    - Medical education or training (unless specifically for clinical trials)
-                    - Diagnostic AI tools (unless part of clinical trial operations)
-                    - General patient care AI (unless in trial context)
-                    - Research methodology reviews (unless about trial operations)
-                    - Healthcare system improvements (unless trial-specific)
-                    - Academic surveys or reviews without trial focus
-                    - AI ethics or explainability (unless trial-specific)
+                    SEMANTIC UNDERSTANDING - Consider these as CLINICAL TRIAL contexts even if not explicitly stated:
+                    - "Clinical study", "clinical research", "clinical investigation"
+                    - "Drug development", "pharmaceutical research", "therapy development"
+                    - "Patient recruitment", "participant enrollment", "subject screening"
+                    - "Research protocol", "study design", "trial methodology"
+                    - "Regulatory approval", "FDA submission", "compliance monitoring"
+                    - "Clinical data", "trial data", "research data management"
+                    - "EDC systems", "electronic data capture", "clinical databases"
+                    - "Data cleaning", "data validation", "data quality", "CRF processing"
+                    - "Clinical data integration", "data warehousing", "trial data systems"
                     
-                    CLINICAL TRIAL KEYWORDS REQUIRED:
-                    Must mention: "clinical trial", "clinical research", "trial design", "patient recruitment", 
-                    "trial protocol", "clinical study", "trial monitoring", "trial operations", "trial data",
-                    "regulatory compliance", "trial management", "clinical investigation"
+                    REJECT IF:
+                    - General healthcare AI without trial/research context
+                    - Pure diagnostic tools not used in trials
+                    - Medical education without research component
+                    - Basic healthcare administration
                     
                     Article Title: {entry['title']}
                     Article Description: {entry['description'][:500]}
                     
-                    CRITICAL ANALYSIS: 
-                    1. Does this article EXPLICITLY mention clinical trials or clinical research operations?
-                    2. Is the AI technology being used specifically in trial contexts (not general healthcare)?
-                    3. Does this discuss actual trial operations like recruitment, monitoring, data collection, or compliance?
+                    ANALYSIS PROCESS:
+                    1. Does this article mention any Generative AI technology (Tier 1)?
+                    2. Is this AI technology applied in clinical research/trial contexts (Tier 2)?
+                    3. If both are true, classify as ai_related: true
                     
-                    BE EXTREMELY STRICT: Only classify as AI-related if the article specifically discusses AI applications 
-                    in clinical trial operations, not general healthcare AI applications.
-
-                    You MUST provide ALL FIVE fields:
-                    1. is_ai_related: true/false (BE STRICT - only true for explicit AI technology mentions)
-                    2. A 50-word summary of the SPECIFIC AI technology mentioned
-                    3. A 120-word INSIGHTFUL comment analyzing THIS SPECIFIC article's implications for clinical trials (be unique, detailed, and article-specific - avoid generic statements)
-                    4. Resources (2-3 specific GenAI clinical trial resources)
-                    5. ai_tag: Choose the most specific category
-
-                    For RESOURCES, use these templates:
-                    • PubMed search for 'generative AI clinical trials': https://pubmed.ncbi.nlm.nih.gov/?term=generative+AI+clinical+trials
-                    • FDA guidance on AI in clinical trials: https://www.fda.gov/regulatory-information/search-fda-guidance-documents/artificial-intelligence-and-machine-learning-software-medical-device
-                    • Clinical Trials Transformation Initiative AI resources: https://www.ctti-clinicaltrials.org/
-
-                    JSON format required:
+                    ANSWER FORMAT:
                     {{
                         "is_ai_related": true/false,
-                        "summary": "50-word summary of SPECIFIC AI technology mentioned",
-                        "comment": "120-word VARIED and UNIQUE analysis of THIS specific article's clinical trial implications. START WITH DIFFERENT PHRASES - avoid 'This article highlights' or 'This study'. Use varied openings like: 'The implementation of...', 'By leveraging...', 'Research demonstrates...', 'The application reveals...', 'Findings suggest...', 'Evidence indicates...'. Analyze the specific AI application, potential impact on trial phases, operational benefits, challenges, regulatory considerations, and implementation feasibility.",
-                        "resources": "2-3 resources in bullet format",
-                        "ai_tag": "Most specific category from: Generative AI, Natural Language Processing, Trial Optimization, AI Ethics"
+                        "explanation": "Brief explanation of your reasoning (2-3 sentences)",
+                        "summary": "If ai_related is true: 120-word comprehensive summary detailing the SPECIFIC AI technology mentioned, its clinical trial application, methodology, potential benefits, implementation challenges, and significance for clinical research operations. If false: leave empty string.",
+                        "ai_tag": "If ai_related is true, choose from: Generative AI, Natural Language Processing, Trial Optimization, AI Ethics. If false: leave empty string."
                     }}
                     """
                     
@@ -969,16 +1068,23 @@ class FeedProcessor:
                             if result.get('is_ai_related', False):
                                 entry['is_ai_related'] = True
                                 entry['summary'] = self._sanitize_text(result.get('summary', ''))
-                                entry['comment'] = self._sanitize_text(result.get('comment', ''))
-                                entry['resources'] = self._sanitize_text(result.get('resources', ''))
                                 entry['ai_tag'] = self._sanitize_text(result.get('ai_tag', 'AI Research'))
+                                entry['explanation'] = self._sanitize_text(result.get('explanation', ''))
                                 
-                                # Ensure word limits
-                                entry['summary'] = self._limit_words(entry['summary'], 60)
-                                entry['comment'] = self._limit_words(entry['comment'], 140)  # Increased for detailed insights
-                                entry['resources'] = self._limit_words(entry['resources'], 120)  # Increased for URLs and descriptions
+                                # Ensure word limits - longer summary, no resources
+                                entry['summary'] = self._limit_words(entry['summary'], 140)  # Increased from 60 to 140
                                 
                                 ai_entries.append(entry)
+                            else:
+                                # Log rejected articles with explanation for debugging
+                                self.logger.info(json.dumps({
+                                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                                    "entry_id": entry['id'],
+                                    "action": "rejected_semantic",
+                                    "title": entry['title'][:100],
+                                    "explanation": result.get('explanation', ''),
+                                    "reason": "LLM determined not AI-related to clinical trials"
+                                }))
                             break  # Success, break out of retry loop
                         else:
                             self.logger.warning(f"Invalid LLM response for entry {entry['id']}, attempt {attempt + 1}: {result}")
@@ -998,7 +1104,7 @@ class FeedProcessor:
     
     def _validate_ai_response(self, result: Dict) -> bool:
         """Validate that LLM response contains all required fields for AI identification."""
-        required_fields = ['is_ai_related', 'summary', 'comment', 'resources', 'ai_tag']
+        required_fields = ['is_ai_related', 'explanation', 'summary', 'ai_tag']
         
         for field in required_fields:
             if field not in result:
@@ -1011,36 +1117,20 @@ class FeedProcessor:
                 if not isinstance(value, bool):
                     return False
             
-            # For non-AI articles, we don't need complete resources and ai_tag
-            elif field in ['summary', 'comment']:
-                if not isinstance(value, str) or len(value.strip()) < 5:
+            # Validate explanation (always required)
+            elif field == 'explanation':
+                if not isinstance(value, str) or len(value.strip()) < 10:
                     return False
             
-            # For AI-related articles, require complete ai_tag
-            elif field == 'ai_tag':
+            # Validate summary and ai_tag based on ai_related status
+            elif field in ['summary', 'ai_tag']:
                 if result.get('is_ai_related', False):
+                    # For AI-related articles, require meaningful content
                     if not isinstance(value, str) or len(value.strip()) < 5:
                         return False
-                # For non-AI articles, ai_tag can be empty
-            
-            # Validate resources field (can be string or list)
-            elif field == 'resources':
-                if result.get('is_ai_related', False):
-                    # For AI articles, require resources
-                    if isinstance(value, list):
-                        if len(value) == 0:
-                            return False
-                        result[field] = '\n'.join(value)
-                    elif isinstance(value, str):
-                        if len(value.strip()) < 5:
-                            return False
-                    else:
-                        return False
                 else:
-                    # For non-AI articles, resources can be empty
-                    if isinstance(value, list):
-                        result[field] = '\n'.join(value) if value else ""
-                    elif not isinstance(value, str):
+                    # For non-AI articles, these can be empty strings
+                    if not isinstance(value, str):
                         return False
         
         return True
@@ -1150,7 +1240,7 @@ def main():
     feed_processor = FeedProcessor(openai_api_key, log_file, days_back)
     site_generator = SiteGenerator()
     
-    print(f"Starting AI in Clinical Research Brief pipeline for {brief_date}")
+    print(f"Starting The GenAI Clinical Trials Watch pipeline for {brief_date}")
     print(f"Collecting articles from the last {days_back} days")
     
     # Step 1: Fetch feeds using web search APIs only
