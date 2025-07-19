@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI in Clinical Research Bi-Weekly Brief - {{ brief_date }}</title>
-    <meta name="description" content="Bi-weekly digest of AI applications in clinical research, curated and analyzed by AI">
+    <title>The GenAI Clinical Trials Watch - {{ brief_date }}</title>
+    <meta name="description" content="Curated digest of Generative AI applications in clinical research">
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -14,162 +14,102 @@
     
     <!-- Custom styles -->
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #fafafa;
+        }
+        
         .card-hover:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
         }
         
         .search-highlight {
-            background-color: yellow;
-            font-weight: bold;
+            background-color: #fef3cd;
+            font-weight: 500;
         }
         
-        @media (max-width: 320px) {
-            .card-grid {
-                grid-template-columns: 1fr;
-            }
+        .title-font {
+            font-family: 'Inter', sans-serif;
+            font-weight: 300;
+            letter-spacing: -0.02em;
+        }
+        
+        .card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .tag {
+            background: #f3f4f6;
+            color: #374151;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .search-input {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 24px;
+            padding: 12px 24px 12px 48px;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen" x-data="clinicalBrief()">
-    <!-- Sticky Header -->
-    <header class="sticky top-0 z-50 bg-white shadow-sm border-b">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
-                <!-- Logo -->
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <h1 class="text-xl font-bold text-gray-900">AI in Clinical Research Bi-Weekly Brief</h1>
-                    </div>
-                </div>
-                
-                <!-- Search Bar -->
-                <div class="flex-1 max-w-lg mx-4">
-                    <div class="relative">
-                        <input 
-                            type="text" 
-                            placeholder="Search articles..." 
-                            class="w-full px-4 py-2 pl-10 pr-4 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            x-model="searchQuery"
-                            @input="performSearch"
-                        >
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                            </svg>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Filter and Download -->
-                <div class="flex items-center space-x-4">
-                    <!-- Filter Button -->
-                    <button 
-                        @click="showFilters = !showFilters"
-                        class="p-2 text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg"
-                        aria-label="Toggle filters"
-                    >
-                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
-                        </svg>
-                    </button>
-                    
-                    <!-- Download PDF Button -->
-                    <a 
-                        href="briefs/{{ brief_date }}.pdf" 
-                        download
-                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                        aria-label="Download PDF archive"
-                    >
-                        <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                        </svg>
-                        Download PDF
-                    </a>
-                </div>
+    <!-- Header Section -->
+    <header class="bg-white">
+        <div class="max-w-5xl mx-auto px-6 py-12">
+            <!-- Main Title -->
+            <div class="text-center mb-8">
+                <h1 class="title-font text-4xl md:text-5xl text-gray-900 mb-4">
+                    The GenAI Clinical Trials Watch
+                </h1>
+                <p class="text-gray-600 text-lg mb-2">
+                    {{ total_items }} articles curated from clinical research sources
+                </p>
+                <p class="text-gray-500 text-sm">
+                    Generated on {{ generated_at[:10] }} at {{ generated_at[11:16] }} UTC
+                </p>
             </div>
-        </div>
-        
-        <!-- Filters Panel -->
-        <div 
-            x-show="showFilters"
-            x-transition:enter="transition ease-out duration-200"
-            x-transition:enter-start="opacity-0 transform scale-95"
-            x-transition:enter-end="opacity-100 transform scale-100"
-            x-transition:leave="transition ease-in duration-150"
-            x-transition:leave-start="opacity-100 transform scale-100"
-            x-transition:leave-end="opacity-0 transform scale-95"
-            class="border-t bg-gray-50 px-4 py-4"
-        >
-            <div class="max-w-7xl mx-auto">
-                <div class="flex flex-wrap gap-4">
-                    <!-- Source Filter -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Source</label>
-                        <select 
-                            x-model="sourceFilter"
-                            @change="performSearch"
-                            class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                        >
-                            <option value="">All Sources</option>
-                            <option value="ClinicalTrials.gov">ClinicalTrials.gov</option>
-                            <option value="FDA">FDA</option>
-                            <option value="NIH">NIH</option>
-                            <option value="Nature Medicine">Nature Medicine</option>
-                            <option value="NEJM">NEJM</option>
-                            <option value="BioPharma Dive">BioPharma Dive</option>
-                            <option value="RAPS">RAPS</option>
-                        </select>
-                    </div>
-                    
-                    <!-- Keyword Filter -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Keywords</label>
-                        <select 
-                            x-model="keywordFilter"
-                            @change="performSearch"
-                            class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                        >
-                            <option value="">All Keywords</option>
-                            <option value="Phase III">Phase III</option>
-                            <option value="Phase II">Phase II</option>
-                            <option value="Phase I">Phase I</option>
-                            <option value="FDA approval">FDA Approval</option>
-                            <option value="oncology">Oncology</option>
-                            <option value="cardiovascular">Cardiovascular</option>
-                            <option value="neurology">Neurology</option>
-                            <option value="immunology">Immunology</option>
-                            <option value="rare disease">Rare Disease</option>
-                            <option value="biosimilar">Biosimilar</option>
-                        </select>
-                    </div>
-                    
-                    <!-- Clear Filters -->
-                    <div class="flex items-end">
-                        <button 
-                            @click="clearFilters"
-                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                        >
-                            Clear Filters
-                        </button>
-                    </div>
+            
+            <!-- Search Bar -->
+            <div class="max-w-md mx-auto relative">
+                <input 
+                    type="text" 
+                    placeholder="Search articles..." 
+                    class="search-input w-full"
+                    x-model="searchQuery"
+                    @input="performSearch"
+                >
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
                 </div>
             </div>
         </div>
     </header>
-    
+
     <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <!-- Brief Header -->
-        <div class="text-center mb-8">
-            <h2 class="text-3xl font-bold text-gray-900 mb-2">{{ brief_date }}</h2>
-            <p class="text-lg text-gray-600">{{ total_items }} articles curated from clinical research sources</p>
-            <p class="text-sm text-gray-500 mt-1">Generated on {{ generated_at[:10] }} at {{ generated_at[11:16] }} UTC</p>
-        </div>
-        
+    <main class="max-w-5xl mx-auto px-6 pb-12">
         <!-- Results Summary -->
-        <div class="mb-6" x-show="searchQuery || sourceFilter || keywordFilter">
-            <p class="text-sm text-gray-600">
+        <div class="mb-6" x-show="searchQuery">
+            <p class="text-sm text-gray-600 text-center">
                 Showing <span x-text="filteredItems.length"></span> of {{ total_items }} articles
                 <span x-show="searchQuery">matching "<span x-text="searchQuery"></span>"</span>
             </p>
@@ -177,7 +117,7 @@
         
         <!-- No Results Message -->
         <div 
-            x-show="filteredItems.length === 0 && (searchQuery || sourceFilter || keywordFilter)"
+            x-show="filteredItems.length === 0 && searchQuery"
             class="text-center py-12"
         >
             <div class="max-w-md mx-auto">
@@ -185,102 +125,59 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.5-.9-6.08-2.371m15.08 2.371A7.962 7.962 0 0112 15c2.34 0 4.5-.9 6.08-2.371M15 9.75a3 3 0 11-6 0 3 3 0 016 0z"></path>
                 </svg>
                 <h3 class="mt-2 text-sm font-medium text-gray-900">No results found</h3>
-                <p class="mt-1 text-sm text-gray-500">Try adjusting your search terms or filters.</p>
+                <p class="mt-1 text-sm text-gray-500">Try adjusting your search terms.</p>
             </div>
         </div>
         
         <!-- Articles Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 card-grid">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <template x-for="item in filteredItems" :key="item.id">
-                <article class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 card-hover transition-all duration-200">
-                    <!-- Article Header -->
+                <article class="card p-6 card-hover">
+                    <!-- AI Tag -->
                     <div class="mb-4">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-2 leading-tight">
-                            <a 
-                                :href="item.link" 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                class="hover:text-blue-600 transition-colors"
-                                x-html="highlightText(item.title)"
-                            ></a>
-                        </h3>
-                        
-                        <!-- AI Tag -->
-                        <div class="flex items-center mb-2">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
-                                </svg>
-                                <span x-text="item.ai_tag"></span>
-                            </span>
-                        </div>
+                        <span class="tag" x-text="item.ai_tag"></span>
                     </div>
                     
-                    <!-- Summary -->
-                    <div class="mb-4">
-                        <p class="text-sm text-gray-700 leading-relaxed" x-html="highlightText(item.summary)"></p>
-                    </div>
+                    <!-- Article Title -->
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4 leading-snug">
+                        <a 
+                            :href="item.link" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            class="hover:text-blue-600 transition-colors"
+                            x-html="highlightText(item.title)"
+                        ></a>
+                    </h3>
                     
-                    <!-- Comment -->
-                    <div class="mb-4">
-                        <p class="text-sm text-gray-600 italic border-l-2 border-gray-200 pl-3" x-html="highlightText(item.comment)"></p>
-                    </div>
+                    <!-- Article Summary -->
+                    <p class="text-gray-600 text-sm leading-relaxed mb-4" x-html="highlightText(item.summary)"></p>
                     
-                    <!-- Resources Section -->
-                    <div class="mb-4 bg-blue-50 rounded-lg p-3 border-l-4 border-blue-200">
-                        <h4 class="text-sm font-semibold text-blue-800 mb-2 flex items-center">
-                            <svg class="w-4 h-4 mr-1 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
-                            </svg>
-                            Related Resources
-                        </h4>
-                        <div class="text-sm text-gray-700 leading-relaxed" x-html="formatResources(item.resources)"></div>
-                    </div>
-                    
-                    <!-- Footer -->
-                    <div class="flex items-center justify-between pt-4 border-t border-gray-100">
-                        <div class="flex items-center text-sm text-gray-500">
-                            <span class="font-medium">Source: </span>
-                            <span x-text="item.source"></span>
-                        </div>
-                        <a :href="item.link" target="_blank" rel="noopener noreferrer" 
-                           class="text-xs text-blue-600 hover:text-blue-800 font-medium">
+                    <!-- Article Footer -->
+                    <div class="flex items-center justify-between text-xs text-gray-500">
+                        <span x-text="item.source"></span>
+                        <a 
+                            :href="item.link" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            class="text-blue-600 hover:text-blue-800 font-medium"
+                        >
                             Read Full Article →
                         </a>
                     </div>
                 </article>
             </template>
         </div>
-        
-        <!-- Error Banner -->
-        <div 
-            x-show="error" 
-            class="mt-8 bg-red-50 border border-red-200 rounded-md p-4"
-            role="alert"
-        >
-            <div class="flex">
-                <svg class="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16c-.77.833.192 2.5 1.732 2.5z"></path>
-                </svg>
-                <div class="ml-3">
-                    <h3 class="text-sm font-medium text-red-800">
-                        An error occurred
-                    </h3>
-                    <p class="mt-1 text-sm text-red-700" x-text="error"></p>
-                </div>
-            </div>
-        </div>
     </main>
-    
+
     <!-- Footer -->
     <footer class="bg-white border-t mt-16">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="max-w-5xl mx-auto px-6 py-8">
             <div class="text-center">
                 <p class="text-sm text-gray-500">
-                    AI in Clinical Research Bi-Weekly Brief - Automated curation of AI applications in clinical research
+                    The GenAI Clinical Trials Watch - Automated curation of AI applications in clinical research
                 </p>
                 <p class="text-xs text-gray-400 mt-2">
-                    Content sourced from public RSS feeds and ranked by AI
+                    Content sourced from clinical research databases and analyzed by AI
                 </p>
             </div>
         </div>
@@ -295,10 +192,6 @@
                 
                 // State
                 searchQuery: '',
-                sourceFilter: '',
-                keywordFilter: '',
-                showFilters: false,
-                error: null,
                 
                 // Initialize
                 init() {
@@ -307,49 +200,17 @@
                 
                 // Search functionality
                 performSearch() {
-                    try {
-                        let filtered = this.items;
-                        
-                        // Text search
-                        if (this.searchQuery) {
-                            const query = this.searchQuery.toLowerCase();
-                            filtered = filtered.filter(item => 
-                                item.title.toLowerCase().includes(query) ||
-                                item.summary.toLowerCase().includes(query) ||
-                                item.comment.toLowerCase().includes(query)
-                            );
-                        }
-                        
-                        // Source filter
-                        if (this.sourceFilter) {
-                            filtered = filtered.filter(item => item.source === this.sourceFilter);
-                        }
-                        
-                        // Keyword filter
-                        if (this.keywordFilter) {
-                            const keyword = this.keywordFilter.toLowerCase();
-                            filtered = filtered.filter(item => 
-                                item.title.toLowerCase().includes(keyword) ||
-                                item.summary.toLowerCase().includes(keyword) ||
-                                item.comment.toLowerCase().includes(keyword)
-                            );
-                        }
-                        
-                        this.filteredItems = filtered;
-                        this.error = null;
-                    } catch (err) {
-                        this.error = 'Search failed. Please try again.';
-                        console.error('Search error:', err);
+                    if (!this.searchQuery) {
+                        this.filteredItems = this.items;
+                        return;
                     }
-                },
-                
-                // Clear all filters
-                clearFilters() {
-                    this.searchQuery = '';
-                    this.sourceFilter = '';
-                    this.keywordFilter = '';
-                    this.filteredItems = this.items;
-                    this.error = null;
+                    
+                    const query = this.searchQuery.toLowerCase();
+                    this.filteredItems = this.items.filter(item => 
+                        item.title.toLowerCase().includes(query) ||
+                        item.summary.toLowerCase().includes(query) ||
+                        item.source.toLowerCase().includes(query)
+                    );
                 },
                 
                 // Highlight search terms
@@ -358,52 +219,6 @@
                     
                     const regex = new RegExp(`(${this.searchQuery})`, 'gi');
                     return text.replace(regex, '<mark class="search-highlight">$1</mark>');
-                },
-                
-                // Format resources with clickable links
-                formatResources(text) {
-                    if (!text) return '';
-                    
-                    // Split by bullet points and process each line
-                    const lines = text.split('•').filter(line => line.trim());
-                    
-                    const formattedLines = lines.map(line => {
-                        const trimmed = line.trim();
-                        if (!trimmed) return '';
-                        
-                        // Look for URL pattern: description: url
-                        const urlMatch = trimmed.match(/^(.+?):\s*(https?:\/\/[^\s]+)/);
-                        if (urlMatch) {
-                            const description = urlMatch[1].trim();
-                            const url = urlMatch[2].trim();
-                            return `<div class="mb-1">
-                                <span class="text-gray-700">${description}:</span>
-                                <a href="${url}" target="_blank" rel="noopener noreferrer" 
-                                   class="text-blue-600 hover:text-blue-800 underline ml-1 text-xs">
-                                    Visit Resource →
-                                </a>
-                            </div>`;
-                        }
-                        
-                        // Fallback: just display the text
-                        return `<div class="mb-1 text-gray-700">${trimmed}</div>`;
-                    });
-                    
-                    return formattedLines.join('');
-                },
-                
-                // Format date
-                formatDate(dateString) {
-                    try {
-                        const date = new Date(dateString);
-                        return date.toLocaleDateString('en-US', {
-                            month: 'short',
-                            day: 'numeric',
-                            year: 'numeric'
-                        });
-                    } catch {
-                        return 'Unknown date';
-                    }
                 }
             }
         }
