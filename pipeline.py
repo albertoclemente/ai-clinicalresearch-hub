@@ -324,7 +324,7 @@ class FeedProcessor:
         try:
             prompt = f"""
             You are a search query optimization expert specializing in clinical research and AI technology. 
-            Generate 10 highly effective Google search queries to find recent articles about Generative AI applications across ALL AREAS of clinical trials and clinical research.
+            Generate 20 highly effective Google search queries to find recent articles about Generative AI applications across ALL AREAS of clinical trials and clinical research.
 
             REQUIREMENTS:
             1. Keep queries SIMPLE and BROAD enough to find results
@@ -367,7 +367,7 @@ class FeedProcessor:
                 model="gpt-4o-mini",
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.7,  # Higher temperature for more creative/diverse queries
-                max_tokens=400
+                max_tokens=800
             )
             
             content = response.choices[0].message.content.strip()
@@ -382,8 +382,8 @@ class FeedProcessor:
                     queries.append(line)
             
             # Validate we got enough queries
-            if len(queries) >= 5:
-                self._generated_queries_cache = queries[:10]  # Limit to 10 queries
+            if len(queries) >= 10:
+                self._generated_queries_cache = queries[:20]  # Limit to 20 queries
                 
                 self.logger.info(json.dumps({
                     "timestamp": datetime.now(timezone.utc).isoformat(),
