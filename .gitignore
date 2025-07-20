@@ -137,3 +137,4 @@ debug_*.py
 !logs/.gitkeep
 !briefs/.gitkeep
 !site/.gitkeep
+.env
