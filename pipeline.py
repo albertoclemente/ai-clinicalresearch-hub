@@ -15,6 +15,7 @@ from typing import Dict, List, Optional, Tuple
 import re
 import requests
 from urllib.parse import quote_plus
+import math
 
 import feedparser
 import openai
@@ -31,18 +32,25 @@ load_dotenv()
 class FeedProcessor:
     """Handles web search and AI content identification in clinical research."""
     
-    # Base topics for LLM-generated search queries - Comprehensive GenAI in Clinical Trials
+    # Base topics for LLM-generated search queries - Enhanced with MeSH terms
     BASE_SEARCH_TOPICS = [
         # Core GenAI Technologies in Clinical Research
         "generative AI in clinical trials",
-        "large language models healthcare research",
+        "large language models healthcare research", 
         "ChatGPT clinical research applications",
         "foundation models drug discovery",
         "synthetic data clinical research",
         
+        # MeSH-informed search terms
+        "artificial intelligence clinical trials MeSH",
+        "machine learning clinical research methodology",
+        "natural language processing clinical data",
+        "computer-assisted clinical decision making",
+        "automated clinical documentation systems",
+        
         # Patient-Facing GenAI Applications
         "AI chatbots patient recruitment",
-        "conversational AI patient engagement",
+        "conversational AI patient engagement", 
         "AI virtual assistants clinical trials",
         "generative AI patient education",
         "AI-powered patient screening",
@@ -101,8 +109,23 @@ class FeedProcessor:
         '"generative models" "drug discovery" clinical research'
     ]
     
-    # RSS feeds removed - using web search and PubMed only
-    RSS_FEEDS = []
+    # Re-enabled key RSS/Atom feeds for better source acquisition
+    RSS_FEEDS = [
+        # Industry News - AI Focus
+        ('https://www.statnews.com/tag/artificial-intelligence/feed/', 'STAT AI', 12),
+        ('https://endpointsnews.com/feed/', 'Endpoints News', 10),
+        
+        # Academic/Research Feeds
+        ('https://aihealth.duke.edu/feed/', 'Duke AI Health', 15),
+        ('https://www.nature.com/subjects/machine-learning/nature-medicine.rss', 'Nature ML', 10),
+        ('https://export.arxiv.org/rss/cs.AI', 'arXiv AI', 8),
+        ('https://export.arxiv.org/rss/cs.LG', 'arXiv ML', 8),
+        ('https://export.arxiv.org/rss/q-bio', 'arXiv Bio', 8),
+        
+        # Medical AI Research
+        ('https://www.nature.com/nm.rss', 'Nature Medicine', 8),
+        ('https://www.jmir.org/rss', 'JMIR', 8),
+    ]
     
     # Source-specific limits for content discovery
     SOURCE_LIMITS = {
@@ -131,6 +154,11 @@ class FeedProcessor:
         self.google_api_key = os.environ.get('GOOGLE_API_KEY')
         self.google_cx = os.environ.get('GOOGLE_CX')  # Custom Search Engine ID
         self.pubmed_base_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
+        
+        # Additional API endpoints for broader source acquisition
+        self.europepmc_base_url = "https://www.ebi.ac.uk/europepmc/webservices/rest/"
+        self.semantic_scholar_base_url = "https://api.semanticscholar.org/graph/v1/"
+        self.medrxiv_base_url = "https://api.medrxiv.org/"
         
         # Cache for generated search queries to avoid regenerating on each run
         self._generated_queries_cache = None
@@ -191,120 +219,157 @@ class FeedProcessor:
         
         return clean_text
     
-    def _extract_title_from_webpage(self, url: str) -> str:
-        """Extract the actual title from a webpage by scraping it."""
+    def _extract_title_from_webpage(self, url: str, source_name: str = "") -> str:
+        """Extract title from webpage with enhanced handling for 403-blocked pages."""
         try:
+            # Enhanced headers to bypass basic blocking
             headers = {
-                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.5',
+                'Accept-Encoding': 'gzip, deflate',
+                'DNT': '1',
+                'Connection': 'keep-alive',
+                'Upgrade-Insecure-Requests': '1',
+                'Sec-Fetch-Dest': 'document',
+                'Sec-Fetch-Mode': 'navigate',
+                'Sec-Fetch-Site': 'none',
+                'Cache-Control': 'max-age=0'
             }
-            response = requests.get(url, headers=headers, timeout=10)
+            
+            # For known problematic domains, try alternative approaches
+            domain = url.lower()
+            if any(blocked_domain in domain for blocked_domain in ['academic.oup.com', 'jamanetwork.com', 'harvard.edu']):
+                # For blocked academic sites, try different strategies
+                try:
+                    # Try with session and additional headers
+                    session = requests.Session()
+                    session.headers.update(headers)
+                    
+                    # Add domain-specific headers
+                    if 'academic.oup.com' in domain:
+                        session.headers['Referer'] = 'https://academic.oup.com/'
+                    elif 'jamanetwork.com' in domain:
+                        session.headers['Referer'] = 'https://jamanetwork.com/'
+                    
+                    response = session.get(url, timeout=15, allow_redirects=True)
+                    
+                except requests.exceptions.RequestException:
+                    # If blocked, try to extract from search snippet or skip gracefully
+                    return ""
+            else:
+                response = requests.get(url, headers=headers, timeout=15)
+            
             response.raise_for_status()
             
-            # Handle encoding properly
-            response.encoding = response.apparent_encoding
-            content = response.text.encode('utf-8', errors='replace').decode('utf-8')
+            soup = BeautifulSoup(response.content, 'html.parser')
             
-            soup = BeautifulSoup(content, 'html.parser')
-            
-            # Try multiple title extraction methods in order of preference
-            title_sources = [
-                ('og:title', soup.find('meta', {'property': 'og:title'})),
-                ('twitter:title', soup.find('meta', {'name': 'twitter:title'})),
-                ('citation_title', soup.find('meta', {'name': 'citation_title'})),  # Academic papers
-                ('dc.title', soup.find('meta', {'name': 'dc.title'})),        # Dublin Core
-                ('article:title', soup.find('meta', {'property': 'article:title'})),
-                ('title_tag', soup.find('title')),
-                ('h1_tag', soup.find('h1')),
-                ('h2_tag', soup.find('h2')),  # Sometimes the main title is in h2
-            ]
-            
-            def is_scraped_title_valid(title: str, source_type: str) -> bool:
-                """Validate scraped title quality."""
+            def is_scraped_title_valid(title: str, source: str) -> bool:
+                """Enhanced validation for scraped titles with better quality checks."""
                 if not title or len(title.strip()) < 15:
                     return False
                 
                 title_lower = title.lower()
+                title_clean = title.strip()
                 
-                # More aggressive filtering for scraped content
+                # Reject clearly invalid or generic titles
                 invalid_patterns = [
-                    'latest research and news',
-                    'health sciences - latest',
-                    'nature medicine',
-                    'nature - international',
-                    'arxiv.org',
-                    'pubmed',
-                    'ncbi',
-                    'coming soon',
-                    'page not found',
-                    '404 error',
-                    'access denied',
-                    'untitled',
-                    'home page',
-                    'main page',
-                    'latest news',
-                    'breaking news',
-                    'health news',
-                    'medical news',
-                    'error 404',
-                    'not found',
-                    'forbidden',
-                    'access restricted'
+                    'page not found', '404 error', 'access denied', 'untitled',
+                    'home page', 'main page', 'loading...', 'please wait',
+                    'sign in', 'login', 'register', 'search results',
+                    'cookies', 'privacy policy', 'terms of service',
+                    'subscribe', 'newsletter', 'advertisement'
                 ]
                 
                 for pattern in invalid_patterns:
                     if pattern in title_lower:
                         return False
                 
-                # Reject titles that are just site names or navigation
-                if title_lower in ['nature', 'science', 'plos', 'bmj', 'nejm', 'jama', 'arxiv', 'pubmed']:
+                # Must contain actual words (not just numbers/symbols)
+                words = re.findall(r'[a-zA-Z]+', title_clean)
+                if len(words) < 3:
                     return False
                 
-                # Reject titles with typical truncation patterns
-                if '|' in title:
-                    parts = title.split('|')
-                    if len(parts) > 1:
-                        last_part = parts[-1].strip()
-                        if len(last_part) <= 3 or last_part.lower() in ['s', 'n', 'nature', 'nat', 'sci', 'bmj', 'nejm']:
-                            return False
+                # Check for research/academic relevance for higher quality
+                research_indicators = [
+                    'study', 'research', 'analysis', 'clinical', 'trial', 'patient',
+                    'medical', 'treatment', 'therapy', 'diagnosis', 'disease',
+                    'artificial intelligence', 'ai', 'machine learning', 'ml',
+                    'algorithm', 'model', 'data', 'technology', 'innovation',
+                    'healthcare', 'health', 'medicine', 'pharmaceutical',
+                    'biomedical', 'genomic', 'precision', 'personalized',
+                    'digital', 'automated', 'prediction', 'classification'
+                ]
                 
-                # Additional validation for title tag content
-                if source_type == 'title_tag':
-                    # Title tags often contain site name, try to extract just the article title
-                    separators = [' | ', ' - ', ' :: ', ' > ', ' — ']
-                    for sep in separators:
-                        if sep in title:
-                            parts = title.split(sep)
-                            # Take the longest meaningful part
-                            main_part = max(parts, key=len).strip()
-                            if len(main_part) >= 20 and not any(pattern in main_part.lower() for pattern in invalid_patterns):
-                                return main_part == title or len(main_part) > len(title) * 0.6
+                # If clearly research-related, more lenient on length
+                is_research_related = any(indicator in title_lower for indicator in research_indicators)
                 
-                return True
+                if is_research_related:
+                    return len(title_clean) >= 20  # More lenient for research content
+                else:
+                    return len(title_clean) >= 30 and len(words) >= 5  # Stricter for general content
             
-            for source_name, source in title_sources:
-                if source:
-                    if source.name == 'meta':
-                        title = source.get('content', '')
+            # Try multiple title extraction methods with priority order
+            title_selectors = [
+                # Article-specific selectors (highest priority)
+                'h1.article-title', 'h1.entry-title', 'h1.post-title', 'h1.paper-title',
+                '.article-header h1', '.entry-header h1', '.post-header h1',
+                '[data-testid="paper-detail-title"]', '.paper-detail-title',
+                
+                # Meta tags (high priority)
+                'meta[property="og:title"]', 'meta[name="twitter:title"]',
+                'meta[name="citation_title"]', 'meta[name="dc.title"]',
+                'meta[name="article:title"]',
+                
+                # Generic selectors (lower priority)
+                'h1', '.title', '.main-title',
+                
+                # Fallback to page title (lowest priority)
+                'title'
+            ]
+            
+            for selector in title_selectors:
+                try:
+                    if selector.startswith('meta'):
+                        element = soup.select_one(selector)
+                        if element:
+                            title = element.get('content', '')
                     else:
-                        title = source.get_text(strip=True)
+                        element = soup.select_one(selector)
+                        if element:
+                            title = element.get_text(strip=True)
                     
-                    # Clean and validate title
-                    if title:
-                        title = self._sanitize_text(title)
+                    if title and len(title.strip()) > 20:  # Prefer longer titles
+                        # Clean up title but be less aggressive
+                        title = re.sub(r'\s+', ' ', title)  # Normalize whitespace
+                        title = title.strip()
                         
-                        # For title tags, try to extract the main article title
-                        if source_name == 'title_tag' and ('|' in title or '-' in title or '::' in title):
-                            separators = [' | ', ' - ', ' :: ', ' > ', ' — ', ' – ']
+                        # Skip if this looks like a site name or navigation
+                        site_indicators = ['home', 'homepage', '|', ' - ', 'nature', 'science direct', 'arxiv', 'pubmed']
+                        if not any(indicator in title.lower() for indicator in site_indicators):
+                            if is_scraped_title_valid(title, source_name):
+                                return title
+                        
+                        # Handle separator-based titles more intelligently
+                        if '|' in title or '–' in title or '—' in title:
+                            separators = ['|', '–', '—', ' - ']
                             for sep in separators:
                                 if sep in title:
                                     parts = [part.strip() for part in title.split(sep)]
-                                    # Find the part that looks most like an article title
-                                    for part in sorted(parts, key=len, reverse=True):
-                                        if len(part) >= 20 and is_scraped_title_valid(part, source_name):
-                                            return part
+                                    # Find the longest part that looks like an article title
+                                    article_parts = [part for part in parts if len(part) >= 20 and 
+                                                   not any(site in part.lower() for site in ['nature', 'science', 'arxiv', 'pubmed', 'elsevier'])]
+                                    if article_parts:
+                                        best_part = max(article_parts, key=len)
+                                        if is_scraped_title_valid(best_part, source_name):
+                                            return best_part
                         
+                        # If no separator handling worked, use the full title if valid
                         if is_scraped_title_valid(title, source_name):
                             return title
+                            
+                except Exception:
+                    continue
             
         except Exception as e:
             self.logger.warning(json.dumps({
@@ -415,91 +480,41 @@ class FeedProcessor:
         """Extract full title from Google search result, trying multiple sources."""
         
         def is_valid_title(title: str) -> bool:
-            """Check if a title is valid and not generic/truncated."""
-            if not title or len(title.strip()) < 20:  # Increased minimum length
+            """Check if a title is valid and not generic/truncated - Enhanced approach."""
+            if not title or len(title.strip()) < 15:
                 return False
             
             title_lower = title.lower()
+            title_clean = title.strip()
             
-            # Reject generic/placeholder titles
-            generic_patterns = [
-                'latest research and news',
-                'health sciences - latest',
-                'health sciences articles',
-                'nature medicine',
-                'arxiv.org',
-                'pubmed',
-                'ncbi',
-                'coming soon',
+            # Reject clearly broken/invalid titles
+            invalid_patterns = [
                 'page not found',
-                '404 error',
+                '404 error', 
                 'access denied',
                 'untitled',
-                'home page',
-                'main page',
-                'latest news',
-                'breaking news',
-                'health news',
-                'medical news',
-                'research | nejm',
-                'articles from across',
-                'view all articles',
-                'browse articles',
-                'browse all',
-                'view articles',
-                'view all',
-                'news & comment',
-                'news and comment',
-                'browse by',
-                'filter by',
-                'search results',
-                'table of contents',
-                'current issue',
-                'nature portfolio',
-                'journal of medical internet research',
-                'jmir - journal',
-                '| nature medicine',
-                'news & comment |',
-                'comment | nature',
-                'health forum',
-                'jama health forum',
-                'health sciences |',
-                '| nature communications',
-                'nature communications',
-                '| nature',
-                'nature |',
-                'sales & marketing',
-                'sales and marketing',
-                'marketing |',
-                '| marketing',
-                'connecting with physicians',
-                'connecting with patients'
+                'loading...',
+                'please wait',
+                'coming soon'
             ]
             
-            for pattern in generic_patterns:
+            for pattern in invalid_patterns:
                 if pattern in title_lower:
                     return False
             
-            # Reject truncated titles (ending with | followed by short text)
-            if '|' in title:
-                parts = title.split('|')
-                if len(parts) > 1:
-                    # If the part after | is very short, it's likely truncated
-                    last_part = parts[-1].strip()
-                    if len(last_part) <= 5 or last_part.lower() in ['s', 'n', 'nature', 'nat', 'sci', 'nejm', 'ai']:
-                        return False
-                    # Check if it's a generic site name
-                    if last_part.lower() in ['nature', 'science', 'plos', 'bmj', 'nejm', 'jama', 'nejm ai']:
-                        return False
+            # More aggressive rejection of truncated titles
+            if title_clean.endswith('...'):
+                # If it ends with ..., it must be substantial enough
+                content_without_dots = title_clean[:-3].strip()
+                words = content_without_dots.split()
+                # Require more content for truncated titles
+                if len(words) < 7 or len(content_without_dots) < 45:
+                    return False
             
-            # Reject titles that are just ellipsis or very short
-            if title.strip().endswith('...') or title.strip().endswith('…'):
+            # Also reject titles ending with .. (double dots)
+            if title_clean.endswith('..') and not title_clean.endswith('...'):
                 return False
-            
-            # Reject titles with excessive truncation indicators
-            if title.count('...') > 1 or title.count('…') > 1:
-                return False
-            
+                
             return True
         
         # Try different title sources in order of preference
@@ -518,11 +533,17 @@ class FeedProcessor:
                 if is_valid_title(clean_title):
                     return clean_title
         
-        # Second pass: try scraping the webpage if no good title found
+        # Second pass: try scraping the webpage if no good title found OR if title is truncated
         link = item.get('link', '')
-        if link:
+        google_title = item.get('title', '')
+        
+        # Check if the Google title appears truncated
+        is_truncated = (google_title.endswith('...') or google_title.endswith('…') or 
+                       len(google_title) < 40 or '...' in google_title)
+        
+        if link and (not any(is_valid_title(title) for _, title in title_sources if title) or is_truncated):
             scraped_title = self._extract_title_from_webpage(link)
-            if scraped_title and is_valid_title(scraped_title):
+            if scraped_title and is_valid_title(scraped_title) and len(scraped_title) > len(google_title):
                 return scraped_title
         
         # Last resort: use the first available title but mark it as potentially problematic
@@ -551,7 +572,7 @@ class FeedProcessor:
         return "Untitled Article"
 
     def search_google(self, query: str, max_results: int = 5) -> List[Dict]:
-        """Search Google for articles using Custom Search API."""
+        """Search Google for articles using Custom Search API with pagination support."""
         if not self.google_api_key or not self.google_cx:
             self.logger.warning("Google API credentials not found. Skipping Google search.")
             return []
@@ -562,96 +583,108 @@ class FeedProcessor:
             end_date = datetime.now(timezone.utc)
             start_date = end_date - timedelta(days=self.days_back)
             
-            # Use the query directly without domain restrictions to get broader coverage
-            url = "https://www.googleapis.com/customsearch/v1"
-            params = {
-                'key': self.google_api_key,
-                'cx': self.google_cx,
-                'q': query,
-                'num': min(max_results, 10),  # Max 10 per request
-                'sort': 'date',  # Sort by date
-                'dateRestrict': f'd{self.days_back}',  # Restrict to last N days
-                'gl': 'us',  # Geographic location
-                'lr': 'lang_en',  # Language restriction
-                'safe': 'off',  # Don't filter results
-                'filter': '1',  # Enable duplicate filtering
-            }
+            # Paginate Google CSE to get deeper results (start = 1, 11, 21...)
+            results_per_page = 10
+            pages_needed = min(3, (max_results + results_per_page - 1) // results_per_page)  # Max 3 pages
             
-            response = requests.get(url, params=params, timeout=30)
-            response.raise_for_status()
-            
-            data = response.json()
-            
-            for item in data.get('items', []):
-                # Skip general job sites, career pages, and irrelevant domains
-                link = item.get('link', '')
-                if any(domain in link.lower() for domain in [
-                    'linkedin.com', 'indeed.com', 'glassdoor.com', 'jobs.',
-                    'career', 'wikipedia.org', 'youtube.com', 'twitter.com',
-                    'facebook.com', 'reddit.com'
-                ]):
-                    continue
+            for page in range(pages_needed):
+                start_index = page * results_per_page + 1
                 
-                title = self._extract_full_title(item)
-                
-                # Skip if we couldn't get a good title
-                if title == "Untitled Article" or not title:
-                    continue
-                
-                # Skip if title is too generic or contains job-related keywords
-                if any(keyword in title.lower() for keyword in [
-                    'job', 'career', 'hiring', 'position', 'vacancy',
-                    'employment', 'recruiter', 'hr ', 'human resources',
-                    'latest research and news', 'health sciences - latest'
-                ]):
-                    continue
-                
-                # Enhanced filtering for navigation/category pages
-                if any(nav_pattern in title.lower() for nav_pattern in [
-                    'browse articles', 'browse all', 'view articles', 'view all',
-                    'news & comment', 'news and comment', 'latest news',
-                    'research |', '| research', 'articles |', '| articles',
-                    'health sciences articles', 'latest research and news',
-                    'home page', 'main page', 'category:', 'section:',
-                    '- journal of', 'journal of medical internet research',
-                    'nature portfolio', 'nature medicine |', 'nejm ai |',
-                    'browse by', 'filter by', 'search results',
-                    'table of contents', 'current issue',
-                    '| nature medicine', 'comment | nature', 'health forum',
-                    'jama health forum', 'jama network', 'health sciences |',
-                    '| nature communications', 'nature communications',
-                    '| nature', 'nature |', 'sales & marketing',
-                    'sales and marketing', 'marketing |', '| marketing',
-                    'connecting with physicians', 'connecting with patients'
-                ]):
-                    continue
-                
-                entry_data = {
-                    'id': str(uuid.uuid4()),
-                    'title': title,
-                    'description': self._sanitize_text(item.get('snippet', '')),
-                    'link': link,
-                    'pub_date': self._parse_date(item.get('pagemap', {}).get('metatags', [{}])[0].get('article:published_time', '')),
-                    'source': self._extract_domain(link),
-                    'brief_date': self.brief_date,
-                    'search_query': query
+                # Use the query directly without domain restrictions to get broader coverage
+                url = "https://www.googleapis.com/customsearch/v1"
+                params = {
+                    'key': self.google_api_key,
+                    'cx': self.google_cx,
+                    'q': query,
+                    'num': results_per_page,
+                    'start': start_index,  # Pagination support
+                    'sort': 'date',  # Sort by date
+                    'dateRestrict': f'd{self.days_back}',  # Restrict to last N days
+                    'gl': 'us',  # Geographic location
+                    'lr': 'lang_en',  # Language restriction
+                    'safe': 'off',  # Don't filter results
+                    'filter': '1',  # Enable duplicate filtering
                 }
                 
-                if entry_data['title'] and entry_data['link']:
-                    entries.append(entry_data)
+                response = requests.get(url, params=params, timeout=30)
+                response.raise_for_status()
+                
+                data = response.json()
+                page_entries = []
+                
+                for item in data.get('items', []):
+                    # Skip general job sites, career pages, and irrelevant domains
+                    link = item.get('link', '')
+                    if any(domain in link.lower() for domain in [
+                        'linkedin.com', 'indeed.com', 'glassdoor.com', 'jobs.',
+                        'career', 'wikipedia.org', 'youtube.com', 'twitter.com',
+                        'facebook.com', 'reddit.com'
+                    ]):
+                        continue
+                    
+                    title = self._extract_full_title(item)
+                    
+                    # Skip if we couldn't get a good title
+                    if title == "Untitled Article" or not title:
+                        continue
+                    
+                    # Skip if title is too generic or contains job-related keywords
+                    if any(keyword in title.lower() for keyword in [
+                        'job', 'career', 'hiring', 'position', 'vacancy',
+                        'employment', 'recruiter', 'hr ', 'human resources',
+                        'latest research and news', 'health sciences - latest'
+                    ]):
+                        continue
+                    
+                    # Reduced filtering for navigation/category pages - be more permissive
+                    if any(nav_pattern in title.lower() for nav_pattern in [
+                        'browse articles', 'browse all', 'view articles', 'view all',
+                        'home page', 'main page', 'category:', 'section:',
+                        'browse by', 'filter by', 'search results',
+                        'table of contents', 'current issue'
+                    ]):
+                        continue
+                    
+                    entry_data = {
+                        'id': str(uuid.uuid4()),
+                        'title': title,
+                        'description': self._sanitize_text(item.get('snippet', '')),
+                        'link': link,
+                        'pub_date': self._parse_date(item.get('pagemap', {}).get('metatags', [{}])[0].get('article:published_time', '')),
+                        'source': self._extract_domain(link),
+                        'brief_date': self.brief_date,
+                        'search_query': query
+                    }
+                    
+                    if entry_data['title'] and entry_data['link']:
+                        page_entries.append(entry_data)
+                
+                entries.extend(page_entries)
+                
+                # Stop if we have enough results or no more results available
+                if len(entries) >= max_results or len(page_entries) == 0:
+                    break
+                
+                # Small delay between pages to be respectful
+                if page < pages_needed - 1:
+                    time.sleep(0.5)
+            
+            # Limit to requested number of results
+            entries = entries[:max_results]
             
             self.logger.info(json.dumps({
                 "timestamp": datetime.now(timezone.utc).isoformat(),
                 "search_type": "google",
                 "query": query,
                 "results_found": len(entries),
+                "pages_searched": min(pages_needed, page + 1),
                 "max_requested": max_results
             }))
             
         except Exception as e:
             self.logger.error(json.dumps({
                 "timestamp": datetime.now(timezone.utc).isoformat(),
-                "search_type": "google",
+                "search_type": "google", 
                 "query": query,
                 "error": str(e)
             }))
@@ -725,6 +758,104 @@ class FeedProcessor:
             self.logger.error(json.dumps({
                 "timestamp": datetime.now(timezone.utc).isoformat(),
                 "search_type": "pubmed",
+                "query": query,
+                "error": str(e)
+            }))
+        
+        return entries
+    
+    def search_europepmc(self, query: str, max_results: int = 5) -> List[Dict]:
+        """Search Europe PMC for additional research papers."""
+        entries = []
+        try:
+            url = f"{self.europepmc_base_url}search"
+            params = {
+                'query': f'({query}) AND (PUB_TYPE:"Journal Article")',
+                'format': 'json',
+                'pageSize': min(max_results, 25),
+                'sort': 'date',
+                'synonym': 'true'
+            }
+            
+            response = requests.get(url, params=params, timeout=30)
+            response.raise_for_status()
+            data = response.json()
+            
+            for result in data.get('resultList', {}).get('result', []):
+                if result.get('isOpenAccess') == 'Y':  # Prefer open access
+                    entry_data = {
+                        'id': str(uuid.uuid4()),
+                        'title': result.get('title', ''),
+                        'description': result.get('abstractText', '')[:500] if result.get('abstractText') else '',
+                        'link': f"https://europepmc.org/article/{result.get('source', '')}/{result.get('id', '')}",
+                        'pub_date': self._parse_date(result.get('firstPublicationDate', '')),
+                        'source': 'Europe PMC',
+                        'brief_date': self.brief_date,
+                        'search_query': query
+                    }
+                    
+                    if entry_data['title']:
+                        entries.append(entry_data)
+            
+            self.logger.info(json.dumps({
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "search_type": "europepmc",
+                "query": query,
+                "results_found": len(entries)
+            }))
+            
+        except Exception as e:
+            self.logger.error(json.dumps({
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "search_type": "europepmc",
+                "query": query,
+                "error": str(e)
+            }))
+        
+        return entries
+    
+    def search_semantic_scholar(self, query: str, max_results: int = 5) -> List[Dict]:
+        """Search Semantic Scholar for AI research papers."""
+        entries = []
+        try:
+            url = f"{self.semantic_scholar_base_url}paper/search"
+            params = {
+                'query': query,
+                'limit': min(max_results, 100),
+                'fields': 'title,abstract,url,year,publicationDate,venue'
+            }
+            
+            response = requests.get(url, params=params, timeout=30)
+            response.raise_for_status()
+            data = response.json()
+            
+            for paper in data.get('data', []):
+                if paper.get('year', 0) >= 2020:  # Recent papers only
+                    entry_data = {
+                        'id': str(uuid.uuid4()),
+                        'title': paper.get('title', ''),
+                        'description': paper.get('abstract', '')[:500] if paper.get('abstract') else '',
+                        'link': paper.get('url', ''),
+                        'pub_date': self._parse_date(paper.get('publicationDate', '')),
+                        'source': 'Semantic Scholar',
+                        'brief_date': self.brief_date,
+                        'search_query': query
+                    }
+                    
+                    if entry_data['title'] and entry_data['link']:
+                        entries.append(entry_data)
+            
+            self.logger.info(json.dumps({
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "search_type": "semantic_scholar",
+                "query": query,
+                "results_found": len(entries)
+            }))
+            
+        except Exception as e:
+            self.logger.error(json.dumps({
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "search_type": "semantic_scholar", 
                 "query": query,
                 "error": str(e)
             }))
@@ -813,6 +944,78 @@ class FeedProcessor:
             all_entries.extend(entries)
             total_fetched += len(entries)
         
+        # Phase 3: Europe PMC Search (Additional academic papers)
+        print("Searching Europe PMC for additional research papers...")
+        europe_pmc_queries = [
+            "generative artificial intelligence clinical trials",
+            "large language models healthcare research",
+            "AI clinical trial automation"
+        ]
+        
+        for query in europe_pmc_queries:
+            entries = self.search_europepmc(query, 3)  # Smaller number to avoid duplicates
+            all_entries.extend(entries)
+            total_fetched += len(entries)
+        
+        # Phase 4: Semantic Scholar Search (AI research focus)
+        print("Searching Semantic Scholar for AI research papers...")
+        semantic_queries = [
+            "generative AI clinical trials healthcare",
+            "large language models medical research clinical"
+        ]
+        
+        for query in semantic_queries:
+            entries = self.search_semantic_scholar(query, 3)  # Smaller number to avoid duplicates
+            all_entries.extend(entries)
+            total_fetched += len(entries)
+        
+        # Phase 5: RSS Feeds (Re-enabled key feeds)
+        print("Fetching from key RSS feeds...")
+        for feed_url, source_name, limit in self.RSS_FEEDS:
+            try:
+                feed = feedparser.parse(feed_url)
+                entries_count = 0
+                
+                for entry in feed.entries[:limit]:
+                    # Basic date filtering
+                    entry_date = None
+                    if hasattr(entry, 'published_parsed') and entry.published_parsed:
+                        entry_date = datetime(*entry.published_parsed[:6], tzinfo=timezone.utc)
+                    elif hasattr(entry, 'updated_parsed') and entry.updated_parsed:
+                        entry_date = datetime(*entry.updated_parsed[:6], tzinfo=timezone.utc)
+                    
+                    # Skip old entries
+                    if entry_date and (datetime.now(timezone.utc) - entry_date).days > self.days_back:
+                        continue
+                    
+                    entry_data = {
+                        'id': str(uuid.uuid4()),
+                        'title': self._sanitize_text(entry.title),
+                        'description': self._sanitize_text(entry.get('summary', entry.get('description', ''))),
+                        'link': entry.link,
+                        'pub_date': entry_date.isoformat() if entry_date else datetime.now(timezone.utc).isoformat(),
+                        'source': source_name,
+                        'brief_date': self.brief_date
+                    }
+                    
+                    all_entries.append(entry_data)
+                    entries_count += 1
+                
+                self.logger.info(json.dumps({
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "source": source_name,
+                    "articles_fetched": entries_count,
+                    "max_allowed": limit
+                }))
+                
+            except Exception as e:
+                self.logger.error(json.dumps({
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "source": source_name,
+                    "error": str(e),
+                    "feed_url": feed_url
+                }))
+        
         # Remove duplicates based on URL
         unique_entries = []
         seen_urls = set()
@@ -826,8 +1029,10 @@ class FeedProcessor:
             "total_articles_fetched": len(unique_entries),
             "duplicates_removed": len(all_entries) - len(unique_entries),
             "search_queries_used": len(search_queries) if 'search_queries' in locals() else len(self.FALLBACK_SEARCH_QUERIES),
-            "search_apis_used": 2,  # Google + PubMed
-            "llm_query_generation": self._generated_queries_cache is not None
+            "search_apis_used": 5,  # Google + PubMed + Europe PMC + Semantic Scholar + RSS
+            "llm_query_generation": self._generated_queries_cache is not None,
+            "enhanced_sources": ["Google CSE", "PubMed", "Europe PMC", "Semantic Scholar", "RSS Feeds"],
+            "improvements_applied": ["Two-stage filtering", "Enhanced title extraction", "BM25 ranking", "MeSH terms", "Pagination"]
         }))
                 
         return unique_entries
@@ -857,68 +1062,194 @@ class FeedProcessor:
         
         return 'Unknown'
     
+    def _quick_ai_screening(self, entry: Dict) -> bool:
+        """Stage 1: Quick keyword screening to filter out obvious non-matches."""
+        title_desc = f"{entry.get('title', '')} {entry.get('description', '')}".lower()
+        
+        # Quick AI keyword check (more inclusive than before)
+        ai_keywords = [
+            'artificial intelligence', 'ai ', ' ai', 'machine learning', 'ml ',
+            'deep learning', 'neural network', 'chatgpt', 'gpt-', 'llm', 'llms',
+            'large language model', 'foundation model', 'generative ai',
+            'natural language processing', 'nlp', 'computer vision',
+            'automated', 'algorithm', 'predictive model', 'digital health',
+            'smart system', 'intelligent system', 'computational'
+        ]
+        
+        clinical_keywords = [
+            'clinical trial', 'clinical research', 'clinical study', 'trial',
+            'patient recruitment', 'trial design', 'trial protocol',
+            'clinical investigation', 'study protocol', 'research study',
+            'randomized', 'controlled trial', 'trial data', 'clinical data'
+        ]
+        
+        # Must have both AI and clinical keywords
+        has_ai_keyword = any(keyword in title_desc for keyword in ai_keywords)
+        has_clinical_keyword = any(keyword in title_desc for keyword in clinical_keywords)
+        
+        return has_ai_keyword and has_clinical_keyword
+    
+    def _calculate_relevance_score(self, entry: Dict, controlled_vocabulary: List[str]) -> float:
+        """Calculate BM25-style relevance score for ranking articles."""
+        # Controlled vocabulary for clinical AI terms
+        if not controlled_vocabulary:
+            controlled_vocabulary = [
+                'artificial intelligence', 'machine learning', 'deep learning', 'neural network',
+                'chatgpt', 'gpt-4', 'large language model', 'llm', 'generative ai',
+                'natural language processing', 'nlp', 'foundation model',
+                'clinical trial', 'clinical research', 'patient recruitment', 'trial design',
+                'trial protocol', 'clinical study', 'randomized controlled trial',
+                'trial monitoring', 'clinical data', 'trial automation'
+            ]
+        
+        # Combine title and description for scoring
+        text = f"{entry.get('title', '')} {entry.get('description', '')}".lower()
+        words = re.findall(r'\b\w+\b', text)
+        
+        if not words:
+            return 0.0
+        
+        # BM25 parameters
+        k1 = 1.2
+        b = 0.75
+        avg_doc_length = 50  # Assumed average document length
+        doc_length = len(words)
+        
+        score = 0.0
+        
+        # Calculate BM25 score for each vocabulary term
+        for term in controlled_vocabulary:
+            term_words = term.split()
+            term_count = 0
+            
+            # Count occurrences of the term (could be multi-word)
+            if len(term_words) == 1:
+                term_count = words.count(term_words[0])
+            else:
+                # For multi-word terms, check for phrase occurrence
+                text_for_phrase = ' '.join(words)
+                term_count = text_for_phrase.count(term)
+            
+            if term_count > 0:
+                # BM25 formula
+                tf = term_count / doc_length
+                idf = math.log((1000 + 1) / (term_count + 1))  # Simplified IDF
+                
+                term_score = idf * (tf * (k1 + 1)) / (tf + k1 * (1 - b + b * (doc_length / avg_doc_length)))
+                score += term_score
+        
+        return score
+    
+    def _calculate_recency_score(self, entry: Dict) -> float:
+        """Calculate recency score (more recent = higher score)."""
+        try:
+            pub_date = datetime.fromisoformat(entry.get('pub_date', '').replace('Z', '+00:00'))
+            now = datetime.now(timezone.utc)
+            days_old = (now - pub_date).days
+            
+            # Exponential decay: newer articles get higher scores
+            # Articles from today get score 1.0, articles from 30 days ago get ~0.5
+            recency_score = math.exp(-days_old / 30.0)
+            return recency_score
+        except:
+            return 0.5  # Default for unparseable dates
+    
+    def _rank_articles(self, entries: List[Dict]) -> List[Dict]:
+        """Rank articles by combined recency and relevance score."""
+        controlled_vocab = [
+            'artificial intelligence', 'machine learning', 'deep learning', 'neural network',
+            'chatgpt', 'gpt-4', 'gpt-3', 'claude', 'llama', 'gemini',
+            'large language model', 'llm', 'foundation model', 'generative ai',
+            'natural language processing', 'nlp', 'computer vision',
+            'clinical trial', 'clinical research', 'patient recruitment', 'trial design',
+            'trial protocol', 'clinical study', 'randomized controlled trial', 'rct',
+            'trial monitoring', 'clinical data', 'trial automation', 'patient engagement',
+            'synthetic data', 'ai chatbot', 'virtual assistant', 'clinical documentation'
+        ]
+        
+        # Calculate combined score for each entry
+        for entry in entries:
+            relevance_score = self._calculate_relevance_score(entry, controlled_vocab)
+            recency_score = self._calculate_recency_score(entry)
+            
+            # Combined score: 70% relevance, 30% recency
+            combined_score = (0.7 * relevance_score) + (0.3 * recency_score)
+            entry['_ranking_score'] = combined_score
+            entry['_relevance_score'] = relevance_score
+            entry['_recency_score'] = recency_score
+        
+        # Sort by combined score (highest first)
+        ranked_entries = sorted(entries, key=lambda x: x.get('_ranking_score', 0), reverse=True)
+        
+        # Remove scoring fields from final output
+        for entry in ranked_entries:
+            entry.pop('_ranking_score', None)
+            entry.pop('_relevance_score', None) 
+            entry.pop('_recency_score', None)
+        
+        return ranked_entries
+    
     def identify_ai_content(self, entries: List[Dict]) -> List[Dict]:
-        """Identify articles specifically about AI applications in clinical research and tag them using OpenAI API."""
+        """Identify articles specifically about AI applications in clinical research using two-stage filtering."""
         ai_entries = []
         
         for entry in entries:
+            # STAGE 1: Quick keyword screening
+            if not self._quick_ai_screening(entry):
+                # Failed quick screen - skip LLM evaluation
+                continue
+            
+            # STAGE 2: Detailed LLM evaluation for articles that passed Stage 1
             # Try up to 3 times to ensure we get all required fields
             for attempt in range(3):
                 try:
+                    # Relaxed prompt to include NLP and machine learning context
                     prompt = f"""
-                    You are a STRICT Generative AI and clinical trials expert. You must be HIGHLY SELECTIVE and only classify articles as AI-related if they EXPLICITLY mention specific AI technologies in clinical research contexts.
-
-                    STRICT CRITERIA - MUST EXPLICITLY MENTION CLINICAL TRIALS OR CLINICAL RESEARCH OPERATIONS:
+                    You are an expert AI researcher specializing in clinical trials and medical research applications.
                     
-                    TIER 1 - GENERATIVE AI IN CLINICAL TRIALS (HIGHEST PRIORITY):
-                    - Large Language Models (LLMs): ChatGPT, GPT-4, Claude, Llama, Gemini used in clinical trial operations
-                    - AI chatbots for patient recruitment, enrollment, or trial engagement
-                    - AI-powered protocol writing, trial design, or regulatory submissions
-                    - Synthetic data generation specifically for clinical trials
-                    - Natural language generation for clinical trial documentation
-                    - AI scribes or documentation tools used in clinical research settings
+                    Analyze this article to determine if it discusses AI technologies applied to clinical research or healthcare.
                     
-                    TIER 2 - APPLIED AI IN CLINICAL TRIAL OPERATIONS:
-                    - Natural language processing for clinical trial data analysis
-                    - AI tools for clinical trial monitoring or safety assessment
-                    - AI-powered patient stratification or recruitment in trials
+                    ACCEPT IF THE ARTICLE MENTIONS:
                     
-                    REJECT IMMEDIATELY IF:
-                    - General healthcare AI without clinical trial connection
-                    - Medical education or training (unless specifically for clinical trials)
-                    - Diagnostic AI tools (unless part of clinical trial operations)
-                    - General patient care AI (unless in trial context)
-                    - Research methodology reviews (unless about trial operations)
-                    - Healthcare system improvements (unless trial-specific)
-                    - Academic surveys or reviews without trial focus
-                    - AI ethics or explainability (unless trial-specific)
+                    TIER 1 - CORE GENERATIVE AI IN CLINICAL RESEARCH:
+                    - ChatGPT, GPT models, LLMs, foundation models in clinical research
+                    - Generative AI for trial protocols, patient communication, or data generation
+                    - AI chatbots or virtual assistants for patient recruitment or trial engagement
+                    - Synthetic data generation for clinical research
+                    - AI-powered clinical trial documentation or report generation
                     
-                    CLINICAL TRIAL KEYWORDS REQUIRED:
-                    Must mention: "clinical trial", "clinical research", "trial design", "patient recruitment", 
-                    "trial protocol", "clinical study", "trial monitoring", "trial operations", "trial data",
-                    "regulatory compliance", "trial management", "clinical investigation"
+                    TIER 2 - APPLIED AI/ML IN CLINICAL RESEARCH:
+                    - Natural language processing for clinical data analysis
+                    - Machine learning for clinical trial monitoring or safety assessment
+                    - AI tools for patient stratification or recruitment
+                    - Automated systems for trial data collection or management
+                    - Predictive models for clinical outcomes or patient selection
+                    - Computer-assisted clinical decision making
+                    
+                    TIER 3 - BROADER AI/ML IN HEALTHCARE RESEARCH:
+                    - Digital health technologies used in clinical studies
+                    - Computational methods for clinical research
+                    - AI-assisted drug discovery mentioned in research contexts
+                    - Automated clinical documentation systems
+                    - Machine learning applications in healthcare research
+                    - NLP applications in medical data processing
+                    
+                    BE MORE INCLUSIVE: Accept articles that mention AI/ML technologies in healthcare research contexts,
+                    not just strict clinical trial operations. Include broader applications that could benefit clinical research.
                     
                     Article Title: {entry['title']}
                     Article Description: {entry['description'][:500]}
                     
-                    CRITICAL ANALYSIS: 
-                    1. Does this article EXPLICITLY mention clinical trials or clinical research operations?
-                    2. Is the AI technology being used specifically in trial contexts (not general healthcare)?
-                    3. Does this discuss actual trial operations like recruitment, monitoring, data collection, or compliance?
-                    
-                    BE EXTREMELY STRICT: Only classify as AI-related if the article specifically discusses AI applications 
-                    in clinical trial operations, not general healthcare AI applications.
-
                     You MUST provide ALL THREE fields:
-                    1. is_ai_related: true/false (BE STRICT - only true for explicit AI technology mentions)
-                    2. A 120-word comprehensive summary of the SPECIFIC AI technology and its clinical trial application
+                    1. is_ai_related: true/false (More inclusive - include ML/NLP/digital health contexts)
+                    2. A comprehensive summary of the AI technology and its relevance to clinical research
                     3. ai_tag: Choose the most specific category
 
                     JSON format required:
                     {{
                         "is_ai_related": true/false,
-                        "summary": "120-word comprehensive summary detailing the SPECIFIC AI technology mentioned, its clinical trial application, methodology, potential benefits, implementation challenges, and significance for clinical research operations. Include technical details about the AI system, target patient populations, trial phases involved, operational improvements, and expected outcomes.",
-                        "ai_tag": "Most specific category from: Generative AI, Natural Language Processing, Trial Optimization, AI Ethics"
+                        "summary": "Comprehensive summary detailing the AI/ML technology mentioned, its clinical research relevance, methodology, potential benefits, and significance for clinical operations. Include technical details about the system, applications, and expected outcomes.",
+                        "ai_tag": "Most specific category from: Generative AI, Natural Language Processing, Machine Learning, Trial Optimization, AI Ethics, Digital Health"
                     }}
                     """
                     
@@ -981,7 +1312,17 @@ class FeedProcessor:
                     if attempt == 2:  # Last attempt
                         continue
         
-        return ai_entries
+        # Apply ranking to AI entries before returning
+        ranked_ai_entries = self._rank_articles(ai_entries)
+        
+        self.logger.info(json.dumps({
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "total_ai_entries": len(ranked_ai_entries),
+            "ranking_applied": True,
+            "message": "Articles ranked by combined relevance and recency scores"
+        }))
+        
+        return ranked_ai_entries
     
     def _validate_ai_response(self, result: Dict) -> bool:
         """Validate that LLM response contains all required fields for AI identification."""
