@@ -189,24 +189,71 @@ class FeedProcessor:
         self.logger.info(json.dumps(log_entry))
     
     def _sanitize_text(self, text: str) -> str:
-        """Sanitize and clean text input."""
+        """Sanitize and clean text input with improved Unicode handling."""
         if not text:
             return ""
         
-        # Handle encoding issues first
-        if isinstance(text, bytes):
-            text = text.decode('utf-8', errors='replace')
+        # Track if we had problematic characters for logging
+        had_replacement_chars = '\ufffd' in text if isinstance(text, str) else False
         
-        # Replace common problematic characters
-        text = text.replace('\u2013', '-')  # en dash
-        text = text.replace('\u2014', '--')  # em dash
-        text = text.replace('\u2018', "'")  # left single quote
-        text = text.replace('\u2019', "'")  # right single quote
-        text = text.replace('\u201c', '"')  # left double quote
-        text = text.replace('\u201d', '"')  # right double quote
-        text = text.replace('\u2026', '...')  # ellipsis
-        text = text.replace('\u00a0', ' ')  # non-breaking space
-        text = text.replace('\ufeff', '')  # BOM (byte order mark)
+        # Handle encoding issues more gracefully
+        if isinstance(text, bytes):
+            # Try multiple encodings before falling back to replace
+            for encoding in ['utf-8', 'utf-16', 'latin-1', 'cp1252']:
+                try:
+                    text = text.decode(encoding)
+                    break
+                except (UnicodeDecodeError, UnicodeError):
+                    continue
+            else:
+                # If all encodings fail, use utf-8 with replace
+                text = text.decode('utf-8', errors='replace')
+                had_replacement_chars = True
+        
+        # Normalize Unicode characters to their closest ASCII equivalents
+        import unicodedata
+        try:
+            # NFKD normalization decomposes characters and removes combining marks
+            text = unicodedata.normalize('NFKD', text)
+        except:
+            pass  # If normalization fails, continue with original text
+        
+        # Replace common problematic Unicode characters with ASCII equivalents
+        unicode_replacements = {
+            # Quotation marks
+            '\u2013': '-',      # en dash
+            '\u2014': '--',     # em dash
+            '\u2015': '--',     # horizontal bar
+            '\u2018': "'",      # left single quote
+            '\u2019': "'",      # right single quote
+            '\u201a': "'",      # single low-9 quote
+            '\u201b': "'",      # single high-reversed-9 quote
+            '\u201c': '"',      # left double quote
+            '\u201d': '"',      # right double quote
+            '\u201e': '"',      # double low-9 quote
+            '\u201f': '"',      # double high-reversed-9 quote
+            '\u2026': '...',    # ellipsis
+            '\u00a0': ' ',      # non-breaking space
+            '\u00ad': '',       # soft hyphen
+            '\ufeff': '',       # BOM (byte order mark)
+            '\u200b': '',       # zero width space
+            '\u200c': '',       # zero width non-joiner
+            '\u200d': '',       # zero width joiner
+            '\u2060': '',       # word joiner
+            # Bullet points and symbols
+            '\u2022': '•',      # bullet
+            '\u2023': '‣',      # triangular bullet
+            '\u25e6': '◦',      # white bullet
+            # Mathematical symbols
+            '\u2212': '-',      # minus sign
+            '\u00d7': 'x',      # multiplication sign
+            '\u00f7': '/',      # division sign
+            # Common accented characters (preserve these)
+            # These will be handled by keeping printable characters
+        }
+        
+        for unicode_char, replacement in unicode_replacements.items():
+            text = text.replace(unicode_char, replacement)
         
         # Remove HTML tags and entities
         clean_text = bleach.clean(text, tags=[], strip=True)
@@ -214,8 +261,39 @@ class FeedProcessor:
         # Normalize whitespace
         clean_text = re.sub(r'\s+', ' ', clean_text).strip()
         
-        # Ensure only printable ASCII and common Unicode characters
-        clean_text = ''.join(char for char in clean_text if ord(char) < 127 or char in 'áéíóúàèìòùâêîôûäëïöüñç')
+        # More permissive character filtering - keep printable characters and common international text
+        def is_allowed_char(char):
+            # Allow ASCII printable characters
+            if 32 <= ord(char) <= 126:
+                return True
+            # Allow common accented characters and international letters
+            if 128 <= ord(char) <= 255:
+                category = unicodedata.category(char)
+                # Keep letters, marks, numbers, punctuation, symbols (but not control chars)
+                return category.startswith(('L', 'M', 'N', 'P', 'S'))
+            # Allow some other Unicode ranges for international content
+            if 256 <= ord(char) <= 2000:
+                category = unicodedata.category(char)
+                return category.startswith(('L', 'N'))  # Letters and numbers only for higher Unicode
+            return False
+        
+        clean_text = ''.join(char for char in clean_text if is_allowed_char(char))
+        
+        # Final cleanup - remove any remaining problematic sequences
+        clean_text = re.sub(r'[\ufffd\uffff]', '', clean_text)  # Remove replacement characters
+        clean_text = re.sub(r'\s+', ' ', clean_text).strip()    # Final whitespace normalization
+        
+        # Log if we encountered character encoding issues (but don't spam the logs)
+        if had_replacement_chars or '\ufffd' in str(text):
+            # Only log occasionally to avoid spam
+            import random
+            if random.random() < 0.1:  # Log 10% of the time
+                self.logger.info(json.dumps({
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "encoding_issue": "Replacement characters found in text",
+                    "sample_length": len(clean_text),
+                    "message": "Character encoding handled gracefully"
+                }))
         
         return clean_text
     
@@ -262,7 +340,28 @@ class FeedProcessor:
             
             response.raise_for_status()
             
-            soup = BeautifulSoup(response.content, 'html.parser')
+            # Handle encoding more robustly
+            if response.encoding is None or response.encoding.lower() in ['iso-8859-1', 'ascii']:
+                # requests sometimes defaults to ISO-8859-1, which causes issues
+                # Try common encodings
+                for encoding in ['utf-8', 'utf-16', 'cp1252', 'latin-1']:
+                    try:
+                        test_decode = response.content.decode(encoding)
+                        response.encoding = encoding
+                        break
+                    except (UnicodeDecodeError, UnicodeError):
+                        continue
+                else:
+                    response.encoding = 'utf-8'  # Final fallback
+            
+            # Get text content and handle any remaining encoding issues
+            try:
+                content = response.text
+            except UnicodeDecodeError:
+                # Fallback to content with error handling
+                content = response.content.decode('utf-8', errors='replace')
+            
+            soup = BeautifulSoup(content, 'html.parser')
             
             def is_scraped_title_valid(title: str, source: str) -> bool:
                 """Enhanced validation for scraped titles with better quality checks."""
@@ -479,97 +578,314 @@ class FeedProcessor:
     def _extract_full_title(self, item: Dict) -> str:
         """Extract full title from Google search result, trying multiple sources."""
         
-        def is_valid_title(title: str) -> bool:
-            """Check if a title is valid and not generic/truncated - Enhanced approach."""
+        def is_potentially_good_title(title: str) -> bool:
+            """Less strict check for whether a title is worth considering."""
             if not title or len(title.strip()) < 15:
                 return False
             
             title_lower = title.lower()
-            title_clean = title.strip()
             
             # Reject clearly broken/invalid titles
             invalid_patterns = [
-                'page not found',
-                '404 error', 
-                'access denied',
-                'untitled',
-                'loading...',
-                'please wait',
-                'coming soon'
+                'page not found', '404 error', 'access denied', 'untitled',
+                'loading...', 'please wait', 'coming soon', 'subscribe',
+                'log in', 'sign in', 'register', 'careers', 'jobs',
+                'home page', 'homepage', 'main page'
             ]
-            
-            for pattern in invalid_patterns:
-                if pattern in title_lower:
-                    return False
-            
-            # More aggressive rejection of truncated titles
-            if title_clean.endswith('...'):
-                # If it ends with ..., it must be substantial enough
-                content_without_dots = title_clean[:-3].strip()
-                words = content_without_dots.split()
-                # Require more content for truncated titles
-                if len(words) < 7 or len(content_without_dots) < 45:
-                    return False
-            
-            # Also reject titles ending with .. (double dots)
-            if title_clean.endswith('..') and not title_clean.endswith('...'):
+            if any(pattern in title_lower for pattern in invalid_patterns):
                 return False
-                
+            
             return True
-        
-        # Try different title sources in order of preference
+
+        def clean_separated_title(title: str) -> str:
+            """Clean up titles with separators, trying to extract the article title."""
+            if not title:
+                return title
+                
+            # Common separators used in "Article Title | Site Name" format
+            separators = [' | ', '|', ' – ', '–', ' — ', '—', ' - ', ' : ', ':']
+            
+            for sep in separators:
+                if sep in title:
+                    parts = [part.strip() for part in title.split(sep)]
+                    
+                    # Filter out obvious site names and choose the best part
+                    site_indicators = [
+                        'nature', 'science', 'arxiv', 'pubmed', 'pmc', 'elsevier',
+                        'springer', 'wiley', 'taylor', 'francis', 'ieee',
+                        'news', 'updates', 'pharma', 'medical', 'health',
+                        'digital', 'exploring', 'reviews', 'analysis',
+                        'pharmaphorum', 'medcity', 'stat', 'endpoints',
+                        'evolving digital futu', 'views on pharma and biot',
+                        'nature medicine', 'research and news', 'health sciences',
+                        'timely updates', 'industry updates'
+                    ]
+                    
+                    # Find parts that don't look like site names
+                    article_parts = []
+                    for part in parts:
+                        part_lower = part.lower()
+                        # Skip if it's clearly a site name
+                        if not any(indicator in part_lower for indicator in site_indicators):
+                            if len(part) >= 20:  # Reasonable length for article title
+                                article_parts.append(part)
+                    
+                    # Return the longest non-site part
+                    if article_parts:
+                        return max(article_parts, key=len)
+                    
+                    # If all parts seem like site names, return the longest one anyway
+                    if parts:
+                        longest_part = max(parts, key=len)
+                        if len(longest_part) >= 20:
+                            return longest_part
+            
+            return title
+
+        # Gather all potential titles from metadata
+        title_candidates = []
         title_sources = [
-            ('google_title', item.get('title', '')),
-            ('og_title', item.get('pagemap', {}).get('metatags', [{}])[0].get('og:title', '')),
-            ('twitter_title', item.get('pagemap', {}).get('metatags', [{}])[0].get('twitter:title', '')),
-            ('article_headline', item.get('pagemap', {}).get('article', [{}])[0].get('headline', '')),
-            ('citation_title', item.get('pagemap', {}).get('metatags', [{}])[0].get('citation_title', '')),
+            item.get('title', ''),
+            item.get('pagemap', {}).get('metatags', [{}])[0].get('og:title', ''),
+            item.get('pagemap', {}).get('metatags', [{}])[0].get('twitter:title', ''),
+            item.get('pagemap', {}).get('article', [{}])[0].get('headline', ''),
+            item.get('pagemap', {}).get('metatags', [{}])[0].get('citation_title', ''),
         ]
         
-        # First pass: try to find a good title from metadata
-        for source_name, title in title_sources:
-            if title:
+        for title in title_sources:
+            if title and isinstance(title, str):
                 clean_title = self._sanitize_text(title)
-                if is_valid_title(clean_title):
-                    return clean_title
+                if is_potentially_good_title(clean_title):
+                    # Clean separated titles immediately
+                    cleaned_title = clean_separated_title(clean_title)
+                    if cleaned_title and is_potentially_good_title(cleaned_title):
+                        title_candidates.append(cleaned_title)
+
+        # Determine the best title from metadata
+        best_meta_title = ""
+        if title_candidates:
+            # Prefer longer titles, they are more likely to be complete
+            best_meta_title = max(title_candidates, key=len)
+
+        # Always try scraping if we have a short or potentially truncated title
+        should_scrape = False
+        link = item.get('link')
+
+        if not link:
+            # No link, can't scrape, just return the best we have
+            return best_meta_title or "Untitled Article"
+
+        # More aggressive conditions to trigger scraping for better titles
+        if not best_meta_title:
+            should_scrape = True
+        elif best_meta_title.endswith('...') or best_meta_title.endswith('…'):
+            should_scrape = True
+        elif len(best_meta_title) < 60:  # Increased threshold even more for short titles
+            should_scrape = True
+        elif any(indicator in best_meta_title.lower() for indicator in [
+            'news', 'updates', 'latest', 'digital', 'exploring', 'reviews'
+        ]):
+            # These are often generic site descriptions, not article titles
+            should_scrape = True
+        elif len([word for word in best_meta_title.split() if len(word) > 3]) < 5:
+            # If there aren't enough substantial words, try scraping
+            should_scrape = True
         
-        # Second pass: try scraping the webpage if no good title found OR if title is truncated
-        link = item.get('link', '')
-        google_title = item.get('title', '')
+        scraped_title = ""
+        if should_scrape:
+            scraped_title = self._extract_title_from_webpage(link, self._extract_domain(link))
+            if scraped_title:
+                scraped_title = clean_separated_title(scraped_title)
+
+        # Choose the best title
+        if scraped_title and len(scraped_title) > len(best_meta_title):
+            return scraped_title
+        elif scraped_title and not best_meta_title:
+            return scraped_title
+        elif best_meta_title:
+            return best_meta_title
+        elif scraped_title:
+            return scraped_title
+        else:
+            return "Untitled Article"
+
+    def _is_quality_article_url(self, url: str) -> bool:
+        """Enhanced check to determine if URL points to a specific article rather than homepage/category."""
+        if not url:
+            return False
+            
+        url_lower = url.lower()
         
-        # Check if the Google title appears truncated
-        is_truncated = (google_title.endswith('...') or google_title.endswith('…') or 
-                       len(google_title) < 40 or '...' in google_title)
+        # Skip obvious homepage URLs
+        homepage_patterns = [
+            r'https?://[^/]+/?$',  # Just domain.com or domain.com/
+            r'https?://[^/]+/index\.',  # index.html, index.php, etc.
+            r'https?://[^/]+/home/?$',  # /home or /home/
+            r'https?://[^/]+/main/?$',  # /main or /main/
+        ]
         
-        if link and (not any(is_valid_title(title) for _, title in title_sources if title) or is_truncated):
-            scraped_title = self._extract_title_from_webpage(link)
-            if scraped_title and is_valid_title(scraped_title) and len(scraped_title) > len(google_title):
-                return scraped_title
+        for pattern in homepage_patterns:
+            if re.match(pattern, url):
+                return False
         
-        # Last resort: use the first available title but mark it as potentially problematic
-        for source_name, title in title_sources:
-            if title:
-                clean_title = self._sanitize_text(title)
-                if clean_title and len(clean_title.strip()) >= 10:
-                    # Check if this would be a problematic title
-                    if (clean_title.endswith('...') or clean_title.endswith('…') or
-                        '...' in clean_title or '…' in clean_title or
-                        len(clean_title) < 25 or  # Very short titles are often truncated
-                        clean_title.lower().endswith(' |') or
-                        clean_title.count('.') > 5):  # Titles with too many dots are often malformed
-                        continue  # Skip this source, try the next one
-                    
-                    # Log this as a problematic title for debugging
-                    self.logger.warning(json.dumps({
-                        "timestamp": datetime.now(timezone.utc).isoformat(),
-                        "issue": "using_potentially_bad_title",
-                        "title": clean_title,
-                        "url": link,
-                        "source": source_name
-                    }))
-                    return clean_title
+        # Skip category/section pages without specific article indicators
+        category_patterns = [
+            '/category/', '/categories/', '/tag/', '/tags/', '/section/', '/sections/',
+            '/topics/', '/topic/', '/subject/', '/subjects/', '/news/', '/articles/',
+            '/posts/', '/blog/', '/press/', '/updates/', '/latest/', '/recent/',
+            '/archive/', '/archives/', '/browse/', '/search/', '/results/',
+            '/reviews/', '/review/', '/analysis/', '/overview/'  # Added review patterns
+        ]
         
-        return "Untitled Article"
+        # Also check for category words at the end of URLs
+        category_endings = ['reviews', 'news', 'articles', 'posts', 'updates', 'latest', 'archive', 'browse']
+        url_path = url_lower.split('/')[-1]  # Get the last part after final slash
+        
+        has_category_pattern = (any(pattern in url_lower for pattern in category_patterns) or 
+                               url_path in category_endings)
+        
+        if has_category_pattern:
+            # But allow if it has specific article indicators
+            article_indicators = [
+                r'/\d{4}/', r'/\d{4}-\d{2}/', r'/\d{4}-\d{2}-\d{2}/',  # Date patterns
+                r'[_-]\d+', r'id=\d+', r'\?p=\d+', r'/article/', r'/story/',
+                r'/research/', r'/study/', r'/trial/', r'/paper/', r'/publication/',
+                r'[_-].*[_-]', r'%20', r'&.*=', r'\?.*='  # URL parameters/encoding, multiple words with separators
+            ]
+            
+            has_article_indicator = any(re.search(pattern, url) for pattern in article_indicators)
+            if not has_article_indicator:
+                # Additional check: if it's a category URL ending with '/', it's definitely a category page
+                if url_lower.endswith('/'):
+                    return False
+                # If it has meaningful content after category/ (longer than just one word)
+                category_part = url_lower.split('category/')[-1] if '/category/' in url_lower else ""
+                if category_part and len(category_part) > 20:  # Long enough to be specific content
+                    return True
+                return False
+        
+        # Skip URLs that are just domain.com/word (likely category pages)
+        path_parts = url_lower.replace('https://', '').replace('http://', '').split('/')[1:]
+        if len(path_parts) == 1 and path_parts[0]:
+            part = path_parts[0]
+            # Single word without specific indicators
+            if (len(part) < 20 and 
+                '.' not in part and 
+                '-' not in part and 
+                '_' not in part and
+                not any(char.isdigit() for char in part)):
+                return False
+        
+        return True
+
+    def _is_quality_article_title(self, title: str, url: str = "") -> bool:
+        """Enhanced detection of quality article titles vs generic/homepage titles."""
+        if not title:
+            return False
+        
+        title_lower = title.lower().strip()
+        
+        # Skip very short titles (likely navigation)
+        if len(title_lower) < 25:  # Increased minimum length
+            return False
+        
+        # Generic homepage/category patterns - expanded list
+        generic_patterns = [
+            # Site name patterns
+            'news & views on', 'latest news', 'industry updates', 'timely updates',
+            'reviews & analysis', 'research and news', 'health sciences',
+            'exploring', 'digital future', 'evolving', 'homepage', 'home page',
+            'pharma\'s evolving', 'digital futu', 'views on pharma',
+            
+            # Navigation patterns  
+            'browse articles', 'view all', 'see all', 'more articles',
+            'category:', 'section:', 'topic:', 'subject:', 'all posts',
+            'recent posts', 'latest posts', 'browse by',
+            
+            # Journal/site patterns
+            'current issue', 'latest issue', 'recent publications',
+            'journal homepage', 'main page', 'welcome to', 'about us',
+            'contact us', 'subscribe', 'newsletter',
+            
+            # Generic descriptors
+            'pharmaceutical news', 'biotech news', 'medical news',
+            'clinical research news', 'industry news', 'health news',
+            'research updates', 'science news',
+            
+            # Common generic titles from logs
+            'digital | exploring', 'pharmaphorum |', 'reviews & analysis |',
+            'news & views', 'latest research and', 'health sciences -'
+        ]
+        
+        for pattern in generic_patterns:
+            if pattern in title_lower:
+                return False
+        
+        # Check for title formats that are clearly site navigation
+        # Pattern: "Word | Site Name" where Word is generic
+        if '|' in title:
+            parts = [p.strip() for p in title.split('|')]
+            if len(parts) >= 2:
+                first_part = parts[0].lower()
+                # Generic first parts that indicate navigation
+                generic_first_parts = [
+                    'news', 'digital', 'updates', 'latest', 'reviews', 'articles', 
+                    'research', 'analysis', 'explore', 'home', 'about', 'contact',
+                    'subscribe', 'browse', 'search', 'archive', 'category'
+                ]
+                if first_part in generic_first_parts:
+                    return False
+                
+                # Also check if first part is too short and generic
+                if len(first_part) < 15 and any(word in first_part for word in generic_first_parts):
+                    return False
+        
+        # Check if title is mostly site branding without specific content
+        site_branding_words = [
+            'news', 'updates', 'views', 'analysis', 'research', 'digital', 'future', 
+            'latest', 'industry', 'pharma', 'pharmaceutical', 'biotech', 'medical', 
+            'health', 'clinical', 'science', 'discovery', 'innovation', 'exploring',
+            'evolving', 'timely', 'recent', 'current'
+        ]
+        
+        title_words = [word for word in title_lower.split() if len(word) > 3]
+        if title_words:
+            branding_word_count = sum(1 for word in title_words if word in site_branding_words)
+            # If more than 60% of substantial words are generic branding terms (was 50%, now more lenient)
+            if (branding_word_count / len(title_words)) > 0.6:
+                return False
+        
+        # Require some specific medical/research keywords for validation
+        specific_keywords = [
+            'study', 'trial', 'research', 'treatment', 'therapy', 'drug', 'medicine',
+            'patient', 'disease', 'clinical', 'diagnosis', 'procedure', 'intervention',
+            'outcome', 'efficacy', 'safety', 'adverse', 'dosage', 'protocol',
+            'randomized', 'controlled', 'placebo', 'biomarker', 'FDA', 'approval',
+            'phase', 'oncology', 'cardiology', 'neurology', 'diabetes', 'cancer'
+        ]
+        
+        has_specific_content = any(keyword in title_lower for keyword in specific_keywords)
+        
+        # If title is long enough and has specific content, it's likely good
+        if len(title_lower) > 40 and has_specific_content:
+            return True
+        
+        # If no specific content but very long and detailed, might still be good
+        if len(title_lower) > 80 and len(title_words) > 8:
+            return True
+        
+        # Special case: if title has AI/technology terms but no medical terms, still consider if detailed enough
+        ai_tech_keywords = [
+            'artificial intelligence', 'machine learning', 'deep learning', 'neural network',
+            'algorithm', 'model', 'chatgpt', 'gpt-4', 'llm', 'foundation model',
+            'generative', 'synthetic', 'automated', 'prediction', 'classification'
+        ]
+        
+        has_ai_tech_content = any(keyword in title_lower for keyword in ai_tech_keywords)
+        if len(title_lower) > 60 and has_ai_tech_content and len(title_words) > 6:
+            return True
+        
+        return False
 
     def search_google(self, query: str, max_results: int = 5) -> List[Dict]:
         """Search Google for articles using Custom Search API with pagination support."""
@@ -622,17 +938,20 @@ class FeedProcessor:
                     ]):
                         continue
                     
-                    title = self._extract_full_title(item)
-                    
-                    # Skip if we couldn't get a good title
-                    if title == "Untitled Article" or not title:
+                    # ENHANCED URL QUALITY CHECK - Skip homepage and category URLs
+                    if not self._is_quality_article_url(link):
                         continue
                     
-                    # Skip if title is too generic or contains job-related keywords
+                    title = self._extract_full_title(item)
+                    
+                    # ENHANCED TITLE QUALITY CHECK - More aggressive generic title detection
+                    if not self._is_quality_article_title(title, link):
+                        continue
+                    
+                    # Skip if title contains job-related keywords
                     if any(keyword in title.lower() for keyword in [
                         'job', 'career', 'hiring', 'position', 'vacancy',
-                        'employment', 'recruiter', 'hr ', 'human resources',
-                        'latest research and news', 'health sciences - latest'
+                        'employment', 'recruiter', 'hr ', 'human resources'
                     ]):
                         continue
                     
@@ -647,7 +966,7 @@ class FeedProcessor:
                     
                     entry_data = {
                         'id': str(uuid.uuid4()),
-                        'title': title,
+                        'title': self._sanitize_text(title),
                         'description': self._sanitize_text(item.get('snippet', '')),
                         'link': link,
                         'pub_date': self._parse_date(item.get('pagemap', {}).get('metatags', [{}])[0].get('article:published_time', '')),
