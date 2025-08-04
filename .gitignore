@@ -138,3 +138,7 @@ debug_*.py
 !briefs/.gitkeep
 !site/.gitkeep
 .env
+
+# Test files
+test_*.py
+debug_*.py
