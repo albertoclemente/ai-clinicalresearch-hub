@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The GenAI Clinical Trials Watch - {{ brief_date }}</title>
-    <meta name="description" content="Curated digest of Generative AI applications in clinical research">
+    <title>AI-Powered Clinical Research Intelligence Hub - {{ brief_date }}</title>
+    <meta name="description" content="Comprehensive AI-driven platform discovering cutting-edge artificial intelligence applications transforming clinical research and trials">
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -188,19 +188,19 @@
         <div class="relative z-10 text-center px-6 max-w-5xl mx-auto">
             <div class="opacity-100">
                 <h1 class="text-6xl md:text-8xl font-light text-white mb-6 tracking-tight">
-                    The <span class="font-mono text-electric-300">GenAI</span>
+                    <span class="font-mono text-electric-300">AI-Powered</span>
                 </h1>
             </div>
             
             <div class="opacity-100">
                 <h2 class="text-3xl md:text-5xl font-light text-white/90 mb-8 tracking-wide">
-                    Clinical Trials Watch
+                    Clinical Research Intelligence Hub
                 </h2>
             </div>
             
             <div class="opacity-100">
                 <p class="text-xl md:text-2xl text-white/70 mb-12 font-light max-w-3xl mx-auto leading-relaxed">
-                    Discover the latest breakthroughs in AI-powered clinical research
+                    Discover cutting-edge AI applications transforming clinical research and trials - from Generative AI and LLMs to Machine Learning and NLP innovations
                 </p>
             </div>
             
@@ -255,21 +255,29 @@
                 <div class="glass-card rounded-2xl p-6 max-w-4xl mx-auto">
                     <div class="flex flex-wrap items-center justify-between gap-4">
                         <div class="flex items-center space-x-4">
-                            <label class="text-sm font-medium text-gray-700">Filter by source:</label>
+                            <label class="text-sm font-medium text-gray-700">Filter by AI technology:</label>
                             <select 
-                                x-model="sourceFilter"
+                                x-model="aiTagFilter"
                                 @change="performSearch"
                                 class="px-4 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-neural-400 focus:border-transparent transition-all duration-200"
                             >
-                                <option value="">All Sources</option>
-                                <option value="PubMed">PubMed</option>
-                                <option value="Nature">Nature</option>
-                                <option value="FDA">FDA</option>
-                                <option value="NEJM">NEJM</option>
+                                <option value="">All AI Technologies</option>
+                                <option value="AI Diagnostics">AI Diagnostics</option>
+                                <option value="AI Ethics">AI Ethics</option>
+                                <option value="Clinical Decision Support">Clinical Decision Support</option>
+                                <option value="Computer Vision">Computer Vision</option>
+                                <option value="Digital Health">Digital Health</option>
+                                <option value="Digital Therapeutics">Digital Therapeutics</option>
+                                <option value="Drug Discovery AI">Drug Discovery AI</option>
+                                <option value="Generative AI">Generative AI</option>
+                                <option value="Machine Learning">Machine Learning</option>
+                                <option value="Natural Language Processing">Natural Language Processing</option>
+                                <option value="Predictive Analytics">Predictive Analytics</option>
+                                <option value="Trial Optimization">Trial Optimization</option>
                             </select>
                         </div>
                         
-                        <div class="text-sm text-gray-500" x-show="searchQuery || sourceFilter">
+                        <div class="text-sm text-gray-500" x-show="searchQuery || aiTagFilter">
                             <span x-text="filteredItems.length"></span> of {{ total_items }} articles
                         </div>
                     </div>
@@ -278,7 +286,7 @@
             
             <!-- No Results -->
             <div 
-                x-show="filteredItems.length === 0 && (searchQuery || sourceFilter)"
+                x-show="filteredItems.length === 0 && (searchQuery || aiTagFilter)"
                 class="text-center py-20 section-fade"
             >
                 <div class="max-w-md mx-auto">
@@ -358,7 +366,7 @@
             <div class="w-24 h-px bg-white/30 mx-auto mb-8"></div>
             
             <div class="flex items-center justify-center space-x-8 text-sm text-white/60">
-                <span>GenAI Clinical Trials Watch</span>
+                <span>AI-Powered Clinical Research Intelligence Hub</span>
                 <span>•</span>
                 <span>AI-Curated Intelligence</span>
                 <span>•</span>
@@ -376,7 +384,7 @@
                 
                 // State
                 searchQuery: '',
-                sourceFilter: '',
+                aiTagFilter: '',
                 
                 // Initialize
                 init() {
@@ -397,9 +405,9 @@
                         );
                     }
                     
-                    // Source filter
-                    if (this.sourceFilter) {
-                        filtered = filtered.filter(item => item.source === this.sourceFilter);
+                    // AI Tag filter
+                    if (this.aiTagFilter) {
+                        filtered = filtered.filter(item => item.ai_tag === this.aiTagFilter);
                     }
                     
                     this.filteredItems = filtered;

@@ -1,6 +1,6 @@
-# The GenAI Clinical Trials Watch
+# AI-Powered Clinical Research Intelligence Hub
 
-A sophisticated AI-powered system that curates the latest breakthroughs in Generative AI applications for clinical research and trials. Features premium UI design, expanded search coverage, and intelligent content filtering.
+A comprehensive AI-driven platform that discovers and curates cutting-edge artificial intelligence applications transforming clinical research and trials. From Generative AI and LLMs to Machine Learning and NLP, we track the latest breakthroughs in AI-powered healthcare innovation. Features premium UI design, expanded search coverage, and intelligent content filtering.
 
 ## ✨ Features
 
