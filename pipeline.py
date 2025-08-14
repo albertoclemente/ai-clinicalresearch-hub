@@ -1534,6 +1534,50 @@ class FeedProcessor:
         
         return ranked_entries
     
+    def _get_dynamic_summary_prompt(self) -> str:
+        """Generate varied summary prompt styles to create more engaging and diverse summaries."""
+        import random
+        
+        # Common boring openings to avoid
+        avoid_phrases = [
+            "The article discusses",
+            "This research explores",
+            "The study investigates", 
+            "This technology is relevant",
+            "The authors present",
+            "This application of AI",
+            "The paper describes",
+            "This methodology involves"
+        ]
+        
+        summary_styles = [
+            # Style 1: Impact-focused
+            f"Create a compelling summary that starts with the breakthrough or key finding. AVOID these generic openings: {', '.join(avoid_phrases[:3])}. Instead, lead with the innovation or discovery that makes this research significant.",
+            
+            # Style 2: Problem-solution focused
+            f"Write a summary that identifies the clinical challenge being addressed and how this AI approach solves it. AVOID starting with '{avoid_phrases[0]}' or '{avoid_phrases[1]}'. Make it feel like a story of innovation solving real problems.",
+            
+            # Style 3: Technical innovation focused
+            f"Highlight what makes this AI methodology technically groundbreaking. AVOID formulaic phrases like '{avoid_phrases[4]}' or '{avoid_phrases[6]}'. Focus on the novel aspects that advance the field.",
+            
+            # Style 4: Clinical significance focused
+            f"Emphasize immediate clinical significance and patient impact. AVOID '{avoid_phrases[2]}' or '{avoid_phrases[5]}'. Start with outcomes that matter to healthcare practitioners.",
+            
+            # Style 5: Future-oriented
+            f"Focus on transformative potential and future implications. AVOID '{avoid_phrases[7]}' or '{avoid_phrases[3]}'. Use forward-looking language that captures revolutionary possibilities.",
+            
+            # Style 6: Human-centered
+            f"Write from a human-centered perspective focusing on patient, researcher, or clinician benefits. AVOID '{avoid_phrases[6]}' or '{avoid_phrases[0]}'. Emphasize real-world user experience.",
+            
+            # Style 7: Data-driven insight
+            f"Lead with compelling statistics, performance metrics, or quantitative improvements. AVOID '{avoid_phrases[1]}' or '{avoid_phrases[4]}'. Let the numbers tell the innovation story.",
+            
+            # Style 8: Accessibility focused
+            f"Explain complex AI concepts accessibly while maintaining scientific rigor. AVOID '{avoid_phrases[5]}' or '{avoid_phrases[2]}'. Make groundbreaking technology understandable."
+        ]
+        
+        return random.choice(summary_styles)
+    
     def identify_ai_content(self, entries: List[Dict]) -> List[Dict]:
         """Identify articles specifically about AI applications in clinical research using two-stage filtering."""
         ai_entries = []
@@ -1598,10 +1642,12 @@ class FeedProcessor:
                     - "AI Ethics": Use for bias, fairness, regulatory compliance discussions
                     - "Digital Health": Use for apps, platforms, digital therapeutics, remote monitoring
 
+                    SUMMARY WRITING INSTRUCTIONS: {self._get_dynamic_summary_prompt()}
+
                     JSON format required:
                     {{
                         "is_ai_related": true/false,
-                        "summary": "Comprehensive summary detailing the AI/ML technology mentioned, its clinical research relevance, methodology, potential benefits, and significance for clinical operations. Include technical details about the system, applications, and expected outcomes.",
+                        "summary": "Write an engaging, original summary following the style instructions above. Keep it informative but fresh and distinctive. Avoid formulaic language and make each summary feel unique while maintaining scientific accuracy.",
                         "ai_tag": "Most specific category from: Generative AI, Natural Language Processing, Machine Learning, Trial Optimization, AI Ethics, Digital Health"
                     }}
                     """
@@ -1609,7 +1655,7 @@ class FeedProcessor:
                     response = self.qwen_client.chat.completions.create(
                         model="qwen/qwen-2.5-72b-instruct",
                         messages=[{"role": "user", "content": prompt}],
-                        temperature=0.3,
+                        temperature=0.5,  # Increased from 0.3 to encourage more creative and varied responses
                         max_tokens=500
                     )
                     
