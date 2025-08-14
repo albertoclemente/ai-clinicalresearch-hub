@@ -38,8 +38,12 @@ class FeedProcessor:
         "generative AI in clinical trials",
         "large language models healthcare research", 
         "ChatGPT clinical research applications",
+        "GPT-4 clinical trial protocol writing",
+        "Claude AI clinical research documentation",
         "foundation models drug discovery",
         "synthetic data clinical research",
+        "LLM generated clinical reports",
+        "generative AI medical writing clinical",
         
         # MeSH-informed search terms
         "artificial intelligence clinical trials MeSH",
@@ -54,6 +58,7 @@ class FeedProcessor:
         "AI virtual assistants clinical trials",
         "generative AI patient education",
         "AI-powered patient screening",
+        "ChatGPT patient communication clinical",
         
         # Clinical Trial Operations & Management
         "AI protocol writing clinical research",
@@ -62,6 +67,8 @@ class FeedProcessor:
         "automated clinical trial monitoring",
         "AI-powered site selection",
         "generative AI regulatory submissions",
+        "LLM clinical trial compliance",
+        "generative AI trial documentation",
         
         # Data & Documentation
         "natural language processing clinical documentation",
@@ -76,6 +83,8 @@ class FeedProcessor:
         "AI clinical data integration",
         "generative AI case report forms",
         "automated clinical data validation",
+        "LLM clinical summary generation",
+        "generative AI regulatory documents",
         
         # Safety & Monitoring
         "AI safety monitoring clinical trials",
@@ -492,37 +501,43 @@ class FeedProcessor:
 
             REQUIREMENTS:
             1. Keep queries SIMPLE and BROAD enough to find results
-            2. Target SPECIFIC AI technologies: ChatGPT, GPT-4, Claude, Llama, foundation models, LLMs
+            2. Target SPECIFIC AI technologies: ChatGPT, GPT-4, Claude, Llama, foundation models, LLMs, generative AI
             3. Focus EXCLUSIVELY on clinical trials and clinical research operations
             4. Use quotation marks sparingly - only for 2-3 word exact phrases
             5. Mix brand names, technology types, and clinical trial applications
             6. Each query should be 3-8 words for optimal Google search performance
             7. Avoid complex boolean operators that might limit results
+            8. PRIORITIZE "generative AI" terms over generic "AI" terms
 
             FOCUS ON CLINICAL TRIAL OPERATIONS ONLY:
             {', '.join(self.BASE_SEARCH_TOPICS)}
 
             EFFECTIVE QUERY EXAMPLES (CLINICAL TRIALS FOCUSED):
-            ChatGPT clinical trials
-            "AI chatbot" patient recruitment
-            LLM trial protocol
-            generative AI clinical study
-            AI trial monitoring
-            synthetic data clinical trials
-            AI clinical research
+            "generative AI" clinical trials
+            ChatGPT clinical trial protocol
+            "LLM generated" clinical reports
+            GPT-4 clinical research writing
+            "generative AI" medical writing clinical
+            Claude clinical trial documentation
+            "synthetic clinical data" generation
+            "AI generated" clinical summaries
+            generative AI regulatory submissions
+            LLM clinical trial optimization
             
             Generate queries that target CLINICAL TRIAL OPERATIONS specifically:
             - Patient recruitment and enrollment for trials
-            - Clinical trial protocol development
+            - Clinical trial protocol development and writing
             - Trial data management and analysis
             - Clinical trial monitoring and compliance
             - Regulatory submissions for trials
-            - Clinical research documentation
+            - Clinical research documentation and writing
             - Trial site management and operations
             - Clinical study optimization
+            - Medical writing and report generation
+            - Synthetic data generation for clinical research
 
             CRITICAL: All queries must include "clinical trials", "clinical research", "clinical study", 
-            or similar trial-specific terms. Avoid general healthcare AI applications.
+            or similar trial-specific terms. EMPHASIZE content generation applications.
             
             Return ONLY the search queries, one per line, no numbering or explanations.
             """
@@ -1214,17 +1229,71 @@ class FeedProcessor:
         return datetime.now(timezone.utc).isoformat()
     
     def fetch_feeds(self, default_max: int = 5) -> List[Dict]:
-        """Fetch articles using web search APIs only (no RSS feeds)."""
+        """Fetch articles using both RSS feeds and web search APIs for comprehensive coverage."""
         all_entries = []
         total_fetched = 0
         
         self.logger.info(json.dumps({
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "days_back": self.days_back,
-            "message": f"Fetching articles from the last {self.days_back} days using web search APIs only"
+            "message": f"Fetching articles from the last {self.days_back} days using RSS feeds and web search APIs"
         }))
         
-        # Phase 1: Web Search (Primary source)
+        # Phase 1: RSS Feeds (High-quality sources)
+        print("Fetching from RSS feeds...")
+        for feed_url, source_name, limit in self.RSS_FEEDS:
+            try:
+                feed = feedparser.parse(feed_url)
+                entries_count = 0
+                
+                for entry in feed.entries[:limit]:
+                    # Basic date filtering
+                    entry_date = None
+                    if hasattr(entry, 'published_parsed') and entry.published_parsed:
+                        entry_date = datetime(*entry.published_parsed[:6], tzinfo=timezone.utc)
+                    elif hasattr(entry, 'updated_parsed') and entry.updated_parsed:
+                        entry_date = datetime(*entry.updated_parsed[:6], tzinfo=timezone.utc)
+                    
+                    # Skip old entries
+                    if entry_date and (datetime.now(timezone.utc) - entry_date).days > self.days_back:
+                        continue
+                    
+                    entry_data = {
+                        'id': str(uuid.uuid4()),
+                        'title': self._sanitize_text(entry.title),
+                        'description': self._sanitize_text(entry.get('summary', entry.get('description', ''))),
+                        'link': entry.link,
+                        'pub_date': entry_date.isoformat() if entry_date else datetime.now(timezone.utc).isoformat(),
+                        'source': source_name,
+                        'search_query': f"RSS: {source_name}",
+                        'search_method': 'RSS Feed'
+                    }
+                    
+                    all_entries.append(entry_data)
+                    entries_count += 1
+                    total_fetched += 1
+                    
+                    if entries_count >= limit:
+                        break
+                        
+                self.logger.info(json.dumps({
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "source": source_name,
+                    "fetched_count": entries_count,
+                    "message": f"Fetched {entries_count} articles from {source_name}"
+                }))
+                
+            except Exception as e:
+                self.logger.error(json.dumps({
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "source": source_name,
+                    "error": str(e),
+                    "message": f"Failed to fetch RSS feed: {source_name}"
+                }))
+                
+        print(f"Fetched {len(all_entries)} articles from RSS feeds")
+        
+        # Phase 2: Web Search (Additional coverage)
         if self.google_api_key and self.google_cx:
             print("Generating optimized search queries with LLM...")
             search_queries = self.generate_search_queries()
@@ -1287,53 +1356,6 @@ class FeedProcessor:
             entries = self.search_semantic_scholar(query, 3)  # Smaller number to avoid duplicates
             all_entries.extend(entries)
             total_fetched += len(entries)
-        
-        # Phase 5: RSS Feeds (Re-enabled key feeds)
-        print("Fetching from key RSS feeds...")
-        for feed_url, source_name, limit in self.RSS_FEEDS:
-            try:
-                feed = feedparser.parse(feed_url)
-                entries_count = 0
-                
-                for entry in feed.entries[:limit]:
-                    # Basic date filtering
-                    entry_date = None
-                    if hasattr(entry, 'published_parsed') and entry.published_parsed:
-                        entry_date = datetime(*entry.published_parsed[:6], tzinfo=timezone.utc)
-                    elif hasattr(entry, 'updated_parsed') and entry.updated_parsed:
-                        entry_date = datetime(*entry.updated_parsed[:6], tzinfo=timezone.utc)
-                    
-                    # Skip old entries
-                    if entry_date and (datetime.now(timezone.utc) - entry_date).days > self.days_back:
-                        continue
-                    
-                    entry_data = {
-                        'id': str(uuid.uuid4()),
-                        'title': self._sanitize_text(entry.title),
-                        'description': self._sanitize_text(entry.get('summary', entry.get('description', ''))),
-                        'link': entry.link,
-                        'pub_date': entry_date.isoformat() if entry_date else datetime.now(timezone.utc).isoformat(),
-                        'source': source_name,
-                        'brief_date': self.brief_date
-                    }
-                    
-                    all_entries.append(entry_data)
-                    entries_count += 1
-                
-                self.logger.info(json.dumps({
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
-                    "source": source_name,
-                    "articles_fetched": entries_count,
-                    "max_allowed": limit
-                }))
-                
-            except Exception as e:
-                self.logger.error(json.dumps({
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
-                    "source": source_name,
-                    "error": str(e),
-                    "feed_url": feed_url
-                }))
         
         # Remove duplicates based on URL
         unique_entries = []
@@ -1564,6 +1586,14 @@ class FeedProcessor:
                     2. A comprehensive summary of the AI technology and its relevance to clinical research
                     3. ai_tag: Choose the most specific category
 
+                    IMPORTANT AI TAGGING GUIDELINES:
+                    - "Generative AI": Use for ChatGPT, GPT-4, Claude, Llama, LLMs when used for CONTENT GENERATION (text generation, medical writing, protocol creation, report writing, synthetic data creation)
+                    - "Natural Language Processing": Use for traditional NLP tasks (text analysis, information extraction, classification, sentiment analysis) WITHOUT content generation
+                    - "Machine Learning": Use for predictive models, algorithms, data analysis, pattern recognition
+                    - "Trial Optimization": Use for patient recruitment, trial design optimization, site selection
+                    - "AI Ethics": Use for bias, fairness, regulatory compliance discussions
+                    - "Digital Health": Use for apps, platforms, digital therapeutics, remote monitoring
+
                     JSON format required:
                     {{
                         "is_ai_related": true/false,
@@ -1780,10 +1810,10 @@ def main():
     print(f"Starting The AI-Powered Clinical Research Intelligence Hub pipeline for {brief_date}")
     print(f"Collecting articles from the last {days_back} days")
     
-    # Step 1: Fetch feeds using web search APIs only
-    print("Fetching articles using web search APIs (no RSS)...")
+    # Step 1: Fetch feeds using RSS feeds and web search APIs
+    print("Fetching articles using RSS feeds and web search APIs...")
     entries = feed_processor.fetch_feeds(default_max=default_max_entries)
-    print(f"Fetched {len(entries)} entries from web search APIs")
+    print(f"Fetched {len(entries)} entries from RSS feeds and web search APIs")
     
     # Step 2: Identify AI-specific content in clinical research
     print("Identifying AI-specific articles in clinical research with Qwen...")
