@@ -190,7 +190,7 @@ The system uses a hybrid approach combining multiple APIs for comprehensive GenA
 - **Google Custom Search API**: 20 LLM-generated queries with comprehensive quality filtering
 - **PubMed API**: 10 academic search queries for research papers
 - **arXiv**: AI and machine learning preprints in clinical contexts
-- **RSS Feeds**: STAT AI, Endpoints News, Duke AI Health, Nature Medicine
+- **RSS Feeds**: STAT AI, Endpoints News, Fierce Biotech, Newswise Clinical Trials, Duke AI Health, Nature Medicine, ArXiv AI/ML
 - **Europe PMC & Semantic Scholar**: Additional academic sources
 - **Targeted Sites**: aihealth.duke.edu, statnews.com, medcitynews.com with homepage filtering
 

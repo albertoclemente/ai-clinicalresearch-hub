@@ -123,6 +123,10 @@ class FeedProcessor:
         # Industry News - AI Focus
         ('https://www.statnews.com/tag/artificial-intelligence/feed/', 'STAT AI', 12),
         ('https://endpointsnews.com/feed/', 'Endpoints News', 10),
+        ('https://www.fiercebiotech.com/rss/xml', 'Fierce Biotech', 10),
+        
+        # Clinical Trials News
+        ('https://www.newswise.com/legacy/feed/channels.php?channel=6502', 'Newswise Clinical Trials', 10),
         
         # Academic/Research Feeds
         ('https://aihealth.duke.edu/feed/', 'Duke AI Health', 15),
