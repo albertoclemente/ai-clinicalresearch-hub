@@ -18,4 +18,5 @@ dependencies:
   - gdk-pixbuf
   - libffi
   - pip:
-    - openai>=1.93.0
+    - openai>=1.93.0  # Still needed for OpenRouter API compatibility
+    - python-dotenv>=1.1.1

@@ -4,7 +4,7 @@ A comprehensive AI-driven platform that discovers and curates cutting-edge artif
 
 ## ✨ Features
 
-🔬 **Advanced AI Curation**: Uses GPT-4o-mini to identify and analyze relevant clinical research articles  
+🔬 **Advanced AI Curation**: Uses Qwen-2.5-72B via OpenRouter to identify and analyze relevant clinical research articles  
 🎯 **Expanded Search Coverage**: 20 optimized search queries covering all aspects of GenAI in clinical trials  
 ⏰ **Extended 60-Day Window**: Comprehensive search across the last 60 days of publications  
 ✨ **Premium UI Design**: Beautiful glassmorphism interface with neural patterns and smooth animations  
@@ -34,9 +34,9 @@ A comprehensive AI-driven platform that discovers and curates cutting-edge artif
 
 ## 🛠 Technology Stack
 
-- **Backend**: Python with OpenAI GPT-4o-mini, Google Custom Search API, PubMed API
+- **Backend**: Python with Qwen-2.5-72B via OpenRouter, Google Custom Search API, PubMed API
 - **Frontend**: Alpine.js, Tailwind CSS, Custom glassmorphism design with neural patterns
-- **AI Technologies**: GPT-4o-mini for content analysis and 20-query search optimization
+- **AI Technologies**: Qwen-2.5-72B for content analysis and 20-query search optimization
 - **Data Sources**: PubMed, Academic publications, Clinical research databases
 - **Design**: Premium UI with Geist fonts, gradient backgrounds, hover animations
 - **Performance**: Fast loading, responsive design, real-time search capabilities
@@ -74,7 +74,7 @@ clinical_research_daily_brief/
 
 ### Prerequisites
 - Python 3.12+ (or Miniconda/Anaconda)
-- OpenAI API key
+- OpenRouter API key (for Qwen model access)
 - Google Custom Search API key and Search Engine ID
 - Git and GitHub account
 
@@ -101,7 +101,7 @@ pip install -r requirements.txt
 
 3. Set environment variables:
 ```bash
-export OPENAI_API_KEY="your-openai-api-key"
+export OPENROUTER_API_KEY="your-openrouter-api-key"
 export GOOGLE_API_KEY="your-google-api-key"
 export GOOGLE_CX="your-custom-search-engine-id"
 ```
@@ -121,8 +121,8 @@ open site/index.html
 You can control the pipeline behavior with environment variables in the `.env` file:
 
 ```bash
-# OpenAI API Configuration
-OPENAI_API_KEY=your-openai-api-key-here
+# Qwen API Configuration via OpenRouter
+OPENROUTER_API_KEY=your-openrouter-api-key-here
 
 # Google Search API Configuration (Optional but recommended)
 GOOGLE_API_KEY=your-google-api-key-here
@@ -140,7 +140,7 @@ DEFAULT_MAX_ENTRIES=5      # Max articles per search query (current: 5)
 - **Enhanced URL validation** ensures only article-specific content is processed
 - **Advanced title quality checks** prevent navigation/branding content from appearing in results
 - **Premium UI** with real-time search, filtering, and glassmorphism design
-- Estimated daily cost: ~$0.20-0.35 (expanded search + enhanced AI processing + quality validation)
+- Estimated daily cost: ~$0.10-0.20 (Qwen model is more cost-effective than GPT-4o-mini)
 
 ### Running Tests
 
@@ -157,7 +157,7 @@ pytest tests/ -v
 3. Select "Deploy from a branch" → "gh-pages"
 4. Add your API keys as repository secrets:
    - Go to Settings → Secrets and variables → Actions
-   - Add `OPENAI_API_KEY` with your OpenAI API key
+   - Add `OPENROUTER_API_KEY` with your OpenRouter API key
    - Add `GOOGLE_API_KEY` with your Google API key
    - Add `GOOGLE_CX` with your Custom Search Engine ID
 
@@ -230,7 +230,7 @@ The system uses a hybrid approach combining multiple APIs for comprehensive GenA
 ## Architecture
 
 ### Pipeline Flow
-1. **LLM Query Generation** - Generate 20 optimized search queries using GPT-4o-mini
+1. **LLM Query Generation** - Generate 20 optimized search queries using Qwen-2.5-72B
 2. **Multi-Source Search** - Execute queries via Google Custom Search API, PubMed API, arXiv, RSS feeds
 3. **Quality Filtering** - Enhanced URL validation and title quality checks eliminate homepage/category content
 4. **Content Processing** - Extract titles, clean content, advanced Unicode handling, remove duplicates
@@ -275,14 +275,14 @@ ls briefs/$(date +%Y-%m-%d).json  # Should exist with GenAI articles
 
 ### AC-2: LLM Query Generation
 ```bash
-python -c "from pipeline import FeedProcessor; import os; fp = FeedProcessor(os.getenv('OPENAI_API_KEY'), 'test.log'); print(len(fp.generate_search_queries()))"
+python -c "from pipeline import FeedProcessor; import os; fp = FeedProcessor(os.getenv('OPENROUTER_API_KEY'), 'test.log'); print(len(fp.generate_search_queries()))"
 # Should output: 20
 ```
 
 ### AC-3: API Integration
 ```bash
 # Verify Google Custom Search API is working
-python -c "from pipeline import FeedProcessor; import os; fp = FeedProcessor(os.getenv('OPENAI_API_KEY'), 'test.log'); print(len(fp.search_google('ChatGPT clinical trials', 3)))"
+python -c "from pipeline import FeedProcessor; import os; fp = FeedProcessor(os.getenv('OPENROUTER_API_KEY'), 'test.log'); print(len(fp.search_google('ChatGPT clinical trials', 3)))"
 # Should return search results
 ```
 
@@ -329,7 +329,7 @@ This project has been completely transformed into a premium AI-powered clinical 
 - **After**: **20 LLM-generated search queries** with **60-day extended coverage**
 - **Multi-Source Integration**: Google Search + PubMed + arXiv + RSS feeds + Europe PMC + Semantic Scholar
 - **Result**: 180+ articles processed daily, 10+ high-quality articles selected
-- **Technology**: GPT-4o-mini generates diverse, optimized queries covering all AI applications
+- **Technology**: Qwen-2.5-72B generates diverse, optimized queries covering all AI applications
 
 ### **✨ Premium UI Design Overhaul**
 - **Modern Design**: Glassmorphism effects with neural patterns and gradient backgrounds
@@ -364,7 +364,7 @@ This project has been completely transformed into a premium AI-powered clinical 
 - GitHub Actions: Repository → Actions tab
 - Site analytics: GitHub Pages insights
 - Error notifications: GitHub Actions email alerts
-- API usage tracking: Google Custom Search and OpenAI usage logs
+- API usage tracking: Google Custom Search and OpenRouter usage logs
 
 ## Support
 
@@ -375,7 +375,7 @@ For issues or questions:
 4. **Recent Changes**: Check `IMPROVEMENTS_IMPLEMENTED.md` for detailed change documentation
 5. **Implementation Details**: Review `targeted_improvements.md` for technical roadmap
 6. Verify Google Custom Search API and PubMed availability
-7. Check OpenAI API quota and billing
+7. Check OpenRouter API quota and billing
 8. Validate Google Custom Search Engine configuration
 
 ### Documentation Files

@@ -18,7 +18,7 @@ from urllib.parse import quote_plus
 import math
 
 import feedparser
-import openai
+from qwen_client import QwenOpenRouterClient
 from bs4 import BeautifulSoup
 from jinja2 import Environment, FileSystemLoader
 import bleach
@@ -137,15 +137,15 @@ class FeedProcessor:
         # Default for others: 5
     }
     
-    def __init__(self, openai_api_key: str, log_file: str, days_back: int = 60):
+    def __init__(self, qwen_api_key: str, log_file: str, days_back: int = 60):
         """Initialize the feed processor.
         
         Args:
-            openai_api_key: OpenAI API key for content analysis
+            qwen_api_key: OpenRouter API key for Qwen model access
             log_file: Path to log file
             days_back: Number of days back to consider articles (default: 60)
         """
-        self.openai_client = openai.OpenAI(api_key=openai_api_key)
+        self.qwen_client = QwenOpenRouterClient(api_key=qwen_api_key)
         self.logger = self._setup_logging(log_file)
         self.brief_date = datetime.now(timezone.utc).strftime('%Y-%m-%d')
         self.days_back = days_back
@@ -527,8 +527,8 @@ class FeedProcessor:
             Return ONLY the search queries, one per line, no numbering or explanations.
             """
             
-            response = self.openai_client.chat.completions.create(
-                model="gpt-4o-mini",
+            response = self.qwen_client.chat.completions.create(
+                model="qwen/qwen-2.5-72b-instruct",
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.7,  # Higher temperature for more creative/diverse queries
                 max_tokens=800
@@ -1572,8 +1572,8 @@ class FeedProcessor:
                     }}
                     """
                     
-                    response = self.openai_client.chat.completions.create(
-                        model="gpt-4o-mini",
+                    response = self.qwen_client.chat.completions.create(
+                        model="qwen/qwen-2.5-72b-instruct",
                         messages=[{"role": "user", "content": prompt}],
                         temperature=0.3,
                         max_tokens=500
@@ -1758,9 +1758,9 @@ class SiteGenerator:
 def main():
     """Main pipeline execution."""
     # Configuration
-    openai_api_key = os.environ.get('OPENAI_API_KEY')
-    if not openai_api_key:
-        raise ValueError("OPENAI_API_KEY environment variable is required")
+    qwen_api_key = os.environ.get('OPENROUTER_API_KEY')
+    if not qwen_api_key:
+        raise ValueError("OPENROUTER_API_KEY environment variable is required")
     
     # Configuration: Default max entries for sources without specific limits
     default_max_entries = int(os.environ.get('DEFAULT_MAX_ENTRIES', '8'))
@@ -1774,10 +1774,10 @@ def main():
     html_file = "site/index.html"
     
     # Initialize processors
-    feed_processor = FeedProcessor(openai_api_key, log_file, days_back)
+    feed_processor = FeedProcessor(qwen_api_key, log_file, days_back)
     site_generator = SiteGenerator()
     
-    print(f"Starting The GenAI Clinical Trials Watch pipeline for {brief_date}")
+    print(f"Starting The AI-Powered Clinical Research Intelligence Hub pipeline for {brief_date}")
     print(f"Collecting articles from the last {days_back} days")
     
     # Step 1: Fetch feeds using web search APIs only
@@ -1786,7 +1786,7 @@ def main():
     print(f"Fetched {len(entries)} entries from web search APIs")
     
     # Step 2: Identify AI-specific content in clinical research
-    print("Identifying AI-specific articles in clinical research with OpenAI...")
+    print("Identifying AI-specific articles in clinical research with Qwen...")
     ai_entries = feed_processor.identify_ai_content(entries)
     print(f"Identified {len(ai_entries)} AI-specific clinical research articles")
     

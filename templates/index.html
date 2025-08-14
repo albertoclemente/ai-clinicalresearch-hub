@@ -314,7 +314,10 @@
                                 <span x-text="item.ai_tag"></span>
                             </span>
                             
-                            <div class="text-xs text-gray-400 font-mono bg-gray-100 px-3 py-1 rounded-full" x-text="item.source"></div>
+                            <div class="flex flex-col items-end space-y-1">
+                                <div class="text-xs text-gray-400 font-mono bg-gray-100 px-3 py-1 rounded-full" x-text="item.source"></div>
+                                <div class="text-xs text-gray-500 font-mono" x-text="formatDate(item.pub_date)"></div>
+                            </div>
                         </div>
                         
                         <!-- Title -->
@@ -419,6 +422,39 @@
                     
                     const regex = new RegExp(`(${this.searchQuery})`, 'gi');
                     return text.replace(regex, '<mark class="search-highlight">$1</mark>');
+                },
+                
+                // Format publication date
+                formatDate(dateString) {
+                    if (!dateString) return '';
+                    
+                    try {
+                        const date = new Date(dateString);
+                        
+                        // Check if date is today, yesterday, or older
+                        const today = new Date();
+                        const yesterday = new Date(today);
+                        yesterday.setDate(yesterday.getDate() - 1);
+                        
+                        const isToday = date.toDateString() === today.toDateString();
+                        const isYesterday = date.toDateString() === yesterday.toDateString();
+                        
+                        if (isToday) {
+                            return 'Today';
+                        } else if (isYesterday) {
+                            return 'Yesterday';
+                        } else {
+                            // Format as month day, year (e.g., "Aug 14, 2025")
+                            return date.toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric'
+                            });
+                        }
+                    } catch (error) {
+                        // If date parsing fails, return a formatted version of the string
+                        return dateString.split('T')[0]; // Just return the date part
+                    }
                 }
             }
         }
