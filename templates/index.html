@@ -236,26 +236,6 @@
                 </p>
             </div>
             
-            <!-- Trending Insights Bar -->
-            <div class="mb-12">
-                <div class="inline-flex items-center space-x-6 bg-white/20 backdrop-blur-sm rounded-2xl px-8 py-4 border border-white/30">
-                    <div class="flex items-center space-x-2">
-                        <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                        <span class="text-sm text-white/90 font-medium">90% accuracy in trial parsing</span>
-                    </div>
-                    <div class="w-px h-4 bg-white/40"></div>
-                    <div class="flex items-center space-x-2">
-                        <div class="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
-                        <span class="text-sm text-white/90 font-medium">ChatGPT transforming diagnostics</span>
-                    </div>
-                    <div class="w-px h-4 bg-white/40"></div>
-                    <div class="flex items-center space-x-2">
-                        <div class="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
-                        <span class="text-sm text-white/90 font-medium">Digital health revolution</span>
-                    </div>
-                </div>
-            </div>
-            
             <!-- Enhanced Search Interface -->
             <div class="opacity-100 mb-8">
                 <div class="bg-white/20 backdrop-blur-md rounded-3xl p-8 w-full max-w-3xl mx-auto border border-white/30">
@@ -291,6 +271,12 @@
                         <button @click="aiTagFilter = 'Digital Health'; performSearch()" class="px-4 py-2 rounded-full text-sm font-medium bg-white/30 text-white hover:bg-white/40 transition-all duration-200 border border-white/20" :class="{'bg-white/50': aiTagFilter === 'Digital Health'}">
                             📱 Digital Health
                         </button>
+                        <button @click="aiTagFilter = 'Trial Optimization'; performSearch()" class="px-4 py-2 rounded-full text-sm font-medium bg-white/30 text-white hover:bg-white/40 transition-all duration-200 border border-white/20" :class="{'bg-white/50': aiTagFilter === 'Trial Optimization'}">
+                            🎯 Trial Optimization
+                        </button>
+                        <button @click="aiTagFilter = 'AI Ethics'; performSearch()" class="px-4 py-2 rounded-full text-sm font-medium bg-white/30 text-white hover:bg-white/40 transition-all duration-200 border border-white/20" :class="{'bg-white/50': aiTagFilter === 'AI Ethics'}">
+                            ⚖️ AI Ethics
+                        </button>
                     </div>
                 </div>
             </div>
@@ -305,11 +291,6 @@
                 <div class="text-center">
                     <div class="text-3xl font-semibold text-white">{{ brief_date }}</div>
                     <div class="text-sm">Latest Update</div>
-                </div>
-                <div class="w-px h-8 bg-white/30"></div>
-                <div class="text-center">
-                    <div class="text-3xl font-semibold text-white">60</div>
-                    <div class="text-sm">Days Coverage</div>
                 </div>
             </div>
         </div>
@@ -336,24 +317,6 @@
                 <p class="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
                     Curated intelligence from the forefront of AI-powered clinical research
                 </p>
-                
-                <!-- Trending Insights Bar -->
-                <div class="inline-flex items-center space-x-6 bg-white/60 backdrop-blur-sm rounded-2xl px-6 py-4 border border-white/50">
-                    <div class="flex items-center space-x-2">
-                        <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                        <span class="text-sm text-gray-700 font-medium">90% accuracy in trial parsing</span>
-                    </div>
-                    <div class="w-px h-4 bg-gray-300"></div>
-                    <div class="flex items-center space-x-2">
-                        <div class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                        <span class="text-sm text-gray-700 font-medium">ChatGPT transforming diagnostics</span>
-                    </div>
-                    <div class="w-px h-4 bg-gray-300"></div>
-                    <div class="flex items-center space-x-2">
-                        <div class="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
-                        <span class="text-sm text-gray-700 font-medium">Digital health revolution</span>
-                    </div>
-                </div>
             </div>
             
             <!-- Enhanced Filter Bar -->
@@ -372,11 +335,8 @@
                                 <option value="Natural Language Processing">💬 Natural Language Processing</option>
                                 <option value="Machine Learning">🧠 Machine Learning</option>
                                 <option value="Digital Health">📱 Digital Health</option>
-                                <option value="AI Diagnostics">🩺 AI Diagnostics</option>
-                                <option value="Clinical Decision Support">⚕️ Clinical Decision Support</option>
-                                <option value="Drug Discovery AI">💊 Drug Discovery AI</option>
-                                <option value="Computer Vision">👁️ Computer Vision</option>
-                                <option value="Predictive Analytics">📊 Predictive Analytics</option>
+                                <option value="Trial Optimization">🎯 Trial Optimization</option>
+                                <option value="AI Ethics">⚖️ AI Ethics</option>
                             </select>
                         </div>
                         
@@ -440,8 +400,9 @@
                                         'bg-gradient-to-r from-blue-500 to-cyan-500': item.ai_tag === 'Natural Language Processing',
                                         'bg-gradient-to-r from-green-500 to-emerald-500': item.ai_tag === 'Machine Learning',
                                         'bg-gradient-to-r from-orange-500 to-red-500': item.ai_tag === 'Digital Health',
-                                        'bg-gradient-to-r from-indigo-500 to-blue-500': item.ai_tag === 'AI Diagnostics',
-                                        'bg-gradient-to-r from-gray-600 to-gray-800': !['Generative AI', 'Natural Language Processing', 'Machine Learning', 'Digital Health', 'AI Diagnostics'].includes(item.ai_tag)
+                                        'bg-gradient-to-r from-yellow-500 to-amber-500': item.ai_tag === 'Trial Optimization',
+                                        'bg-gradient-to-r from-indigo-500 to-violet-500': item.ai_tag === 'AI Ethics',
+                                        'bg-gradient-to-r from-gray-600 to-gray-800': !['Generative AI', 'Natural Language Processing', 'Machine Learning', 'Digital Health', 'Trial Optimization', 'AI Ethics'].includes(item.ai_tag)
                                     }"
                                 >
                                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
