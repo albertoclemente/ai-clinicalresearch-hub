@@ -1,6 +1,6 @@
 # AI-Powered Clinical Research Intelligence Hub
 
-An advanced automated pipeline that discovers, analyzes, and curates cutting-edge AI applications in clinical research using GPT-4, featuring a premium glassmorphism web interface with comprehensive UI/UX enhancements.
+An advanced automated pipeline that discovers, analyzes, and curates cutting-edge AI applications in clinical research using **Qwen LLM** (via OpenRouter), featuring a premium glassmorphism web interface with comprehensive UI/UX enhancements.
 
 ## 🚀 Recent Major Updates (August 2025)
 
@@ -40,7 +40,7 @@ An advanced automated pipeline that discovers, analyzes, and curates cutting-edg
 
 ### Intelligence Pipeline
 - **Automated Content Discovery**: Monitors 12+ trusted sources including PubMed, Clinical Trials gov, and specialized journals
-- **AI-Powered Analysis**: Uses GPT-4 to analyze and categorize articles by 6 specific AI technology types
+- **AI-Powered Analysis**: Uses **Qwen LLM (via OpenRouter)** to analyze and categorize articles by 6 specific AI technology types
 - **Smart Filtering**: Intelligent filtering to identify content specifically related to AI applications in clinical research
 - **Multi-format Output**: Generates both JSON data and premium styled HTML presentations
 - **Daily Automation**: Production-ready for unattended GitHub Actions deployment
@@ -63,13 +63,13 @@ The system provides comprehensive coverage across 6 key AI domains:
 5. **🎯 Trial Optimization** - Clinical trial design, patient recruitment, protocol optimization
 6. **⚖️ AI Ethics** - Bias, fairness, transparency, responsible AI implementation
 
-Each article is analyzed using GPT-4 to determine relevance, extract key insights, categorize by technology type, and generate concise summaries optimized for discovery.
+Each article is analyzed using **Qwen LLM** to determine relevance, extract key insights, categorize by technology type, and generate concise summaries optimized for discovery.
 
 ## 🛠️ Technology Stack
 
 ### Backend Pipeline
 - **Python 3.8+** for core pipeline
-- **OpenAI GPT-4** for content analysis
+- **Qwen LLM (via OpenRouter)** for content analysis
 - **Beautiful Soup** for web scraping
 - **Requests** for HTTP operations
 - **Jinja2** for HTML templating
@@ -105,8 +105,8 @@ The pipeline generates:
 
 1. **Clone the repository**
 ```bash
-git clone <repository-url>
-cd clinical_research_daily_brief
+git clone https://github.com/albertoclemente/gen-ai-clinical-trials-watch.git
+cd gen-ai-clinical-trials-watch
 ```
 
 2. **Install dependencies**
@@ -116,7 +116,7 @@ pip install -r requirements.txt
 
 3. **Set environment variables**
 ```bash
-export OPENAI_API_KEY="your-api-key-here"
+export OPENROUTER_API_KEY="your-openrouter-api-key-here"
 ```
 
 4. **Run the pipeline**
@@ -124,10 +124,7 @@ export OPENAI_API_KEY="your-api-key-here"
 python pipeline.py
 ```
 
-5. **Generate HTML interface**
-```bash
-python generate_html.py
-```
+Note: The pipeline automatically generates the HTML interface, so there's no need for a separate `generate_html.py` step.
 
 ## 🎨 Premium Web Interface Features
 
@@ -175,21 +172,25 @@ Based on current data analysis:
 
 ```
 clinical_research_daily_brief/
-├── briefs/                         # Generated content
-│   └── YYYY-MM-DD.json            # Daily brief data
-├── logs/                           # Processing logs
-│   └── YYYY-MM-DD.log             # Detailed logs
-├── site/                           # Static website output
-│   ├── index.html                  # Generated main page
-│   └── styles.css                  # Styling
-├── templates/                      # Jinja2 templates
-│   └── index.html                  # Main page template with premium UI
-├── pipeline.py                     # Main processing script
-├── generate_html.py                # HTML generation script
-├── requirements.txt                # Python dependencies
-├── environment.yml                 # Conda environment
-├── IMPROVEMENTS_IMPLEMENTED.md     # Detailed change documentation
-└── README.md                       # This file
+├── briefs/                                 # Generated content
+│   └── YYYY-MM-DD.json                    # Daily brief data
+├── logs/                                   # Processing logs
+│   └── YYYY-MM-DD.log                     # Detailed logs
+├── site/                                   # Static website output
+│   ├── index.html                          # Generated main page
+│   ├── styles.css                          # Additional styling
+│   └── assets/                             # Static assets
+├── templates/                              # Jinja2 templates
+│   └── index.html                          # Main page template with premium UI
+├── pipeline.py                             # Main processing script
+├── qwen_client.py                          # Qwen LLM client wrapper
+├── generate_html.py                        # Standalone HTML generation utility
+├── requirements.txt                        # Python dependencies
+├── environment.yml                         # Conda environment
+├── FRONTEND_IMPROVEMENTS_IMPLEMENTED.md    # Frontend enhancement documentation
+├── AMELIORATIONS_IMPLEMENTED.md           # Production robustness documentation
+├── IMPROVEMENTS_IMPLEMENTED.md            # General improvements documentation
+└── README.md                              # This file
 ```
 
 ## 🔄 Recent Improvements Timeline
@@ -222,6 +223,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 🔗 Links
 
-- [Live Demo](https://your-github-username.github.io/clinical-research-daily-brief/)
-- [GitHub Repository](https://github.com/your-username/clinical-research-daily-brief)
-- [Documentation](./IMPROVEMENTS_IMPLEMENTED.md)
+- [GitHub Repository](https://github.com/albertoclemente/gen-ai-clinical-trials-watch)
+- [Frontend Improvements Documentation](./FRONTEND_IMPROVEMENTS_IMPLEMENTED.md)
+- [Production Robustness Documentation](./AMELIORATIONS_IMPLEMENTED.md)
+- [General Improvements Documentation](./IMPROVEMENTS_IMPLEMENTED.md)
