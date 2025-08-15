@@ -285,6 +285,9 @@
                         <button @click="aiTagFilter = 'Machine Learning'; performSearch()" class="px-4 py-2 rounded-full text-sm font-medium bg-white/30 text-white hover:bg-white/40 transition-all duration-200 border border-white/20" :class="{'bg-white/50': aiTagFilter === 'Machine Learning'}">
                             🧠 Machine Learning
                         </button>
+                        <button @click="aiTagFilter = 'Natural Language Processing'; performSearch()" class="px-4 py-2 rounded-full text-sm font-medium bg-white/30 text-white hover:bg-white/40 transition-all duration-200 border border-white/20" :class="{'bg-white/50': aiTagFilter === 'Natural Language Processing'}">
+                            💬 NLP
+                        </button>
                         <button @click="aiTagFilter = 'Digital Health'; performSearch()" class="px-4 py-2 rounded-full text-sm font-medium bg-white/30 text-white hover:bg-white/40 transition-all duration-200 border border-white/20" :class="{'bg-white/50': aiTagFilter === 'Digital Health'}">
                             📱 Digital Health
                         </button>
