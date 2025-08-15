@@ -183,6 +183,50 @@ class BriefData(BaseModel):
     
     class Config:
         str_strip_whitespace = True
+
+class TokenBucket:
+    """Token bucket rate limiter for API calls."""
+    
+    def __init__(self, rate_per_sec: float = 2.0, burst: int = 4):
+        """
+        Initialize token bucket.
+        
+        Args:
+            rate_per_sec: Tokens added per second
+            burst: Maximum tokens in bucket
+        """
+        self.rate = rate_per_sec
+        self.burst = burst
+        self.tokens = float(burst)
+        self.last_update = time.time()
+    
+    def consume(self, tokens: int = 1) -> None:
+        """
+        Consume tokens from bucket, blocking if necessary.
+        
+        Args:
+            tokens: Number of tokens to consume
+        """
+        now = time.time()
+        
+        # Add tokens based on elapsed time
+        elapsed = now - self.last_update
+        self.tokens = min(self.burst, self.tokens + elapsed * self.rate)
+        self.last_update = now
+        
+        # Block until we have enough tokens
+        while self.tokens < tokens:
+            sleep_time = (tokens - self.tokens) / self.rate
+            time.sleep(sleep_time)
+            
+            now = time.time()
+            elapsed = now - self.last_update
+            self.tokens = min(self.burst, self.tokens + elapsed * self.rate)
+            self.last_update = now
+        
+        # Consume tokens
+        self.tokens -= tokens
+
 from bs4 import BeautifulSoup
 from jinja2 import Environment, FileSystemLoader
 import bleach
@@ -362,10 +406,15 @@ class FeedProcessor:
         # Retry configuration
         self.retry_config = RetryConfig(max_retries=3, base_delay=1.0, max_delay=30.0)
         
-        # Rate limiting configuration
+        # Rate limiting configuration with token buckets
         self.google_requests_count = 0
         self.google_request_limit = 100  # Daily limit safety margin
         self.pubmed_request_limit = 300   # Per hour limit safety margin
+        
+        # Initialize token bucket rate limiters
+        self.google_throttle = TokenBucket(rate_per_sec=1.0, burst=3)  # Conservative for Google API
+        self.pubmed_throttle = TokenBucket(rate_per_sec=3.0, burst=5)  # PubMed allows more
+        self.general_throttle = TokenBucket(rate_per_sec=2.0, burst=4)  # For other APIs
         
         # Cache for generated search queries to avoid regenerating on each run
         self._generated_queries_cache = None
@@ -1157,6 +1206,9 @@ class FeedProcessor:
                     'filter': '1',  # Enable duplicate filtering
                 }
                 
+                # Apply rate limiting with token bucket
+                self.google_throttle.consume(1)
+                
                 # Use robust retry logic
                 response = request_with_retries(
                     self.session, 'GET', url, params=params, 
@@ -1282,6 +1334,9 @@ class FeedProcessor:
                 'retmode': 'json'
             }
             
+            # Apply rate limiting with token bucket
+            self.pubmed_throttle.consume(1)
+            
             # Use robust retry logic
             search_response = request_with_retries(
                 self.session, 'GET', search_url, params=search_params,
@@ -1300,6 +1355,9 @@ class FeedProcessor:
                     'id': ','.join(pmids),
                     'retmode': 'json'
                 }
+                
+                # Apply rate limiting with token bucket
+                self.pubmed_throttle.consume(1)
                 
                 # Use robust retry logic for fetching details
                 fetch_response = request_with_retries(
@@ -1952,6 +2010,7 @@ class FeedProcessor:
                                 entry['is_ai_related'] = True
                                 entry['summary'] = self._sanitize_text(result.get('summary', ''))
                                 entry['ai_tag'] = self._sanitize_text(result.get('ai_tag', 'AI Research'))
+                                entry['brief_date'] = self.brief_date  # Add brief_date field
                                 
                                 # Ensure word limits - longer summary, no resources
                                 entry['summary'] = self._limit_words(entry['summary'], 140)  # Increased from 60 to 140
@@ -2064,7 +2123,7 @@ class FeedProcessor:
                 try:
                     # Convert to BriefItem for validation
                     validated_item = BriefItem(**entry)
-                    validated_items.append(validated_item.dict())
+                    validated_items.append(validated_item.model_dump())
                 except ValidationError as e:
                     self.logger.warning(f"Skipping invalid entry: {e}")
                     continue
@@ -2076,7 +2135,7 @@ class FeedProcessor:
                     total_items=len(validated_items),
                     brief_date=self.brief_date
                 )
-                brief_data = brief_data_obj.dict()
+                brief_data = brief_data_obj.model_dump()
                 brief_data['generated_at'] = datetime.now(timezone.utc).isoformat()
             except ValidationError as e:
                 self.logger.error(f"Brief data validation failed: {e}")

@@ -154,6 +154,19 @@
             animation: fadeIn 1s ease-out;
         }
         
+        /* Screen reader only content */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+        
         /* Removed stagger animations for immediate visibility */
         
         .tag-ai {
@@ -207,12 +220,59 @@
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
+        
+        /* Reduced motion support */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+            
+            .animate-float,
+            .animate-pulse-slow,
+            .animate-glow {
+                animation: none !important;
+            }
+        }
+        
+        /* Focus-visible styles for accessibility */
+        *:focus-visible {
+            outline: 2px solid #3b82f6;
+            outline-offset: 2px;
+        }
+        
+        /* Skip to content link */
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 6px;
+            background: white;
+            color: black;
+            padding: 8px 16px;
+            text-decoration: none;
+            border-radius: 4px;
+            z-index: 1000;
+            font-weight: 600;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .skip-link:focus {
+            top: 6px;
+        }
     </style>
 </head>
 <body class="min-h-screen font-sans antialiased overflow-x-hidden neural-pattern" x-data="clinicalBrief()">
     
+    <!-- Skip to content link for accessibility -->
+    <a href="#main-content" class="skip-link">Skip to content</a>
+    
     <!-- Hero Header with Enhanced Gradient and Animations -->
     <header class="relative min-h-screen flex items-center justify-center overflow-hidden" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%); background-size: 400% 400%; animation: gradientShift 15s ease infinite;">
+        
+        <!-- Contrast overlay for better text readability -->
+        <div class="absolute inset-0 bg-black/20"></div>
         
         <!-- Animated Background Elements -->
         <div class="absolute inset-0 opacity-20">
@@ -243,6 +303,8 @@
                         <input 
                             type="text" 
                             placeholder="🔬 Search breakthrough AI innovations..." 
+                            aria-label="Search articles about AI innovations in clinical research"
+                            role="searchbox"
                             class="w-full px-8 py-5 text-lg bg-white/95 backdrop-blur-sm rounded-2xl border-0 focus:outline-none focus:ring-4 focus:ring-white/50 transition-all duration-300 text-gray-800 placeholder-gray-500 shadow-lg"
                             x-model="searchQuery"
                             @input="performSearch"
@@ -255,26 +317,26 @@
                     </div>
                     
                     <!-- Category Filter Pills -->
-                    <div class="flex flex-wrap justify-center gap-3">
-                        <button @click="aiTagFilter = ''; performSearch()" class="px-4 py-2 rounded-full text-sm font-medium bg-white/30 text-white hover:bg-white/40 transition-all duration-200 border border-white/20" :class="{'bg-white/50': !aiTagFilter}">
+                    <div class="flex flex-wrap justify-center gap-3" role="group" aria-label="Filter articles by AI technology category">
+                        <button @click="aiTagFilter = ''; performSearch()" aria-label="Show all AI technology articles" class="px-4 py-2 rounded-full text-sm font-medium bg-white/30 text-white hover:bg-white/40 transition-all duration-200 border border-white/20" :class="{'bg-white/50': !aiTagFilter}">
                             🌟 All Technologies
                         </button>
-                        <button @click="aiTagFilter = 'Generative AI'; performSearch()" class="px-4 py-2 rounded-full text-sm font-medium bg-white/30 text-white hover:bg-white/40 transition-all duration-200 border border-white/20" :class="{'bg-white/50': aiTagFilter === 'Generative AI'}">
+                        <button @click="aiTagFilter = 'Generative AI'; performSearch()" aria-label="Filter by Generative AI articles" class="px-4 py-2 rounded-full text-sm font-medium bg-white/30 text-white hover:bg-white/40 transition-all duration-200 border border-white/20" :class="{'bg-white/50': aiTagFilter === 'Generative AI'}">
                             🤖 Generative AI
                         </button>
-                        <button @click="aiTagFilter = 'Machine Learning'; performSearch()" class="px-4 py-2 rounded-full text-sm font-medium bg-white/30 text-white hover:bg-white/40 transition-all duration-200 border border-white/20" :class="{'bg-white/50': aiTagFilter === 'Machine Learning'}">
+                        <button @click="aiTagFilter = 'Machine Learning'; performSearch()" aria-label="Filter by Machine Learning articles" class="px-4 py-2 rounded-full text-sm font-medium bg-white/30 text-white hover:bg-white/40 transition-all duration-200 border border-white/20" :class="{'bg-white/50': aiTagFilter === 'Machine Learning'}">
                             🧠 Machine Learning
                         </button>
-                        <button @click="aiTagFilter = 'Natural Language Processing'; performSearch()" class="px-4 py-2 rounded-full text-sm font-medium bg-white/30 text-white hover:bg-white/40 transition-all duration-200 border border-white/20" :class="{'bg-white/50': aiTagFilter === 'Natural Language Processing'}">
+                        <button @click="aiTagFilter = 'Natural Language Processing'; performSearch()" aria-label="Filter by Natural Language Processing articles" class="px-4 py-2 rounded-full text-sm font-medium bg-white/30 text-white hover:bg-white/40 transition-all duration-200 border border-white/20" :class="{'bg-white/50': aiTagFilter === 'Natural Language Processing'}">
                             💬 NLP
                         </button>
-                        <button @click="aiTagFilter = 'Digital Health'; performSearch()" class="px-4 py-2 rounded-full text-sm font-medium bg-white/30 text-white hover:bg-white/40 transition-all duration-200 border border-white/20" :class="{'bg-white/50': aiTagFilter === 'Digital Health'}">
+                        <button @click="aiTagFilter = 'Digital Health'; performSearch()" aria-label="Filter by Digital Health articles" class="px-4 py-2 rounded-full text-sm font-medium bg-white/30 text-white hover:bg-white/40 transition-all duration-200 border border-white/20" :class="{'bg-white/50': aiTagFilter === 'Digital Health'}">
                             📱 Digital Health
                         </button>
-                        <button @click="aiTagFilter = 'Trial Optimization'; performSearch()" class="px-4 py-2 rounded-full text-sm font-medium bg-white/30 text-white hover:bg-white/40 transition-all duration-200 border border-white/20" :class="{'bg-white/50': aiTagFilter === 'Trial Optimization'}">
+                        <button @click="aiTagFilter = 'Trial Optimization'; performSearch()" aria-label="Filter by Trial Optimization articles" class="px-4 py-2 rounded-full text-sm font-medium bg-white/30 text-white hover:bg-white/40 transition-all duration-200 border border-white/20" :class="{'bg-white/50': aiTagFilter === 'Trial Optimization'}">
                             🎯 Trial Optimization
                         </button>
-                        <button @click="aiTagFilter = 'AI Ethics'; performSearch()" class="px-4 py-2 rounded-full text-sm font-medium bg-white/30 text-white hover:bg-white/40 transition-all duration-200 border border-white/20" :class="{'bg-white/50': aiTagFilter === 'AI Ethics'}">
+                        <button @click="aiTagFilter = 'AI Ethics'; performSearch()" aria-label="Filter by AI Ethics articles" class="px-4 py-2 rounded-full text-sm font-medium bg-white/30 text-white hover:bg-white/40 transition-all duration-200 border border-white/20" :class="{'bg-white/50': aiTagFilter === 'AI Ethics'}">
                             ⚖️ AI Ethics
                         </button>
                     </div>
@@ -327,8 +389,9 @@
                             <label class="text-sm font-semibold text-gray-700 whitespace-nowrap">🔬 Filter by AI Technology:</label>
                             <select 
                                 x-model="aiTagFilter"
-                                @change="performSearch"
+                                @change="performSearchImmediate"
                                 class="px-4 py-3 bg-white/80 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-200 text-gray-700 min-w-[200px]"
+                                aria-label="Filter articles by AI technology"
                             >
                                 <option value="">🌟 All Technologies</option>
                                 <option value="Generative AI">🤖 Generative AI</option>
@@ -338,15 +401,29 @@
                                 <option value="Trial Optimization">🎯 Trial Optimization</option>
                                 <option value="AI Ethics">⚖️ AI Ethics</option>
                             </select>
+                            
+                            <label class="text-sm font-semibold text-gray-700 whitespace-nowrap">📊 Sort by:</label>
+                            <select 
+                                x-model="sortBy"
+                                @change="performSearchImmediate"
+                                class="px-4 py-3 bg-white/80 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-200 text-gray-700 min-w-[150px]"
+                                aria-label="Sort articles"
+                            >
+                                <option value="newest">🆕 Newest First</option>
+                                <option value="oldest">📅 Oldest First</option>
+                                <option value="source">🔤 Source A-Z</option>
+                            </select>
                         </div>
                         
                         <div class="flex items-center space-x-4">
-                            <div class="text-sm text-gray-600" x-show="searchQuery || aiTagFilter">
+                            <div class="text-sm text-gray-600">
                                 <span class="font-semibold text-blue-600" x-text="filteredItems.length"></span> 
                                 <span>of</span> 
                                 <span class="font-semibold">{{ total_items }}</span> 
                                 <span>discoveries</span>
                             </div>
+                            <!-- Screen reader live region for search results -->
+                            <div class="sr-only" role="status" aria-live="polite" x-text="`${filteredItems.length} results found`"></div>
                             <button 
                                 @click="searchQuery = ''; aiTagFilter = ''; performSearch()"
                                 x-show="searchQuery || aiTagFilter"
@@ -395,6 +472,7 @@
                                 <!-- AI Technology Badge -->
                                 <span 
                                     class="inline-flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-semibold text-white"
+                                    :aria-label="`Category: ${item.ai_tag}`"
                                     :class="{
                                         'bg-gradient-to-r from-purple-500 to-pink-500': item.ai_tag === 'Generative AI',
                                         'bg-gradient-to-r from-blue-500 to-cyan-500': item.ai_tag === 'Natural Language Processing',
@@ -412,10 +490,10 @@
                                 </span>
                             </div>
                             
-                            <!-- Source and Date -->
+                            <!-- Source and Date with better semantics -->
                             <div class="flex flex-col items-end space-y-2">
                                 <div class="text-xs text-gray-500 font-mono bg-gray-100 px-3 py-1 rounded-full" x-text="item.source"></div>
-                                <div class="text-xs text-gray-400 font-medium" x-text="formatDate(item.pub_date)"></div>
+                                <time :datetime="item.pub_date" class="text-xs text-gray-400 font-medium" x-text="formatDate(item.pub_date)"></time>
                             </div>
                         </div>
                         
@@ -491,6 +569,24 @@
         </div>
     </main>
     
+    <!-- Back to Top Button -->
+    <button 
+        @click="scrollToTop"
+        class="fixed bottom-8 right-8 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition-all duration-300 z-50"
+        x-show="showBackToTop"
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0 transform scale-95"
+        x-transition:enter-end="opacity-100 transform scale-100"
+        x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="opacity-100 transform scale-100"
+        x-transition:leave-end="opacity-0 transform scale-95"
+        aria-label="Back to top"
+    >
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
+        </svg>
+    </button>
+    
     <!-- Creative Footer -->
     <footer class="relative neural-gradient py-20 text-white overflow-hidden">
         <div class="absolute inset-0 opacity-10">
@@ -518,6 +614,36 @@
     </footer>
     
     <script>
+        // Global keyboard event handlers
+        document.addEventListener('keydown', (e) => {
+            if (e.key === '/' && document.activeElement.tagName !== 'INPUT') {
+                e.preventDefault();
+                document.querySelector('input[role=searchbox]').focus();
+            }
+            if (e.key === 'Escape') {
+                // Clear search if input is focused, otherwise trigger Alpine method
+                if (document.activeElement.matches('input[role=searchbox]')) {
+                    document.activeElement.blur();
+                }
+                // Use Alpine.js store to clear search
+                Alpine.store('search').clear();
+            }
+        });
+        
+        // Alpine.js stores for global state
+        document.addEventListener('alpine:init', () => {
+            Alpine.store('search', {
+                clear() {
+                    const component = Alpine.findClosest(document.body, x => x.$data);
+                    if (component) {
+                        component.searchQuery = '';
+                        component.aiTagFilter = '';
+                        component.performSearch();
+                    }
+                }
+            });
+        });
+        
         function clinicalBrief() {
             return {
                 // Data
@@ -527,14 +653,78 @@
                 // State
                 searchQuery: '',
                 aiTagFilter: '',
+                sortBy: 'newest',
+                searchTimeout: null,
+                showBackToTop: false,
                 
                 // Initialize
                 init() {
                     this.filteredItems = this.items;
+                    this.loadStateFromUrl();
+                    this.setupScrollListener();
                 },
                 
-                // Search functionality
+                // Setup scroll listener for back to top button
+                setupScrollListener() {
+                    window.addEventListener('scroll', () => {
+                        this.showBackToTop = window.scrollY > 300;
+                    });
+                },
+                
+                // Load state from URL parameters
+                loadStateFromUrl() {
+                    const url = new URL(window.location);
+                    this.searchQuery = url.searchParams.get('q') || '';
+                    this.aiTagFilter = url.searchParams.get('tag') || '';
+                    this.sortBy = url.searchParams.get('sort') || 'newest';
+                    if (this.searchQuery || this.aiTagFilter) {
+                        this.performSearch();
+                    }
+                },
+                
+                // Sync state to URL
+                syncUrl() {
+                    const url = new URL(window.location);
+                    if (this.searchQuery) {
+                        url.searchParams.set('q', this.searchQuery);
+                    } else {
+                        url.searchParams.delete('q');
+                    }
+                    if (this.aiTagFilter) {
+                        url.searchParams.set('tag', this.aiTagFilter);
+                    } else {
+                        url.searchParams.delete('tag');
+                    }
+                    if (this.sortBy !== 'newest') {
+                        url.searchParams.set('sort', this.sortBy);
+                    } else {
+                        url.searchParams.delete('sort');
+                    }
+                    history.replaceState(null, '', url.toString());
+                },
+                
+                // Debounced search functionality
                 performSearch() {
+                    // Clear existing timeout
+                    if (this.searchTimeout) {
+                        clearTimeout(this.searchTimeout);
+                    }
+                    
+                    // Debounce search by 150ms
+                    this.searchTimeout = setTimeout(() => {
+                        this._doSearch();
+                        this.syncUrl();
+                    }, 150);
+                },
+                
+                // Immediate search for filter changes
+                performSearchImmediate() {
+                    this._doSearch();
+                    this.syncUrl();
+                },
+                
+                // Internal search implementation
+                _doSearch() {
                     let filtered = this.items;
                     
                     // Text search
@@ -552,15 +742,64 @@
                         filtered = filtered.filter(item => item.ai_tag === this.aiTagFilter);
                     }
                     
+                    // Sort results
+                    filtered = this.sortResults(filtered);
+                    
                     this.filteredItems = filtered;
                 },
                 
-                // Highlight search terms
+                // Sort results based on selected criteria
+                sortResults(items) {
+                    return [...items].sort((a, b) => {
+                        switch (this.sortBy) {
+                            case 'oldest':
+                                return new Date(a.pub_date) - new Date(b.pub_date);
+                            case 'source':
+                                return a.source.localeCompare(b.source);
+                            case 'newest':
+                            default:
+                                return new Date(b.pub_date) - new Date(a.pub_date);
+                        }
+                    });
+                },
+                
+                // Copy link to clipboard
+                async copyLink(url) {
+                    try {
+                        await navigator.clipboard.writeText(url);
+                        // You could add a toast notification here
+                        console.log('Link copied to clipboard');
+                    } catch (err) {
+                        console.error('Failed to copy link:', err);
+                        // Fallback for older browsers
+                        const textArea = document.createElement('textarea');
+                        textArea.value = url;
+                        document.body.appendChild(textArea);
+                        textArea.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(textArea);
+                    }
+                },
+                
+                // Helper functions for XSS safety
+                escapeRegex(str) {
+                    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                },
+                
+                escapeHtml(str) {
+                    const div = document.createElement('div');
+                    div.textContent = str;
+                    return div.innerHTML;
+                },
+                
+                // Highlight search terms with XSS protection
                 highlightText(text) {
-                    if (!this.searchQuery) return text;
+                    if (!this.searchQuery) return this.escapeHtml(text);
                     
-                    const regex = new RegExp(`(${this.searchQuery})`, 'gi');
-                    return text.replace(regex, '<mark class="search-highlight">$1</mark>');
+                    const safeQuery = this.escapeRegex(this.searchQuery);
+                    const regex = new RegExp(`(${safeQuery})`, 'gi');
+                    const escapedText = this.escapeHtml(text);
+                    return escapedText.replace(regex, '<mark class="search-highlight">$1</mark>');
                 },
                 
                 // Format publication date
@@ -591,6 +830,14 @@
                             block: 'start'
                         });
                     }
+                },
+                
+                // Scroll to top of page
+                scrollToTop() {
+                    window.scrollTo({
+                        top: 0,
+                        behavior: 'smooth'
+                    });
                 }
             }
         }
