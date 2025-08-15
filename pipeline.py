@@ -14,11 +14,175 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 import re
 import requests
-from urllib.parse import quote_plus
+from urllib.parse import quote_plus, urlparse, parse_qs, urlencode, urlunparse
 import math
+import random
+import hashlib
+import tempfile
+from dataclasses import dataclass
 
 import feedparser
 from qwen_client import QwenOpenRouterClient
+from pydantic import BaseModel, Field, ValidationError
+
+# Robust HTTP retry configuration
+@dataclass
+class RetryConfig:
+    max_retries: int = 3
+    base_delay: float = 1.0
+    max_delay: float = 60.0
+    backoff_factor: float = 2.0
+    jitter: bool = True
+
+def request_with_retries(
+    session: requests.Session,
+    method: str,
+    url: str,
+    timeout: int = 30,
+    retry_config: Optional[RetryConfig] = None,
+    **kwargs
+) -> requests.Response:
+    """
+    Make HTTP request with exponential backoff and jitter.
+    
+    Args:
+        session: requests session
+        method: HTTP method (GET, POST, etc.)
+        url: Target URL
+        timeout: Request timeout in seconds
+        retry_config: Retry configuration
+        **kwargs: Additional arguments for requests
+    
+    Returns:
+        requests.Response object
+        
+    Raises:
+        requests.RequestException: After all retries exhausted
+    """
+    if retry_config is None:
+        retry_config = RetryConfig()
+    
+    last_exception = None
+    
+    for attempt in range(retry_config.max_retries + 1):
+        try:
+            response = session.request(method, url, timeout=timeout, **kwargs)
+            
+            # Check for rate limiting
+            if response.status_code == 429:
+                retry_after = response.headers.get('Retry-After')
+                if retry_after:
+                    try:
+                        delay = float(retry_after)
+                        logging.warning(f"Rate limited, retrying after {delay}s for {url}")
+                        time.sleep(delay)
+                        continue
+                    except ValueError:
+                        pass
+            
+            # Raise for other HTTP errors (will be caught and retried if appropriate)
+            response.raise_for_status()
+            return response
+            
+        except (requests.exceptions.RequestException, requests.exceptions.Timeout) as e:
+            last_exception = e
+            
+            # Don't retry on client errors (4xx except 429)
+            if hasattr(e, 'response') and e.response is not None:
+                if 400 <= e.response.status_code < 500 and e.response.status_code != 429:
+                    logging.error(f"Client error {e.response.status_code} for {url}: {e}")
+                    raise e
+            
+            if attempt == retry_config.max_retries:
+                logging.error(f"Final retry failed for {url} after {attempt + 1} attempts: {e}")
+                break
+            
+            # Calculate delay with exponential backoff and jitter
+            delay = min(
+                retry_config.base_delay * (retry_config.backoff_factor ** attempt),
+                retry_config.max_delay
+            )
+            
+            if retry_config.jitter:
+                delay *= (0.5 + random.random() * 0.5)  # 50-150% of calculated delay
+            
+            logging.warning(f"Request failed for {url} (attempt {attempt + 1}), retrying in {delay:.2f}s: {e}")
+            time.sleep(delay)
+    
+    # All retries exhausted
+    raise last_exception
+
+def canonicalize_url(url: str) -> str:
+    """
+    Canonicalize URL for deduplication by removing tracking parameters.
+    
+    Args:
+        url: Original URL
+        
+    Returns:
+        Canonicalized URL string
+    """
+    try:
+        parsed = urlparse(url)
+        
+        # Remove common tracking parameters
+        tracking_params = {
+            'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content',
+            'fbclid', 'gclid', 'ref', '_ga', '_gl', 'mc_cid', 'mc_eid',
+            'source', 'medium', 'campaign'
+        }
+        
+        query_params = parse_qs(parsed.query, keep_blank_values=False)
+        filtered_params = {
+            k: v for k, v in query_params.items() 
+            if k.lower() not in tracking_params
+        }
+        
+        # Rebuild query string
+        new_query = urlencode(filtered_params, doseq=True) if filtered_params else ''
+        
+        # Normalize: lowercase host, remove trailing slash, rebuild URL
+        normalized = urlunparse((
+            parsed.scheme.lower(),
+            parsed.netloc.lower(),
+            parsed.path.rstrip('/') if parsed.path != '/' else parsed.path,
+            parsed.params,
+            new_query,
+            ''  # Remove fragment
+        ))
+        
+        return normalized
+        
+    except Exception as e:
+        logging.warning(f"Failed to canonicalize URL {url}: {e}")
+        return url
+
+# Data validation models
+class BriefItem(BaseModel):
+    """Validated brief item model."""
+    id: str = Field(..., min_length=1)
+    title: str = Field(..., min_length=5, max_length=500)
+    description: str = Field(..., max_length=2000)
+    summary: str = Field(..., min_length=10, max_length=1000)
+    ai_tag: str = Field(..., min_length=1, max_length=100)
+    source: str = Field(..., min_length=1, max_length=200)
+    pub_date: str = Field(..., min_length=1)
+    link: str = Field(..., min_length=10)
+    brief_date: str = Field(..., min_length=1)
+    search_query: Optional[str] = Field(None, max_length=500)
+    is_ai_related: bool = True
+    
+    class Config:
+        str_strip_whitespace = True
+
+class BriefData(BaseModel):
+    """Validated brief data container."""
+    items: List[BriefItem]
+    total_items: int = Field(ge=0)
+    brief_date: str
+    
+    class Config:
+        str_strip_whitespace = True
 from bs4 import BeautifulSoup
 from jinja2 import Environment, FileSystemLoader
 import bleach
@@ -158,23 +322,65 @@ class FeedProcessor:
             log_file: Path to log file
             days_back: Number of days back to consider articles (default: 60)
         """
+        # Validate required environment variables
+        if not qwen_api_key:
+            raise ValueError("OPENROUTER_API_KEY is required")
+        
         self.qwen_client = QwenOpenRouterClient(api_key=qwen_api_key)
         self.logger = self._setup_logging(log_file)
         self.brief_date = datetime.now(timezone.utc).strftime('%Y-%m-%d')
         self.days_back = days_back
         
-        # Initialize search APIs
+        # Initialize search APIs with validation
         self.google_api_key = os.environ.get('GOOGLE_API_KEY')
         self.google_cx = os.environ.get('GOOGLE_CX')  # Custom Search Engine ID
         self.pubmed_base_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
+        
+        # Log API availability
+        if self.google_api_key and self.google_cx:
+            self.logger.info("Google Custom Search API configured")
+        else:
+            self.logger.warning("Google Custom Search API not configured - will skip Google searches")
         
         # Additional API endpoints for broader source acquisition
         self.europepmc_base_url = "https://www.ebi.ac.uk/europepmc/webservices/rest/"
         self.semantic_scholar_base_url = "https://api.semanticscholar.org/graph/v1/"
         self.medrxiv_base_url = "https://api.medrxiv.org/"
         
+        # Create robust HTTP session with retries
+        self.session = requests.Session()
+        self.session.headers.update({
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.5',
+            'Accept-Encoding': 'gzip, deflate',
+            'DNT': '1',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1'
+        })
+        
+        # Retry configuration
+        self.retry_config = RetryConfig(max_retries=3, base_delay=1.0, max_delay=30.0)
+        
+        # Rate limiting configuration
+        self.google_requests_count = 0
+        self.google_request_limit = 100  # Daily limit safety margin
+        self.pubmed_request_limit = 300   # Per hour limit safety margin
+        
         # Cache for generated search queries to avoid regenerating on each run
         self._generated_queries_cache = None
+        
+        # Deduplication tracking
+        self.seen_urls = set()
+        self.seen_titles = set()
+        
+        # Cost tracking
+        self.api_costs = {
+            'qwen_calls': 0,
+            'google_calls': 0,
+            'pubmed_calls': 0,
+            'estimated_cost_usd': 0.0
+        }
         
     def _setup_logging(self, log_file: str) -> logging.Logger:
         """Set up JSON logging as specified in PRD."""
@@ -911,6 +1117,11 @@ class FeedProcessor:
         if not self.google_api_key or not self.google_cx:
             self.logger.warning("Google API credentials not found. Skipping Google search.")
             return []
+            
+        # Check rate limits
+        if self.google_requests_count >= self.google_request_limit:
+            self.logger.warning(f"Google API request limit reached ({self.google_request_limit})")
+            return []
         
         entries = []
         try:
@@ -923,6 +1134,11 @@ class FeedProcessor:
             pages_needed = min(3, (max_results + results_per_page - 1) // results_per_page)  # Max 3 pages
             
             for page in range(pages_needed):
+                # Check rate limits per page
+                if self.google_requests_count >= self.google_request_limit:
+                    self.logger.warning("Google API rate limit reached during pagination")
+                    break
+                    
                 start_index = page * results_per_page + 1
                 
                 # Use the query directly without domain restrictions to get broader coverage
@@ -941,8 +1157,13 @@ class FeedProcessor:
                     'filter': '1',  # Enable duplicate filtering
                 }
                 
-                response = requests.get(url, params=params, timeout=30)
-                response.raise_for_status()
+                # Use robust retry logic
+                response = request_with_retries(
+                    self.session, 'GET', url, params=params, 
+                    retry_config=self.retry_config, timeout=30
+                )
+                self.google_requests_count += 1
+                self.api_costs['google_calls'] += 1
                 
                 data = response.json()
                 page_entries = []
@@ -957,11 +1178,21 @@ class FeedProcessor:
                     ]):
                         continue
                     
+                    # Canonicalize URL for deduplication
+                    canonical_url = canonicalize_url(link)
+                    if canonical_url in self.seen_urls:
+                        continue
+                    
                     # ENHANCED URL QUALITY CHECK - Skip homepage and category URLs
                     if not self._is_quality_article_url(link):
                         continue
                     
                     title = self._extract_full_title(item)
+                    
+                    # Fuzzy title deduplication
+                    title_normalized = re.sub(r'[^\w\s]', '', title.lower()).strip()
+                    if title_normalized in self.seen_titles:
+                        continue
                     
                     # ENHANCED TITLE QUALITY CHECK - More aggressive generic title detection
                     if not self._is_quality_article_title(title, link):
@@ -973,6 +1204,10 @@ class FeedProcessor:
                         'employment', 'recruiter', 'hr ', 'human resources'
                     ]):
                         continue
+                    
+                    # Record URL and title for deduplication
+                    self.seen_urls.add(canonical_url)
+                    self.seen_titles.add(title_normalized)
                     
                     # Reduced filtering for navigation/category pages - be more permissive
                     if any(nav_pattern in title.lower() for nav_pattern in [
@@ -1047,8 +1282,12 @@ class FeedProcessor:
                 'retmode': 'json'
             }
             
-            search_response = requests.get(search_url, params=search_params, timeout=30)
-            search_response.raise_for_status()
+            # Use robust retry logic
+            search_response = request_with_retries(
+                self.session, 'GET', search_url, params=search_params,
+                retry_config=self.retry_config, timeout=30
+            )
+            self.api_costs['pubmed_calls'] += 1
             search_data = search_response.json()
             
             pmids = search_data.get('esearchresult', {}).get('idlist', [])
@@ -1062,18 +1301,40 @@ class FeedProcessor:
                     'retmode': 'json'
                 }
                 
-                fetch_response = requests.get(fetch_url, params=fetch_params, timeout=30)
-                fetch_response.raise_for_status()
+                # Use robust retry logic for fetching details
+                fetch_response = request_with_retries(
+                    self.session, 'GET', fetch_url, params=fetch_params,
+                    retry_config=self.retry_config, timeout=30
+                )
+                self.api_costs['pubmed_calls'] += 1
                 fetch_data = fetch_response.json()
                 
                 for pmid, paper in fetch_data.get('result', {}).items():
                     if pmid == 'uids':
                         continue
                     
+                    # Build PubMed URL
+                    pubmed_url = f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/"
+                    canonical_url = canonicalize_url(pubmed_url)
+                    
+                    # Check for duplicates
+                    if canonical_url in self.seen_urls:
+                        continue
+                    
+                    title = self._sanitize_text(paper.get('title', ''))
+                    title_normalized = re.sub(r'[^\w\s]', '', title.lower()).strip()
+                    
+                    if title_normalized in self.seen_titles:
+                        continue
+                    
+                    # Record for deduplication
+                    self.seen_urls.add(canonical_url)
+                    self.seen_titles.add(title_normalized)
+                    
                     entry_data = {
                         'id': str(uuid.uuid4()),
-                        'title': self._sanitize_text(paper.get('title', '')),
-                        'description': self._sanitize_text(paper.get('title', '') + ' - ' + str(paper.get('authors', ''))),
+                        'title': title,
+                        'description': self._sanitize_text(title + ' - ' + str(paper.get('authors', ''))),
                         'link': f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/",
                         'pub_date': self._parse_pubmed_date(paper.get('pubdate', '')),
                         'source': 'PubMed',
@@ -1793,18 +2054,75 @@ class FeedProcessor:
         return sorted_entries
     
     def save_brief_data(self, entries: List[Dict], output_file: str):
-        """Save brief data to JSON file."""
-        Path(output_file).parent.mkdir(parents=True, exist_ok=True)
+        """Save brief data to JSON file with validation and atomic writes."""
+        try:
+            Path(output_file).parent.mkdir(parents=True, exist_ok=True)
+            
+            # Validate entries before saving
+            validated_items = []
+            for entry in entries:
+                try:
+                    # Convert to BriefItem for validation
+                    validated_item = BriefItem(**entry)
+                    validated_items.append(validated_item.dict())
+                except ValidationError as e:
+                    self.logger.warning(f"Skipping invalid entry: {e}")
+                    continue
+            
+            # Create validated brief data
+            try:
+                brief_data_obj = BriefData(
+                    items=validated_items,
+                    total_items=len(validated_items),
+                    brief_date=self.brief_date
+                )
+                brief_data = brief_data_obj.dict()
+                brief_data['generated_at'] = datetime.now(timezone.utc).isoformat()
+            except ValidationError as e:
+                self.logger.error(f"Brief data validation failed: {e}")
+                # Fallback to basic structure
+                brief_data = {
+                    'brief_date': self.brief_date,
+                    'generated_at': datetime.now(timezone.utc).isoformat(),
+                    'items': validated_items,
+                    'total_items': len(validated_items)
+                }
+            
+            # Atomic write using temporary file
+            temp_file = output_file + '.tmp'
+            try:
+                with open(temp_file, 'w', encoding='utf-8') as f:
+                    json.dump(brief_data, f, indent=2, ensure_ascii=False)
+                
+                # Atomic move
+                Path(temp_file).rename(output_file)
+                self.logger.info(f"Brief data saved successfully to {output_file}")
+                
+            except Exception as e:
+                # Clean up temp file on error
+                if Path(temp_file).exists():
+                    Path(temp_file).unlink()
+                raise e
+                
+        except Exception as e:
+            self.logger.error(f"Failed to save brief data: {e}")
+            # Don't re-raise - allow pipeline to continue
+    
+    def log_cost_estimate(self):
+        """Log estimated API costs for this run."""
+        # Rough cost estimates (as of 2025)
+        qwen_cost_per_1k = 0.0007  # $0.0007 per 1k tokens
+        google_cost_per_call = 0.005  # $0.005 per search
         
-        brief_data = {
-            'brief_date': self.brief_date,
-            'generated_at': datetime.now(timezone.utc).isoformat(),
-            'items': entries,
-            'total_items': len(entries)
-        }
+        estimated_cost = (
+            self.api_costs['qwen_calls'] * qwen_cost_per_1k +
+            self.api_costs['google_calls'] * google_cost_per_call
+        )
         
-        with open(output_file, 'w', encoding='utf-8') as f:
-            json.dump(brief_data, f, indent=2, ensure_ascii=False)
+        self.api_costs['estimated_cost_usd'] = estimated_cost
+        
+        self.logger.info(f"API usage summary: {self.api_costs}")
+        return estimated_cost
 
 
 class SiteGenerator:
@@ -1815,80 +2133,173 @@ class SiteGenerator:
         self.env = Environment(loader=FileSystemLoader(templates_dir))
         
     def generate_html(self, brief_data: Dict, output_file: str):
-        """Generate HTML page using Jinja2 template."""
-        template = self.env.get_template('index.html')
-        
-        # Prepare template context
-        context = {
-            'brief_date': brief_data['brief_date'],
-            'generated_at': brief_data['generated_at'],
-            'items': brief_data['items'],
-            'total_items': brief_data['total_items']
-        }
-        
-        # Render template
-        html_content = template.render(**context)
-        
-        # Save HTML file
-        Path(output_file).parent.mkdir(parents=True, exist_ok=True)
-        with open(output_file, 'w', encoding='utf-8') as f:
+        """Generate HTML page using Jinja2 template with atomic writes."""
+        try:
+            template = self.env.get_template('index.html')
+            
+            # Prepare template context
+            context = {
+                'brief_date': brief_data['brief_date'],
+                'generated_at': brief_data['generated_at'],
+                'items': brief_data['items'],
+                'total_items': brief_data['total_items']
+            }
+            
+            # Render template
+            html_content = template.render(**context)
+            
+            # Atomic write using temporary file
+            Path(output_file).parent.mkdir(parents=True, exist_ok=True)
+            temp_file = output_file + '.tmp'
+            
+            try:
+                with open(temp_file, 'w', encoding='utf-8') as f:
+                    f.write(html_content)
+                
+                # Atomic move
+                Path(temp_file).rename(output_file)
+                
+            except Exception as e:
+                # Clean up temp file on error
+                if Path(temp_file).exists():
+                    Path(temp_file).unlink()
+                raise e
+                
+        except Exception as e:
+            logging.error(f"Failed to generate HTML: {e}")
+            # Don't re-raise - allow pipeline to continue
             f.write(html_content)
 
 
 def main():
-    """Main pipeline execution."""
-    # Configuration
-    qwen_api_key = os.environ.get('OPENROUTER_API_KEY')
-    if not qwen_api_key:
-        raise ValueError("OPENROUTER_API_KEY environment variable is required")
-    
-    # Configuration: Default max entries for sources without specific limits
-    default_max_entries = int(os.environ.get('DEFAULT_MAX_ENTRIES', '8'))
-    
-    # Configuration: Timeframe for article collection (configurable via environment)
-    days_back = int(os.environ.get('DAYS_BACK', '60'))  # Default to 60 days
-    
+    """Main pipeline execution with comprehensive error handling."""
     brief_date = datetime.now(timezone.utc).strftime('%Y-%m-%d')
     log_file = f"logs/{brief_date}.log"
     json_file = f"briefs/{brief_date}.json"
     html_file = "site/index.html"
     
-    # Initialize processors
-    feed_processor = FeedProcessor(qwen_api_key, log_file, days_back)
-    site_generator = SiteGenerator()
+    # Status tracking for CI
+    status_file = f"logs/{brief_date}.status"
     
-    print(f"Starting The AI-Powered Clinical Research Intelligence Hub pipeline for {brief_date}")
-    print(f"Collecting articles from the last {days_back} days")
+    # Initialize variables for error handling
+    selected_articles = []
     
-    # Step 1: Fetch feeds using RSS feeds and web search APIs
-    print("Fetching articles using RSS feeds and web search APIs...")
-    entries = feed_processor.fetch_feeds(default_max=default_max_entries)
-    print(f"Fetched {len(entries)} entries from RSS feeds and web search APIs")
-    
-    # Step 2: Identify AI-specific content in clinical research
-    print("Identifying AI-specific articles in clinical research with Qwen...")
-    ai_entries = feed_processor.identify_ai_content(entries)
-    print(f"Identified {len(ai_entries)} AI-specific clinical research articles")
-    
-    # Step 3: Select and sort articles
-    print("Selecting and sorting articles...")
-    selected_articles = feed_processor.select_articles(ai_entries)
-    print(f"Selected {len(selected_articles)} articles for the brief")
-    
-    # Step 4: Save brief data
-    print("Saving brief data...")
-    feed_processor.save_brief_data(selected_articles, json_file)
-    
-    # Step 5: Generate HTML
-    print("Generating HTML...")
-    with open(json_file, 'r', encoding='utf-8') as f:
-        brief_data = json.load(f)
-    site_generator.generate_html(brief_data, html_file)
-    
-    print(f"Pipeline completed successfully!")
-    print(f"- Brief data: {json_file}")
-    print(f"- HTML page: {html_file}")
-    print(f"- Logs: {log_file}")
+    try:
+        # Validate required environment variables
+        qwen_api_key = os.environ.get('OPENROUTER_API_KEY')
+        if not qwen_api_key:
+            raise ValueError("OPENROUTER_API_KEY environment variable is required")
+        
+        # Configuration: Default max entries for sources without specific limits
+        default_max_entries = int(os.environ.get('DEFAULT_MAX_ENTRIES', '8'))
+        
+        # Configuration: Timeframe for article collection (configurable via environment)
+        days_back = int(os.environ.get('DAYS_BACK', '60'))  # Default to 60 days
+        
+        # Initialize processors with error handling
+        try:
+            feed_processor = FeedProcessor(qwen_api_key, log_file, days_back)
+            site_generator = SiteGenerator()
+        except Exception as e:
+            logging.error(f"Failed to initialize processors: {e}")
+            _write_status_file(status_file, 'FAILED', f"Initialization failed: {e}")
+            raise
+        
+        print(f"Starting The AI-Powered Clinical Research Intelligence Hub pipeline for {brief_date}")
+        print(f"Collecting articles from the last {days_back} days")
+        
+        # Step 1: Fetch feeds using RSS feeds and web search APIs (soft fail)
+        entries = []
+        try:
+            print("Fetching articles using RSS feeds and web search APIs...")
+            entries = feed_processor.fetch_feeds(default_max=default_max_entries)
+            print(f"Fetched {len(entries)} entries from RSS feeds and web search APIs")
+        except Exception as e:
+            logging.error(f"Failed to fetch feeds: {e}")
+            print(f"Warning: Failed to fetch feeds, continuing with empty set: {e}")
+        
+        if not entries:
+            print("No entries found, creating minimal brief")
+            _write_status_file(status_file, 'WARNING', "No entries found")
+        
+        # Step 2: Identify AI-specific content (soft fail)
+        ai_entries = []
+        try:
+            print("Identifying AI-specific articles in clinical research with Qwen...")
+            ai_entries = feed_processor.identify_ai_content(entries)
+            print(f"Identified {len(ai_entries)} AI-specific clinical research articles")
+        except Exception as e:
+            logging.error(f"Failed to identify AI content: {e}")
+            print(f"Warning: Failed to identify AI content, using all entries: {e}")
+            ai_entries = entries  # Fallback to all entries
+        
+        # Step 3: Select and sort articles (soft fail)
+        selected_articles = []
+        try:
+            print("Selecting and sorting articles...")
+            selected_articles = feed_processor.select_articles(ai_entries)
+            print(f"Selected {len(selected_articles)} articles for the brief")
+        except Exception as e:
+            logging.error(f"Failed to select articles: {e}")
+            print(f"Warning: Failed to select articles, using all AI entries: {e}")
+            selected_articles = ai_entries  # Fallback to all AI entries
+        
+        # Step 4: Save brief data (critical - must succeed)
+        try:
+            print("Saving brief data...")
+            feed_processor.save_brief_data(selected_articles, json_file)
+        except Exception as e:
+            logging.error(f"Failed to save brief data: {e}")
+            _write_status_file(status_file, 'FAILED', f"Failed to save brief data: {e}")
+            raise
+        
+        # Step 5: Generate HTML (soft fail)
+        try:
+            print("Generating HTML...")
+            with open(json_file, 'r', encoding='utf-8') as f:
+                brief_data = json.load(f)
+            site_generator.generate_html(brief_data, html_file)
+        except Exception as e:
+            logging.error(f"Failed to generate HTML: {e}")
+            print(f"Warning: Failed to generate HTML: {e}")
+            _write_status_file(status_file, 'WARNING', f"HTML generation failed: {e}")
+        
+        # Log cost estimates
+        try:
+            cost = feed_processor.log_cost_estimate()
+            print(f"Estimated cost: ${cost:.4f}")
+        except Exception as e:
+            logging.warning(f"Failed to calculate costs: {e}")
+        
+        print(f"Pipeline completed successfully!")
+        print(f"- Brief data: {json_file}")
+        print(f"- HTML page: {html_file}")
+        print(f"- Logs: {log_file}")
+        
+        _write_status_file(status_file, 'SUCCESS', f"Pipeline completed with {len(selected_articles)} articles")
+        
+    except Exception as e:
+        logging.error(f"Pipeline failed: {e}")
+        print(f"Pipeline failed: {e}")
+        try:
+            _write_status_file(status_file, 'FAILED', str(e))
+        except:
+            pass  # Don't fail on status file write
+        raise
+
+def _write_status_file(status_file: str, status: str, message: str = ""):
+    """Write status file for CI monitoring."""
+    try:
+        Path(status_file).parent.mkdir(parents=True, exist_ok=True)
+        status_data = {
+            'status': status,
+            'timestamp': datetime.now(timezone.utc).isoformat(),
+            'message': message
+        }
+        with open(status_file, 'w', encoding='utf-8') as f:
+            json.dump(status_data, f, indent=2)
+    except Exception as e:
+        logging.error(f"Failed to write status file: {e}")
 
 
 if __name__ == "__main__":
