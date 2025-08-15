@@ -54,6 +54,7 @@ jobs:
         env:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          CLOUDFLARE_WA_TOKEN: ${{ secrets.CLOUDFLARE_WA_TOKEN }}
         run: |
           echo "🚀 Starting AI Clinical Research Intelligence Pipeline..."
           python pipeline.py
