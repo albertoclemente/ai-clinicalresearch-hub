@@ -2197,13 +2197,13 @@ class SiteGenerator:
             template = self.env.get_template('index.html')
             
             # Prepare template context
-            cf_wa_token = os.getenv("CLOUDFLARE_WA_TOKEN", "")
+            goatcounter_url = os.getenv("GOATCOUNTER_URL", "")
             context = {
                 'brief_date': brief_data['brief_date'],
                 'generated_at': brief_data['generated_at'],
                 'items': brief_data['items'],
                 'total_items': brief_data['total_items'],
-                'CLOUDFLARE_WA_TOKEN': cf_wa_token,
+                'GOATCOUNTER_URL': goatcounter_url,
             }
             
             # Render template

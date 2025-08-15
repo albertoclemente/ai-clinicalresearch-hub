@@ -105,8 +105,8 @@ The pipeline generates:
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/albertoclemente/gen-ai-clinical-trials-watch.git
-cd gen-ai-clinical-trials-watch
+git clone https://github.com/albertoclemente/ai-clinicalresearch-hub.git
+cd ai-clinicalresearch-hub
 ```
 
 2. **Install dependencies**
@@ -114,9 +114,14 @@ cd gen-ai-clinical-trials-watch
 pip install -r requirements.txt
 ```
 
-3. **Set environment variables**
+3. **Set environment variables (local runs)**
 ```bash
 export OPENROUTER_API_KEY="your-openrouter-api-key-here"
+# Optional (Google Custom Search for broader discovery)
+export GOOGLE_API_KEY="your-google-api-key"
+export GOOGLE_CX="your-google-cse-id"   # aka CSE ID
+# Optional (privacy-friendly site analytics)
+export GOATCOUNTER_URL="https://YOURCODE.goatcounter.com/count"
 ```
 
 4. **Run the pipeline**
@@ -149,14 +154,39 @@ Note: The pipeline automatically generates the HTML interface, so there's no nee
 - **Accessibility Focused**: Proper semantic HTML and keyboard navigation
 - **Mobile Responsive**: Optimized experience across all device sizes
 
-## 📅 Automation
+## 📅 Deployment (GitHub Pages)
 
-The pipeline can be automated using GitHub Actions. The workflow file runs daily and:
-- Executes the scraping and analysis pipeline
-- Generates new brief files with AI categorization
-- Creates premium HTML presentation
-- Commits results to the repository
-- Deploys the interactive web interface
+This project deploys to GitHub Pages via a manual GitHub Actions workflow.
+
+1) Enable Pages
+- Settings → Pages → Source: "Deploy from a branch"
+- Branch: `gh-pages`, Folder: `/ (root)`
+
+2) Add repository secrets (Settings → Secrets and variables → Actions)
+- `OPENROUTER_API_KEY` (required)
+- `GOOGLE_API_KEY` (optional)
+- `GOOGLE_CX` (preferred) or `GOOGLE_CSE_ID` (optional)
+- `GOATCOUNTER_URL` (optional, for analytics; format: https://YOURCODE.goatcounter.com/count)
+
+3) Run the workflow
+- Go to the Actions tab → "🔬 AI Clinical Research Intelligence Hub - Manual Deploy" → Run workflow
+
+The workflow generates the brief, builds `site/index.html`, and publishes to the `gh-pages` branch.
+Your site will be available at:
+https://albertoclemente.github.io/ai-clinicalresearch-hub/
+
+Note: The workflow uses Python 3.9 and installs dependencies from `requirements.txt` on each run.
+
+## 📈 Analytics (optional, GoatCounter)
+
+Privacy-friendly analytics are supported via GoatCounter:
+
+- Create a GoatCounter site; copy the `data-goatcounter` URL (looks like `https://YOURCODE.goatcounter.com/count`).
+- Add repo secret `GOATCOUNTER_URL` with that value (no quotes).
+- On deploy, the template injects:
+  `<script data-goatcounter="{{ GOATCOUNTER_URL }}" async src="https://gc.zgo.at/count.js"></script>`
+
+Verify after deploy: View Source on the live page and search for `gc.zgo.at` or `data-goatcounter`.
 
 ## 📊 Typical AI Technology Distribution
 
@@ -171,26 +201,24 @@ Based on current data analysis:
 ## 📁 Repository Structure
 
 ```
-clinical_research_daily_brief/
-├── briefs/                                 # Generated content
-│   └── YYYY-MM-DD.json                    # Daily brief data
-├── logs/                                   # Processing logs
-│   └── YYYY-MM-DD.log                     # Detailed logs
-├── site/                                   # Static website output
-│   ├── index.html                          # Generated main page
-│   ├── styles.css                          # Additional styling
-│   └── assets/                             # Static assets
-├── templates/                              # Jinja2 templates
-│   └── index.html                          # Main page template with premium UI
-├── pipeline.py                             # Main processing script
-├── qwen_client.py                          # Qwen LLM client wrapper
-├── generate_html.py                        # Standalone HTML generation utility
-├── requirements.txt                        # Python dependencies
-├── environment.yml                         # Conda environment
-├── FRONTEND_IMPROVEMENTS_IMPLEMENTED.md    # Frontend enhancement documentation
-├── AMELIORATIONS_IMPLEMENTED.md           # Production robustness documentation
-├── IMPROVEMENTS_IMPLEMENTED.md            # General improvements documentation
-└── README.md                              # This file
+ai-clinicalresearch-hub/
+├── briefs/                 # Generated content (YYYY-MM-DD.json)
+├── logs/                   # Processing logs (YYYY-MM-DD.log)
+├── site/                   # Static website output (published to gh-pages)
+│   ├── index.html
+│   └── styles.css
+├── templates/              # Jinja2 templates (main UI)
+│   ├── index.html
+│   └── pdf.html
+├── .github/workflows/
+│   └── deploy.yml          # Manual GitHub Pages deployment workflow
+├── pipeline.py             # Main processing script
+├── qwen_client.py          # Qwen LLM client wrapper (OpenRouter)
+├── requirements.txt        # Python dependencies
+├── environment.yml         # Optional conda environment
+├── IMPROVEMENTS_IMPLEMENTED.md
+├── targeted_improvements.md
+└── README.md
 ```
 
 ## 🔄 Recent Improvements Timeline
@@ -223,7 +251,6 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 🔗 Links
 
-- [GitHub Repository](https://github.com/albertoclemente/gen-ai-clinical-trials-watch)
-- [Frontend Improvements Documentation](./FRONTEND_IMPROVEMENTS_IMPLEMENTED.md)
-- [Production Robustness Documentation](./AMELIORATIONS_IMPLEMENTED.md)
-- [General Improvements Documentation](./IMPROVEMENTS_IMPLEMENTED.md)
+- [GitHub Repository](https://github.com/albertoclemente/ai-clinicalresearch-hub)
+- [Live Site](https://albertoclemente.github.io/ai-clinicalresearch-hub/)
+- [Improvements Log](./IMPROVEMENTS_IMPLEMENTED.md)
