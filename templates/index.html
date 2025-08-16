@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI-Powered Clinical Research Intelligence Hub - {{ brief_date }}</title>
-    <meta name="description" content="Comprehensive AI-driven platform discovering cutting-edge artificial intelligence applications transforming clinical research and trials">
+    <title>AI Clinical Research Daily Brief - {{ brief_date }}</title>
+    <meta name="description" content="Daily updates on AI breakthroughs in clinical research and healthcare. Automatically curated news, studies, and innovations in medical AI technology.">
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -339,7 +339,7 @@
                     Clinical Research <span class="bg-gradient-to-r from-yellow-300 to-pink-300 bg-clip-text text-transparent font-semibold">Intelligence Hub</span>
                 </h2>
                 <p class="text-xl md:text-2xl text-white/80 mb-12 font-light max-w-4xl mx-auto leading-relaxed">
-                    Discover cutting-edge AI applications transforming clinical research and trials - from Generative AI and LLMs to Machine Learning and NLP innovations
+                    Your daily source for the latest AI breakthroughs in clinical research. Automatically curated, summarized, and organized so you never miss what matters
                 </p>
             </div>
             
@@ -349,8 +349,8 @@
                     <div class="relative mb-6">
                         <input 
                             type="text" 
-                            placeholder="🔬 Search breakthrough AI innovations..." 
-                            aria-label="Search articles about AI innovations in clinical research"
+                            placeholder="🔍 Search AI research news..." 
+                            aria-label="Search articles about AI in clinical research"
                             role="searchbox"
                             class="w-full px-8 py-5 text-lg bg-white/95 backdrop-blur-sm rounded-2xl border-0 focus:outline-none focus:ring-4 focus:ring-white/50 transition-all duration-300 text-gray-800 placeholder-gray-500 shadow-lg"
                             x-model="searchQuery"
@@ -394,12 +394,12 @@
             <div class="flex items-center justify-center space-x-8 text-white/70">
                 <div class="text-center">
                     <div class="text-3xl font-semibold text-white">{{ total_items }}</div>
-                    <div class="text-sm">AI Discoveries</div>
+                    <div class="text-sm">Stories Today</div>
                 </div>
                 <div class="w-px h-8 bg-white/30"></div>
                 <div class="text-center">
                     <div class="text-3xl font-semibold text-white">{{ brief_date }}</div>
-                    <div class="text-sm">Latest Update</div>
+                    <div class="text-sm">Last Updated</div>
                 </div>
             </div>
         </div>
@@ -421,10 +421,10 @@
             <!-- Section Header with Insights -->
             <div class="text-center mb-16 section-fade">
                 <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-                    Latest AI <span class="bg-gradient-to-r from-blue-600 to-emerald-600 bg-clip-text text-transparent">Breakthroughs</span>
+                    Today's AI <span class="bg-gradient-to-r from-blue-600 to-emerald-600 bg-clip-text text-transparent">Discoveries</span>
                 </h2>
                 <p class="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
-                    Curated intelligence from the forefront of AI-powered clinical research
+                    Fresh insights from the world of AI-powered healthcare research, updated daily
                 </p>
             </div>
             
@@ -467,7 +467,7 @@
                                 <span class="font-semibold text-blue-600" x-text="filteredItems.length"></span> 
                                 <span>of</span> 
                                 <span class="font-semibold">{{ total_items }}</span> 
-                                <span>discoveries</span>
+                                <span>articles</span>
                                 <template x-if="getTotalPages() > 1">
                                     <span class="ml-2 text-xs text-gray-500">
                                         (Page <span x-text="currentPage"></span> of <span x-text="getTotalPages()"></span>)
@@ -726,9 +726,9 @@
             <div class="w-24 h-px bg-white/30 mx-auto mb-8"></div>
             
             <div class="flex items-center justify-center space-x-8 text-sm text-white/60">
-                <span>AI-Powered Clinical Research Intelligence Hub</span>
+                <span>AI Clinical Research Daily Brief</span>
                 <span>•</span>
-                <span>AI-Curated Intelligence</span>
+                <span>Powered by AI Curation</span>
                 <span>•</span>
                 <span>{{ brief_date }}</span>
             </div>
