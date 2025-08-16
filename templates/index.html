@@ -266,6 +266,48 @@
         .skip-link:focus {
             top: 6px;
         }
+        
+        /* Pagination controls styling */
+        .pagination-container {
+            margin-top: 3rem;
+            margin-bottom: 2rem;
+            padding: 1.5rem 0;
+            border-top: 1px solid rgba(229, 231, 235, 0.5);
+        }
+        
+        .pagination-nav {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.25rem;
+            flex-wrap: wrap;
+        }
+        
+        .pagination-nav button {
+            min-height: 2.5rem;
+            min-width: 2.5rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        @media (max-width: 640px) {
+            .pagination-container {
+                margin-top: 2rem;
+                padding: 1rem 0;
+            }
+            
+            .pagination-nav {
+                gap: 0.125rem;
+            }
+            
+            .pagination-nav button {
+                min-height: 2.25rem;
+                min-width: 2.25rem;
+                padding: 0.375rem 0.75rem;
+                font-size: 0.875rem;
+            }
+        }
     </style>
 </head>
 <body class="min-h-screen font-sans antialiased overflow-x-hidden neural-pattern" x-data="clinicalBrief()">
@@ -363,7 +405,7 @@
         </div>
         
         <!-- Enhanced Scroll Indicator -->
-        <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce cursor-pointer group" @click="scrollToContent()">
+        <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce cursor-pointer group" @click="document.querySelector('#main-content').scrollIntoView({ behavior: 'smooth', block: 'start' })">
             <div class="p-3 bg-white/20 rounded-full backdrop-blur-sm border border-white/30 group-hover:bg-white/30 transition-all duration-300">
                 <svg class="w-6 h-6 text-white/80 group-hover:text-white transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
@@ -426,6 +468,11 @@
                                 <span>of</span> 
                                 <span class="font-semibold">{{ total_items }}</span> 
                                 <span>discoveries</span>
+                                <template x-if="getTotalPages() > 1">
+                                    <span class="ml-2 text-xs text-gray-500">
+                                        (Page <span x-text="currentPage"></span> of <span x-text="getTotalPages()"></span>)
+                                    </span>
+                                </template>
                             </div>
                             <!-- Screen reader live region for search results -->
                             <div class="sr-only" role="status" aria-live="polite" x-text="`${filteredItems.length} results found`"></div>
@@ -465,7 +512,7 @@
             
             <!-- Enhanced Articles Grid -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <template x-for="(item, index) in filteredItems" :key="item.id">
+                <template x-for="(item, index) in getPaginatedItems()" :key="item.id">
                     <article class="group glass-card rounded-3xl p-8 hover-lift transition-all duration-500 border border-white/40 hover:border-blue-200 relative overflow-hidden">
                         
                         <!-- Gradient Accent -->
@@ -571,6 +618,76 @@
                     </article>
                 </template>
             </div>
+            
+            <!-- Pagination Controls -->
+            <div class="pagination-container" x-show="getTotalPages() > 1">
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-6 mb-6">
+                    <div class="flex items-center space-x-2 text-sm text-gray-600">
+                        <span>Showing</span>
+                        <span class="font-semibold" x-text="((currentPage - 1) * itemsPerPage) + 1"></span>
+                        <span>to</span>
+                        <span class="font-semibold" x-text="Math.min(currentPage * itemsPerPage, filteredItems.length)"></span>
+                        <span>of</span>
+                        <span class="font-semibold" x-text="filteredItems.length"></span>
+                        <span>results</span>
+                    </div>
+                    
+                    <div class="text-sm text-gray-500">
+                        Page <span class="font-semibold" x-text="currentPage"></span> of <span class="font-semibold" x-text="getTotalPages()"></span>
+                    </div>
+                </div>
+                
+                <nav class="pagination-nav" aria-label="Pagination navigation">
+                    <!-- Previous Button -->
+                    <button 
+                        @click="prevPage()"
+                        :disabled="!hasPrevPage()"
+                        :class="{'opacity-50 cursor-not-allowed': !hasPrevPage(), 'hover:bg-blue-50': hasPrevPage()}"
+                        class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-l-lg transition-colors duration-200"
+                        aria-label="Previous page"
+                    >
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                        </svg>
+                        <span class="hidden sm:inline">Previous</span>
+                    </button>
+                    
+                    <!-- Page Numbers -->
+                    <template x-for="page in Array.from({length: Math.min(5, getTotalPages())}, (_, i) => {
+                        const totalPages = getTotalPages();
+                        if (totalPages <= 5) return i + 1;
+                        if (currentPage <= 3) return i + 1;
+                        if (currentPage >= totalPages - 2) return totalPages - 4 + i;
+                        return currentPage - 2 + i;
+                    })" :key="page">
+                        <button 
+                            @click="goToPage(page)"
+                            :class="{
+                                'bg-blue-600 text-white border-blue-600': page === currentPage,
+                                'bg-white text-gray-700 border-gray-300 hover:bg-gray-50': page !== currentPage
+                            }"
+                            class="px-3 py-2 text-sm font-medium border transition-colors duration-200"
+                            :aria-label="`Go to page ${page}`"
+                            :aria-current="page === currentPage ? 'page' : false"
+                            x-text="page"
+                        ></button>
+                    </template>
+                    
+                    <!-- Next Button -->
+                    <button 
+                        @click="nextPage()"
+                        :disabled="!hasNextPage()"
+                        :class="{'opacity-50 cursor-not-allowed': !hasNextPage(), 'hover:bg-blue-50': hasNextPage()}"
+                        class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-r-lg transition-colors duration-200"
+                        aria-label="Next page"
+                    >
+                        <span class="hidden sm:inline">Next</span>
+                        <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </button>
+                </nav>
+            </div>
         </div>
     </main>
     
@@ -662,6 +779,10 @@
                 searchTimeout: null,
                 showBackToTop: false,
                 
+                // Pagination
+                currentPage: 1,
+                itemsPerPage: 8,
+                
                 // Initialize
                 init() {
                     this.filteredItems = this.items;
@@ -751,6 +872,60 @@
                     filtered = this.sortResults(filtered);
                     
                     this.filteredItems = filtered;
+                    
+                    // Reset to first page when search changes
+                    this.currentPage = 1;
+                },
+                
+                // Pagination helper methods
+                getPaginatedItems() {
+                    const start = (this.currentPage - 1) * this.itemsPerPage;
+                    const end = start + this.itemsPerPage;
+                    return this.filteredItems.slice(start, end);
+                },
+                
+                getTotalPages() {
+                    return Math.ceil(this.filteredItems.length / this.itemsPerPage);
+                },
+                
+                hasNextPage() {
+                    return this.currentPage < this.getTotalPages();
+                },
+                
+                hasPrevPage() {
+                    return this.currentPage > 1;
+                },
+                
+                // Pagination navigation methods
+                nextPage() {
+                    if (this.hasNextPage()) {
+                        this.currentPage++;
+                        this.scrollToArticles();
+                    }
+                },
+                
+                prevPage() {
+                    if (this.hasPrevPage()) {
+                        this.currentPage--;
+                        this.scrollToArticles();
+                    }
+                },
+                
+                goToPage(page) {
+                    if (page >= 1 && page <= this.getTotalPages()) {
+                        this.currentPage = page;
+                        this.scrollToArticles();
+                    }
+                },
+                
+                scrollToArticles() {
+                    const articlesSection = document.querySelector('.grid');
+                    if (articlesSection) {
+                        articlesSection.scrollIntoView({ 
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
                 },
                 
                 // Sort results based on selected criteria
