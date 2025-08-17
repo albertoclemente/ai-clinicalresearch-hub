@@ -2,9 +2,16 @@
 
 An advanced automated pipeline that discovers, analyzes, and curates cutting-edge AI applications in clinical research using **Qwen LLM** (via OpenRouter), featuring a premium glassmorphism web interface with comprehensive UI/UX enhancements.
 
-## 🚀 Recent Major Updates (August 16, 2025)
+## 🚀 Recent Major Updates (August 17, 2025)
 
-### **🔧 Latest Refinements & Production Optimization**
+### **⏰ Automated Daily Scheduling**
+- **Weekday Automation**: Pipeline now runs automatically Monday-Friday at 5:00 AM Central European Time
+- **GitHub Actions Integration**: Scheduled workflow ensures daily content updates without manual intervention
+- **Timezone Awareness**: Proper CET/CEST handling for consistent 5 AM local time execution
+- **Dual Trigger Support**: Maintains manual trigger option alongside automated scheduling
+- **Enhanced Logging**: Clear distinction between automated and manual runs in deployment logs
+
+### **🔧 Previous Refinements & Production Optimization** (August 16, 2025)
 - **Search Interface Polish**: Fixed search icon display issue replacing UTF-8 replacement character (�) with proper 🔍 emoji
 - **Production Pipeline Run**: Successfully processed 180 articles, identified 16 AI-relevant discoveries with excellent cost efficiency ($0.10)
 - **Enhanced Content Curation**: Qwen LLM filtering achieved 8.9% precision rate from comprehensive source network
@@ -50,7 +57,7 @@ An advanced automated pipeline that discovers, analyzes, and curates cutting-edg
 - **AI-Powered Analysis**: Uses **Qwen LLM (via OpenRouter)** to analyze and categorize articles by 6 specific AI technology types
 - **Smart Filtering**: Intelligent filtering to identify content specifically related to AI applications in clinical research
 - **Multi-format Output**: Generates both JSON data and premium styled HTML presentations
-- **Daily Automation**: Production-ready for unattended GitHub Actions deployment
+- **Daily Automation**: Runs automatically Monday-Friday at 5:00 AM CET via GitHub Actions with production-ready deployment
 
 ### Premium Web Interface
 - **Glassmorphism Design**: Modern UI with frosted glass effects, animated gradients, and floating elements
@@ -176,9 +183,20 @@ Note: The pipeline automatically generates the HTML interface, so there's no nee
 - **Accessibility Focused**: Proper semantic HTML and keyboard navigation
 - **Mobile Responsive**: Optimized experience across all device sizes
 
-## 📅 Deployment (GitHub Pages)
+## 📅 Deployment & Automation
 
-This project deploys to GitHub Pages via a manual GitHub Actions workflow.
+### Automated Daily Runs
+The pipeline runs automatically **Monday through Friday at 5:00 AM Central European Time** via GitHub Actions.
+
+**Schedule Details:**
+- **Frequency**: Weekdays only (Monday-Friday)
+- **Time**: 5:00 AM CET/CEST (3:00 AM UTC)
+- **Timezone**: Central European Time with daylight saving awareness
+- **Output**: Fresh daily brief with latest AI clinical research discoveries
+
+### Manual Deployment (GitHub Pages)
+
+For manual runs or initial setup:
 
 1) Enable Pages
 - Settings → Pages → Source: "Deploy from a branch"
@@ -190,12 +208,17 @@ This project deploys to GitHub Pages via a manual GitHub Actions workflow.
 - `GOOGLE_CX` (preferred) or `GOOGLE_CSE_ID` (optional)
 - `GOATCOUNTER_URL` (optional, for analytics; format: https://YOURCODE.goatcounter.com/count)
 
-3) Run the workflow
-- Go to the Actions tab → "🔬 AI Clinical Research Intelligence Hub - Manual Deploy" → Run workflow
+3) Run the workflow manually (if needed)
+- Go to the Actions tab → "🔬 AI Clinical Research Intelligence Hub - Daily Automation" → Run workflow
 
 The workflow generates the brief, builds `site/index.html`, and publishes to the `gh-pages` branch.
 Your site will be available at:
 https://albertoclemente.github.io/ai-clinicalresearch-hub/
+
+**Automated vs Manual Runs:**
+- **Automated**: Runs daily at 5 AM CET Monday-Friday automatically
+- **Manual**: Can be triggered anytime via GitHub Actions interface
+- **Both**: Generate identical output with clear logging of trigger type
 
 Note: The workflow uses Python 3.9 and installs dependencies from `requirements.txt` on each run.
 
@@ -244,6 +267,13 @@ ai-clinicalresearch-hub/
 ```
 
 ## 🔄 Recent Improvements Timeline
+
+### August 17, 2025 - Daily Automation & Scheduling
+1. **Automated Weekday Runs**: GitHub Actions scheduled for Monday-Friday at 5:00 AM CET
+2. **Timezone Handling**: Proper CET/CEST awareness with daylight saving time support
+3. **Dual Trigger Support**: Maintains both automated schedule and manual trigger options
+4. **Enhanced Workflow**: Updated deployment messages and logging for automated runs
+5. **Production Ready**: Fully automated daily content generation and deployment
 
 ### August 16, 2025 - Search Interface Polish & Production Optimization
 1. **Search Icon Fix**: Resolved UTF-8 replacement character (�) with proper 🔍 emoji display

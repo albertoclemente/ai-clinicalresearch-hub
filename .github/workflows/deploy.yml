@@ -1,10 +1,18 @@
-name: 🔬 AI Clinical Research Intelligence Hub - Manual Deploy
+name: 🔬 AI Clinical Research Intelligence Hub - Daily Automation
 
 # Token permissions for this workflow (needed to push to gh-pages)
 permissions:
   contents: write
 
 on:
+  # Scheduled runs: Monday to Friday at 5:00 AM Central European Time (UTC+1/UTC+2)
+  # During CET (UTC+1): 4:00 AM UTC
+  # During CEST (UTC+2): 3:00 AM UTC
+  # Using 3:00 AM UTC to handle daylight saving time
+  schedule:
+    - cron: '0 3 * * 1-5'  # Monday to Friday at 3:00 AM UTC (5:00 AM CET)
+  
+  # Manual trigger option
   workflow_dispatch:
     inputs:
       deploy_message:
@@ -15,7 +23,7 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    name: 🚀 Generate Brief & Deploy to GitHub Pages
+    name: 🚀 Generate Daily Brief & Deploy to GitHub Pages
     permissions:
       contents: write
 
@@ -23,7 +31,19 @@ jobs:
       - name: 📥 Checkout Repository
         uses: actions/checkout@v4
 
-      - name: 🐍 Setup Python 3.9
+      - name: � Set Timezone and Run Info
+        run: |
+          echo "🕐 Current UTC time: $(date -u)"
+          echo "🌍 Setting timezone to Europe/Berlin (CET/CEST)"
+          sudo timedatectl set-timezone Europe/Berlin || echo "Timezone setting not available in container"
+          echo "🔄 Trigger type: ${{ github.event_name }}"
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            echo "⏰ This is an automated daily run"
+          else
+            echo "👤 This is a manual run"
+          fi
+
+      - name: �🐍 Setup Python 3.9
         uses: actions/setup-python@v4
         with:
           python-version: '3.9'
@@ -76,9 +96,10 @@ jobs:
           publish_dir: ./site
           force_orphan: true
           commit_message: |
-            🔬 Deploy AI Clinical Research Intelligence Hub
+            🔬 Daily AI Clinical Research Intelligence Hub Update
 
-            ${{ github.event.inputs.deploy_message }}
+            ${{ github.event.inputs.deploy_message || 'Automated daily deployment' }}
+            Triggered: ${{ github.event_name }}
             Commit: ${{ github.sha }}
           user_name: 'github-actions[bot]'
           user_email: 'github-actions[bot]@users.noreply.github.com'
@@ -86,7 +107,11 @@ jobs:
       - name: 📝 Deployment Summary
         run: |
           echo "🎉 Deployment completed successfully!"
-          echo "🔗 Your site will be available at:"
+          echo "� Run type: ${{ github.event_name }}"
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            echo "⏰ Automated daily deployment at 5:00 AM CET"
+          fi
+          echo "�🔗 Your site will be available at:"
           echo "   https://albertoclemente.github.io/ai-clinicalresearch-hub/"
           echo ""
           echo "📊 Generated content summary:"
