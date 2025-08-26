@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Clinical Research Daily Brief - 2025-08-26</title>
+    <meta name="description" content="Daily updates on AI breakthroughs in clinical research and healthcare. Automatically curated news, studies, and innovations in medical AI technology.">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- GoatCounter analytics -->
+    <script data-goatcounter="https://albertoclemente.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+    
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'sans': ['Geist', 'ui-sans-serif', 'system-ui'],
+                        'mono': ['JetBrains Mono', 'ui-monospace', 'monospace']
+                    },
+                    colors: {
+                        'neural': {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        },
+                        'electric': {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#06b6d4',
+                            600: '#0891b2',
+                            700: '#0e7490',
+                            800: '#155e75',
+                            900: '#164e63',
+                        }
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'glow': 'glow 2s ease-in-out infinite alternate',
+                        'slide-up': 'slideUp 0.5s ease-out',
+                        'fade-in': 'fadeIn 0.8s ease-out'
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-10px)' }
+                        },
+                        glow: {
+                            '0%': { boxShadow: '0 0 20px rgba(6, 182, 212, 0.3)' },
+                            '100%': { boxShadow: '0 0 30px rgba(6, 182, 212, 0.6)' }
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(20px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' }
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- Custom styles -->
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .neural-gradient {
+            background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 50%, #8b5cf6 100%);
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .hover-lift {
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        .hover-lift:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        .search-highlight {
+            background: linear-gradient(120deg, #fbbf24 0%, #f59e0b 100%);
+            color: #1f2937;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        
+        .tag-ai {
+            background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+            color: white;
+            animation: glow 3s ease-in-out infinite alternate;
+        }
+        
+        .neural-pattern {
+            background-image: 
+                radial-gradient(circle at 1px 1px, rgba(6, 182, 212, 0.15) 1px, transparent 0);
+            background-size: 20px 20px;
+        }
+        
+        .text-gradient {
+            background: linear-gradient(135deg, #1f2937 0%, #4b5563 50%, #6b7280 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .search-glow:focus {
+            box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.2), 0 0 20px rgba(6, 182, 212, 0.3);
+        }
+        
+        .minimal-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        
+        .minimal-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        
+        .minimal-scrollbar::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+            border-radius: 2px;
+        }
+        
+        .section-fade {
+            animation: fadeIn 1s ease-out;
+        }
+        
+        /* Screen reader only content */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+        
+        /* Removed stagger animations for immediate visibility */
+        
+        .tag-ai {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .search-input {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 24px;
+            padding: 12px 24px 12px 48px;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        /* Premium Animations */
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        .hover-lift {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .hover-lift:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .section-fade {
+            animation: fadeIn 0.8s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Reduced motion support */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+            
+            .animate-float,
+            .animate-pulse-slow,
+            .animate-glow {
+                animation: none !important;
+            }
+        }
+        
+        /* Focus-visible styles for accessibility */
+        *:focus-visible {
+            outline: 2px solid #3b82f6;
+            outline-offset: 2px;
+        }
+        
+        /* Skip to content link */
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 6px;
+            background: white;
+            color: black;
+            padding: 8px 16px;
+            text-decoration: none;
+            border-radius: 4px;
+            z-index: 1000;
+            font-weight: 600;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .skip-link:focus {
+            top: 6px;
+        }
+        
+        /* Pagination controls styling */
+        .pagination-container {
+            margin-top: 3rem;
+            margin-bottom: 2rem;
+            padding: 1.5rem 0;
+            border-top: 1px solid rgba(229, 231, 235, 0.5);
+        }
+        
+        .pagination-nav {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.25rem;
+            flex-wrap: wrap;
+        }
+        
+        .pagination-nav button {
+            min-height: 2.5rem;
+            min-width: 2.5rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        @media (max-width: 640px) {
+            .pagination-container {
+                margin-top: 2rem;
+                padding: 1rem 0;
+            }
+            
+            .pagination-nav {
+                gap: 0.125rem;
+            }
+            
+            .pagination-nav button {
+                min-height: 2.25rem;
+                min-width: 2.25rem;
+                padding: 0.375rem 0.75rem;
+                font-size: 0.875rem;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased overflow-x-hidden neural-pattern" x-data="clinicalBrief()">
+    
+    <!-- Skip to content link for accessibility -->
+    <a href="#main-content" class="skip-link">Skip to content</a>
+    
+    <!-- Hero Header with Enhanced Gradient and Animations -->
+    <header class="relative min-h-screen flex items-center justify-center overflow-hidden" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%); background-size: 400% 400%; animation: gradientShift 15s ease infinite;">
+        
+        <!-- Contrast overlay for better text readability -->
+        <div class="absolute inset-0 bg-black/20"></div>
+        
+        <!-- Animated Background Elements -->
+        <div class="absolute inset-0 opacity-20">
+            <div class="absolute top-20 left-20 w-72 h-72 bg-white rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-float"></div>
+            <div class="absolute top-40 right-32 w-96 h-96 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-float" style="animation-delay: 2s;"></div>
+            <div class="absolute bottom-32 left-32 w-80 h-80 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-float" style="animation-delay: 4s;"></div>
+            <div class="absolute bottom-20 right-20 w-64 h-64 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-float" style="animation-delay: 6s;"></div>
+        </div>
+        
+        <!-- Main Hero Content -->
+        <div class="relative z-10 text-center px-6 max-w-6xl mx-auto">
+            <div class="opacity-100 mb-8">
+                <h1 class="text-6xl md:text-8xl font-light text-white mb-6 tracking-tight">
+                    <span class="font-mono text-blue-200">AI-Powered</span>
+                </h1>
+                <h2 class="text-3xl md:text-5xl font-light text-white/90 mb-8 tracking-wide">
+                    Clinical Research <span class="bg-gradient-to-r from-yellow-300 to-pink-300 bg-clip-text text-transparent font-semibold">Intelligence Hub</span>
+                </h2>
+                <p class="text-xl md:text-2xl text-white/80 mb-12 font-light max-w-4xl mx-auto leading-relaxed">
+                    Your daily source for the latest AI breakthroughs in clinical research. Automatically curated, summarized, and organized so you never miss what matters
+                </p>
+            </div>
+            
+            <!-- Enhanced Search Interface -->
+            <div class="opacity-100 mb-8">
+                <div class="bg-white/20 backdrop-blur-md rounded-3xl p-8 w-full max-w-3xl mx-auto border border-white/30">
+                    <div class="relative mb-6">
+                        <input 
+                            type="text" 
+                            placeholder="🔍 Search AI research news..." 
+                            aria-label="Search articles about AI in clinical research"
+                            role="searchbox"
+                            class="w-full px-8 py-5 text-lg bg-white/95 backdrop-blur-sm rounded-2xl border-0 focus:outline-none focus:ring-4 focus:ring-white/50 transition-all duration-300 text-gray-800 placeholder-gray-500 shadow-lg"
+                            x-model="searchQuery"
+                            @input="performSearch"
+                        >
+                        <div class="absolute right-6 top-1/2 transform -translate-y-1/2">
+                            <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <!-- Category Filter Pills -->
+                    <div class="flex flex-wrap justify-center gap-3" role="group" aria-label="Filter articles by AI technology category">
+                        <button @click="aiTagFilter = ''; performSearch()" aria-label="Show all AI technology articles" class="px-4 py-2 rounded-full text-sm font-medium bg-white/30 text-white hover:bg-white/40 transition-all duration-200 border border-white/20" :class="{'bg-white/50': !aiTagFilter}">
+                            🌟 All Technologies
+                        </button>
+                        <button @click="aiTagFilter = 'Generative AI'; performSearch()" aria-label="Filter by Generative AI articles" class="px-4 py-2 rounded-full text-sm font-medium bg-white/30 text-white hover:bg-white/40 transition-all duration-200 border border-white/20" :class="{'bg-white/50': aiTagFilter === 'Generative AI'}">
+                            🤖 Generative AI
+                        </button>
+                        <button @click="aiTagFilter = 'Machine Learning'; performSearch()" aria-label="Filter by Machine Learning articles" class="px-4 py-2 rounded-full text-sm font-medium bg-white/30 text-white hover:bg-white/40 transition-all duration-200 border border-white/20" :class="{'bg-white/50': aiTagFilter === 'Machine Learning'}">
+                            🧠 Machine Learning
+                        </button>
+                        <button @click="aiTagFilter = 'Natural Language Processing'; performSearch()" aria-label="Filter by Natural Language Processing articles" class="px-4 py-2 rounded-full text-sm font-medium bg-white/30 text-white hover:bg-white/40 transition-all duration-200 border border-white/20" :class="{'bg-white/50': aiTagFilter === 'Natural Language Processing'}">
+                            💬 NLP
+                        </button>
+                        <button @click="aiTagFilter = 'Digital Health'; performSearch()" aria-label="Filter by Digital Health articles" class="px-4 py-2 rounded-full text-sm font-medium bg-white/30 text-white hover:bg-white/40 transition-all duration-200 border border-white/20" :class="{'bg-white/50': aiTagFilter === 'Digital Health'}">
+                            📱 Digital Health
+                        </button>
+                        <button @click="aiTagFilter = 'Trial Optimization'; performSearch()" aria-label="Filter by Trial Optimization articles" class="px-4 py-2 rounded-full text-sm font-medium bg-white/30 text-white hover:bg-white/40 transition-all duration-200 border border-white/20" :class="{'bg-white/50': aiTagFilter === 'Trial Optimization'}">
+                            🎯 Trial Optimization
+                        </button>
+                        <button @click="aiTagFilter = 'AI Ethics'; performSearch()" aria-label="Filter by AI Ethics articles" class="px-4 py-2 rounded-full text-sm font-medium bg-white/30 text-white hover:bg-white/40 transition-all duration-200 border border-white/20" :class="{'bg-white/50': aiTagFilter === 'AI Ethics'}">
+                            ⚖️ AI Ethics
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Statistics Display -->
+            <div class="flex items-center justify-center space-x-8 text-white/70">
+                <div class="text-center">
+                    <div class="text-3xl font-semibold text-white">21</div>
+                    <div class="text-sm">Stories Today</div>
+                </div>
+                <div class="w-px h-8 bg-white/30"></div>
+                <div class="text-center">
+                    <div class="text-3xl font-semibold text-white">2025-08-26</div>
+                    <div class="text-sm">Last Updated</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Enhanced Scroll Indicator -->
+        <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce cursor-pointer group" @click="document.querySelector('#main-content').scrollIntoView({ behavior: 'smooth', block: 'start' })">
+            <div class="p-3 bg-white/20 rounded-full backdrop-blur-sm border border-white/30 group-hover:bg-white/30 transition-all duration-300">
+                <svg class="w-6 h-6 text-white/80 group-hover:text-white transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+                </svg>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Main Content Section -->
+    <main class="relative bg-gradient-to-br from-gray-50 to-blue-50/30 min-h-screen py-20" id="main-content">
+        <div class="max-w-7xl mx-auto px-6 lg:px-8">
+            
+            <!-- Section Header with Insights -->
+            <div class="text-center mb-16 section-fade">
+                <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+                    Today's AI <span class="bg-gradient-to-r from-blue-600 to-emerald-600 bg-clip-text text-transparent">Discoveries</span>
+                </h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
+                    Fresh insights from the world of AI-powered healthcare research, updated daily
+                </p>
+            </div>
+            
+            <!-- Enhanced Filter Bar -->
+            <div class="section-fade mb-16">
+                <div class="glass-card rounded-3xl p-6 max-w-5xl mx-auto border border-white/30">
+                    <div class="flex flex-col lg:flex-row items-center justify-between gap-6">
+                        <div class="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6">
+                            <label class="text-sm font-semibold text-gray-700 whitespace-nowrap">🔬 Filter by AI Technology:</label>
+                            <select 
+                                x-model="aiTagFilter"
+                                @change="performSearchImmediate"
+                                class="px-4 py-3 bg-white/80 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-200 text-gray-700 min-w-[200px]"
+                                aria-label="Filter articles by AI technology"
+                            >
+                                <option value="">🌟 All Technologies</option>
+                                <option value="Generative AI">🤖 Generative AI</option>
+                                <option value="Natural Language Processing">💬 Natural Language Processing</option>
+                                <option value="Machine Learning">🧠 Machine Learning</option>
+                                <option value="Digital Health">📱 Digital Health</option>
+                                <option value="Trial Optimization">🎯 Trial Optimization</option>
+                                <option value="AI Ethics">⚖️ AI Ethics</option>
+                            </select>
+                            
+                            <label class="text-sm font-semibold text-gray-700 whitespace-nowrap">📊 Sort by:</label>
+                            <select 
+                                x-model="sortBy"
+                                @change="performSearchImmediate"
+                                class="px-4 py-3 bg-white/80 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-200 text-gray-700 min-w-[150px]"
+                                aria-label="Sort articles"
+                            >
+                                <option value="newest">🆕 Newest First</option>
+                                <option value="oldest">📅 Oldest First</option>
+                                <option value="source">🔤 Source A-Z</option>
+                            </select>
+                        </div>
+                        
+                        <div class="flex items-center space-x-4">
+                            <div class="text-sm text-gray-600">
+                                <span class="font-semibold text-blue-600" x-text="filteredItems.length"></span> 
+                                <span>of</span> 
+                                <span class="font-semibold">21</span> 
+                                <span>articles</span>
+                                <template x-if="getTotalPages() > 1">
+                                    <span class="ml-2 text-xs text-gray-500">
+                                        (Page <span x-text="currentPage"></span> of <span x-text="getTotalPages()"></span>)
+                                    </span>
+                                </template>
+                            </div>
+                            <!-- Screen reader live region for search results -->
+                            <div class="sr-only" role="status" aria-live="polite" x-text="`${filteredItems.length} results found`"></div>
+                            <button 
+                                @click="searchQuery = ''; aiTagFilter = ''; performSearch()"
+                                x-show="searchQuery || aiTagFilter"
+                                class="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded-full text-gray-600 transition-colors"
+                            >
+                                Clear
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- No Results State -->
+            <div 
+                x-show="filteredItems.length === 0 && (searchQuery || aiTagFilter)"
+                class="text-center py-24 section-fade"
+            >
+                <div class="max-w-md mx-auto">
+                    <div class="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-blue-400 to-emerald-500 flex items-center justify-center">
+                        <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.5-.9-6.08-2.371m15.08 2.371A7.962 7.962 0 0112 15c2.34 0 4.5-.9 6.08-2.371M15 9.75a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-3">No matches found</h3>
+                    <p class="text-gray-600 mb-6">Try exploring different AI technologies or broaden your search terms.</p>
+                    <button 
+                        @click="searchQuery = ''; aiTagFilter = ''; performSearch()"
+                        class="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium"
+                    >
+                        View All Articles
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Enhanced Articles Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <template x-for="(item, index) in getPaginatedItems()" :key="item.id">
+                    <article class="group glass-card rounded-3xl p-8 hover-lift transition-all duration-500 border border-white/40 hover:border-blue-200 relative overflow-hidden">
+                        
+                        <!-- Gradient Accent -->
+                        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-emerald-500 to-purple-500"></div>
+                        
+                        <!-- Article Header -->
+                        <div class="flex items-start justify-between mb-6">
+                            <div class="flex items-center space-x-3">
+                                <!-- AI Technology Badge -->
+                                <span 
+                                    class="inline-flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-semibold text-white"
+                                    :aria-label="`Category: ${item.ai_tag}`"
+                                    :class="{
+                                        'bg-gradient-to-r from-purple-500 to-pink-500': item.ai_tag === 'Generative AI',
+                                        'bg-gradient-to-r from-blue-500 to-cyan-500': item.ai_tag === 'Natural Language Processing',
+                                        'bg-gradient-to-r from-green-500 to-emerald-500': item.ai_tag === 'Machine Learning',
+                                        'bg-gradient-to-r from-orange-500 to-red-500': item.ai_tag === 'Digital Health',
+                                        'bg-gradient-to-r from-yellow-500 to-amber-500': item.ai_tag === 'Trial Optimization',
+                                        'bg-gradient-to-r from-indigo-500 to-violet-500': item.ai_tag === 'AI Ethics',
+                                        'bg-gradient-to-r from-gray-600 to-gray-800': !['Generative AI', 'Natural Language Processing', 'Machine Learning', 'Digital Health', 'Trial Optimization', 'AI Ethics'].includes(item.ai_tag)
+                                    }"
+                                >
+                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                                    </svg>
+                                    <span x-text="item.ai_tag"></span>
+                                </span>
+                            </div>
+                            
+                            <!-- Source and Date with better semantics -->
+                            <div class="flex flex-col items-end space-y-2">
+                                <div class="text-xs text-gray-500 font-mono bg-gray-100 px-3 py-1 rounded-full" x-text="item.source"></div>
+                                <time :datetime="item.pub_date" class="text-xs text-gray-400 font-medium" x-text="formatDate(item.pub_date)"></time>
+                            </div>
+                        </div>
+                        
+                        <!-- Title with Curiosity Hook -->
+                        <div class="mb-6">
+                            <h3 class="text-xl lg:text-2xl font-bold text-gray-900 mb-3 leading-tight group-hover:text-blue-600 transition-colors duration-300">
+                                <a 
+                                    :href="item.link" 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    x-html="highlightText(item.title)"
+                                    class="hover:underline decoration-blue-500 decoration-2 underline-offset-4"
+                                ></a>
+                            </h3>
+                            
+                            <!-- Key Insight Teaser -->
+                            <div class="flex items-center space-x-2 text-sm font-medium text-blue-600 mb-4">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                </svg>
+                                <span>Key Innovation</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Enhanced Summary -->
+                        <div class="mb-8">
+                            <p class="text-gray-700 leading-relaxed text-base" x-html="highlightText(item.summary)"></p>
+                            
+                            <!-- Impact Metrics (if available) -->
+                            <div class="mt-4 flex flex-wrap gap-2" x-show="item.summary.includes('%') || item.summary.includes('accuracy') || item.summary.includes('improvement')">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700" x-show="item.summary.includes('90%')">
+                                    📈 90% Accuracy
+                                </span>
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700" x-show="item.summary.includes('improvement')">
+                                    ⚡ Significant Improvement
+                                </span>
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700" x-show="item.summary.includes('30%')">
+                                    📊 30% Better Tracking
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <!-- Enhanced Footer -->
+                        <div class="flex items-center justify-between pt-6 border-t border-gray-100">
+                            <div class="flex items-center space-x-4">
+                                <!-- Research Type Indicator -->
+                                <div class="flex items-center space-x-1 text-xs text-gray-500">
+                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <span x-show="item.title.includes('Randomized')">RCT Study</span>
+                                    <span x-show="item.title.includes('Protocol')">Protocol</span>
+                                    <span x-show="item.title.includes('Trial') && !item.title.includes('Randomized')">Clinical Trial</span>
+                                    <span x-show="!item.title.includes('Trial') && !item.title.includes('Protocol')">Research</span>
+                                </div>
+                            </div>
+                            
+                            <a 
+                                :href="item.link" 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                class="group/cta inline-flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-emerald-600 text-white px-5 py-2.5 rounded-xl hover:from-blue-700 hover:to-emerald-700 transition-all duration-200 text-sm font-semibold hover:shadow-lg"
+                            >
+                                <span>Explore Study</span>
+                                <svg class="w-4 h-4 group-hover/cta:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                                </svg>
+                            </a>
+                        </div>
+                    </article>
+                </template>
+            </div>
+            
+            <!-- Pagination Controls -->
+            <div class="pagination-container" x-show="getTotalPages() > 1">
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-6 mb-6">
+                    <div class="flex items-center space-x-2 text-sm text-gray-600">
+                        <span>Showing</span>
+                        <span class="font-semibold" x-text="((currentPage - 1) * itemsPerPage) + 1"></span>
+                        <span>to</span>
+                        <span class="font-semibold" x-text="Math.min(currentPage * itemsPerPage, filteredItems.length)"></span>
+                        <span>of</span>
+                        <span class="font-semibold" x-text="filteredItems.length"></span>
+                        <span>results</span>
+                    </div>
+                    
+                    <div class="text-sm text-gray-500">
+                        Page <span class="font-semibold" x-text="currentPage"></span> of <span class="font-semibold" x-text="getTotalPages()"></span>
+                    </div>
+                </div>
+                
+                <nav class="pagination-nav" aria-label="Pagination navigation">
+                    <!-- Previous Button -->
+                    <button 
+                        @click="prevPage()"
+                        :disabled="!hasPrevPage()"
+                        :class="{'opacity-50 cursor-not-allowed': !hasPrevPage(), 'hover:bg-blue-50': hasPrevPage()}"
+                        class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-l-lg transition-colors duration-200"
+                        aria-label="Previous page"
+                    >
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                        </svg>
+                        <span class="hidden sm:inline">Previous</span>
+                    </button>
+                    
+                    <!-- Page Numbers -->
+                    <template x-for="page in Array.from({length: Math.min(5, getTotalPages())}, (_, i) => {
+                        const totalPages = getTotalPages();
+                        if (totalPages <= 5) return i + 1;
+                        if (currentPage <= 3) return i + 1;
+                        if (currentPage >= totalPages - 2) return totalPages - 4 + i;
+                        return currentPage - 2 + i;
+                    })" :key="page">
+                        <button 
+                            @click="goToPage(page)"
+                            :class="{
+                                'bg-blue-600 text-white border-blue-600': page === currentPage,
+                                'bg-white text-gray-700 border-gray-300 hover:bg-gray-50': page !== currentPage
+                            }"
+                            class="px-3 py-2 text-sm font-medium border transition-colors duration-200"
+                            :aria-label="`Go to page ${page}`"
+                            :aria-current="page === currentPage ? 'page' : false"
+                            x-text="page"
+                        ></button>
+                    </template>
+                    
+                    <!-- Next Button -->
+                    <button 
+                        @click="nextPage()"
+                        :disabled="!hasNextPage()"
+                        :class="{'opacity-50 cursor-not-allowed': !hasNextPage(), 'hover:bg-blue-50': hasNextPage()}"
+                        class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-r-lg transition-colors duration-200"
+                        aria-label="Next page"
+                    >
+                        <span class="hidden sm:inline">Next</span>
+                        <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </button>
+                </nav>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Back to Top Button -->
+    <button 
+        @click="scrollToTop"
+        class="fixed bottom-8 right-8 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition-all duration-300 z-50"
+        x-show="showBackToTop"
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0 transform scale-95"
+        x-transition:enter-end="opacity-100 transform scale-100"
+        x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="opacity-100 transform scale-100"
+        x-transition:leave-end="opacity-0 transform scale-95"
+        aria-label="Back to top"
+    >
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
+        </svg>
+    </button>
+    
+    <!-- Creative Footer -->
+    <footer class="relative neural-gradient py-20 text-white overflow-hidden">
+        <div class="absolute inset-0 opacity-10">
+            <div class="neural-pattern h-full w-full"></div>
+        </div>
+        
+        <div class="relative z-10 max-w-4xl mx-auto px-6 text-center">
+            <div class="mb-8">
+                <h3 class="text-2xl font-light mb-4">Powered by Artificial Intelligence</h3>
+                <p class="text-white/70 text-lg font-light">
+                    Curating the future of clinical research, one breakthrough at a time
+                </p>
+            </div>
+            
+            <div class="w-24 h-px bg-white/30 mx-auto mb-8"></div>
+            
+            <div class="flex items-center justify-center space-x-8 text-sm text-white/60">
+                <span>AI Clinical Research Daily Brief</span>
+                <span>•</span>
+                <span>Powered by AI Curation</span>
+                <span>•</span>
+                <span>2025-08-26</span>
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        // Global keyboard event handlers
+        document.addEventListener('keydown', (e) => {
+            if (e.key === '/' && document.activeElement.tagName !== 'INPUT') {
+                e.preventDefault();
+                document.querySelector('input[role=searchbox]').focus();
+            }
+            if (e.key === 'Escape') {
+                // Clear search if input is focused, otherwise trigger Alpine method
+                if (document.activeElement.matches('input[role=searchbox]')) {
+                    document.activeElement.blur();
+                }
+                // Use Alpine.js store to clear search
+                Alpine.store('search').clear();
+            }
+        });
+        
+        // Alpine.js stores for global state
+        document.addEventListener('alpine:init', () => {
+            Alpine.store('search', {
+                clear() {
+                    const component = Alpine.findClosest(document.body, x => x.$data);
+                    if (component) {
+                        component.searchQuery = '';
+                        component.aiTagFilter = '';
+                        component.performSearch();
+                    }
+                }
+            });
+        });
+        
+        function clinicalBrief() {
+            return {
+                // Data
+                items: [{"ai_tag": "Digital Health", "brief_date": "2025-08-26", "description": "Artificial intelligence-enhanced mapping of the international classification of functioning, disability and health via a mobile app: a randomized controlled trial. - [{\u0027name\u0027: \u0027Kurban Z\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Khassenov D\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Burkitbaev Z\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Bulekbayeva S\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Chinaliyev A\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Bakhtiyar S\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Saparbayev S\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Sultanaliyev T\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Zhunissova U\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Slivkina N\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Titskaya E\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Arias L\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Aldakuatova D\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Yessenbayeva G\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Ermakhan Z\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}]", "id": "c792b151-f26c-43d9-8eda-5256d6b83325", "is_ai_related": true, "link": "https://pubmed.ncbi.nlm.nih.gov/40837960/", "pub_date": "2025-08-26T03:23:40.293886+00:00", "search_query": "generative AI clinical trials", "source": "PubMed", "summary": "A groundbreaking mobile app leverages artificial intelligence to enhance the mapping of the International Classification of Functioning, Disability and Health (ICF). This randomized controlled trial demonstrates the app\u0027s effectiveness in improving the accuracy and efficiency of ICF coding, which is crucial for clinical research and patient care. The AI-enhanced tool streamlines the process, making it easier for healthcare professionals to gather and analyze functional data, ultimately leading to better patient outcomes and more robust clinical studies.", "title": "Artificial intelligence-enhanced mapping of the international classification of functioning, disability and health via a mobile app: a randomized controlled trial."}, {"ai_tag": "Natural Language Processing", "brief_date": "2025-08-26", "description": "5 days ago ... ... recruitment for clinical research studies. Electronic ... Unstructured narratives, found in EHR notes, contain detailed accounts of a patient\u0027s clinical ...", "id": "da95f6ad-10ae-47dc-b33a-5d377e9d2d54", "is_ai_related": true, "link": "https://www.nature.com/articles/s44401-025-00033-4", "pub_date": "2025-08-26T03:23:19.530527+00:00", "search_query": "ChatGPT patient recruitment clinical", "source": "Nature.Com", "summary": "Post-acute sequelae of SARS-CoV-2 infection, often referred to as long COVID, pose significant challenges in clinical research due to the complexity and variability of symptoms. Unstructured narratives in electronic health records (EHRs) contain detailed accounts of patient experiences, but extracting this information manually is time-consuming and error-prone. To address this, researchers have developed a hybrid natural language processing (NLP) system that can efficiently and accurately extract symptoms from clinical notes. This technology not only enhances the precision of symptom tracking but also facilitates more effective patient recruitment and stratification for clinical studies, ultimately improving the quality and speed of research into long-term COVID-19 effects.", "title": "Extracting post-acute sequelae of SARS-CoV-2 infection symptoms from clinical notes via hybrid natural language processing"}, {"ai_tag": "Generative AI", "brief_date": "2025-08-26", "description": "5 days ago ... ... clinical trial registries, and peer-reviewed medical publications. The ... LLM agents\u0027 capabilities in retrieving and synthesizing medical evidence ...", "id": "844f27f1-3760-46eb-8b30-61687f588026", "is_ai_related": true, "link": "https://arxiv.org/html/2508.14880v1", "pub_date": "2025-08-26T03:23:17.892907+00:00", "search_query": "LLM clinical trial optimization", "source": "Arxiv.Org", "summary": "Researchers have developed a knowledge-informed trajectory synthesis framework that leverages large language models (LLMs) to enhance medical research. This framework enables LLM agents to retrieve and synthesize medical evidence from clinical trial registries and peer-reviewed publications, significantly improving the efficiency and accuracy of medical research. For researchers, this technology streamlines the process of gathering and analyzing vast amounts of medical data, allowing for more informed and data-driven decision-making. Clinicians and patients can benefit from more accurate and up-to-date medical insights, leading to better treatment outcomes and personalized care.", "title": "Expert-Level Medical Deep Researcher via A Knowledge-Informed Trajectory Synthesis Framework"}, {"ai_tag": "Machine Learning", "brief_date": "2025-08-26", "description": "18 hours ago ... ... clinical data, aiming to develop a cost-effective method, particularly ... Artificial intelligence (AI) and machine learning (ML) employ data-driven ...", "id": "430bb17d-ebd0-4543-be17-22ce90c589fe", "is_ai_related": true, "link": "https://www.nature.com/articles/s41598-025-16660-8", "pub_date": "2025-08-26T03:23:08.839055+00:00", "search_query": "AI generated clinical summaries", "source": "Nature.Com", "summary": "This groundbreaking research introduces a novel machine learning framework designed to identify stroke types in resource-constrained settings, demonstrating the potential to revolutionize stroke diagnosis and treatment. By leveraging robust algorithms that can handle missing data, this technology not only enhances accuracy but also ensures cost-effectiveness. The transformative potential of this framework extends beyond immediate clinical applications, offering a scalable solution that can be adapted for various healthcare settings, ultimately improving patient outcomes and reducing healthcare disparities.", "title": "A novel machine learning framework for stroke type identification in resource constrained settings with robustness to missing data"}, {"ai_tag": "Generative AI", "brief_date": "2025-08-26", "description": "2 days ago ... ... clinical data, phenotypic heterogeneity, and low ... Feasibility of combining spatial computing and AI for mental health support in anxiety and depression.", "id": "023159c0-5b15-4555-b634-2ff7a461d97d", "is_ai_related": true, "link": "https://www.nature.com/articles/s41746-025-01955-x", "pub_date": "2025-08-26T03:23:04.088365+00:00", "search_query": "generative AI medical writing clinical", "source": "Nature.Com", "summary": "This research leverages large language models (LLMs) augmented with graph retrieval to enhance the diagnosis and understanding of rare genetic diseases characterized by facial phenotypes. By integrating spatial computing and AI, the study aims to improve the accuracy and efficiency of identifying and managing these conditions, which can significantly benefit clinical research and patient care. The application of LLMs in this context demonstrates the potential of advanced AI technologies to address the challenges of phenotypic heterogeneity and low prevalence in rare genetic disorders.", "title": "Graph retrieval augmented large language models for facial phenotype associated rare genetic disease"}, {"ai_tag": "Generative AI", "brief_date": "2025-08-26", "description": "1 day ago ... ... (ChatGPT) intervention on preoperative anxiety: a randomized controlled trial ... Cruz Rivera et al. Guidelines for clinical trial protocols for ...", "id": "58cd85c4-e1c8-4731-909d-92d46b2bb1af", "is_ai_related": true, "link": "https://www.sciencedirect.com/science/article/abs/pii/S1386505625003041", "pub_date": "2025-08-26T03:22:58.995244+00:00", "search_query": "ChatGPT clinical trial protocol", "source": "Sciencedirect.Com", "summary": "The article explores the use of ChatGPT, a generative AI model, in reducing preoperative anxiety among patients through a randomized controlled trial. It highlights how AI can be employed to create personalized, supportive interactions that help patients manage their stress before surgery. Additionally, the article references guidelines for clinical trial protocols, suggesting a broader interest in standardizing AI interventions in healthcare settings. This application showcases the potential of generative AI to enhance patient care and improve clinical trial outcomes by addressing psychological well-being.", "title": "Artificial intelligence in nursing support for patients"}, {"ai_tag": "Generative AI", "brief_date": "2025-08-26", "description": "7 hours ago ... Generative AI Tracker ... Drug discovery, development, and approval require years of experimentation and clinical trials, all governed by a strict regulatory ...", "id": "641f6a31-94ff-481f-9375-000999048f44", "is_ai_related": true, "link": "https://www.statnews.com/sponsor/2025/08/25/empowering-patients-to-shape-the-future-of-mash-care/", "pub_date": "2025-08-26T03:22:56.149191+00:00", "search_query": "generative AI clinical trials", "source": "Statnews.Com", "summary": "A groundbreaking approach using generative AI to accelerate drug discovery and development is reshaping the future of MASH (Mental and Sexual Health) care. By leveraging advanced generative models, researchers can simulate and predict the efficacy and safety of new treatments, significantly reducing the time and cost of clinical trials. This innovation not only streamlines the drug development process but also empowers patients to actively participate in shaping the future of healthcare through more efficient and patient-centered clinical research.", "title": "Empowering patients to shape the future of MASH care"}, {"ai_tag": "Generative AI", "brief_date": "2025-08-26", "description": "15 hours ago ... ... generative artificial intelligence should be continuously monitored for its implications in eye care ... clinical trials. Conclusion. LLMs show great promise to ...", "id": "47fd741a-d52d-4606-aaea-714702e60b0e", "is_ai_related": true, "link": "https://www.nature.com/articles/s41433-025-03935-7", "pub_date": "2025-08-26T03:22:55.347029+00:00", "search_query": "generative AI clinical trials", "source": "Nature.Com", "summary": "Large Language Models (LLMs) like those behind ChatGPT are showing significant potential in enhancing eye care by generating high-quality clinical content, which can aid in patient communication, report writing, and even the creation of synthetic data for research purposes. These advancements could streamline clinical workflows, improve patient understanding, and bolster the robustness of clinical studies. The continuous monitoring of these technologies is crucial to ensure they meet ethical standards and regulatory requirements, ultimately leading to better patient outcomes and more efficient clinical research.", "title": "a scoping review on their utility for clinicians, researchers, patients, and educators"}, {"ai_tag": "Generative AI", "brief_date": "2025-08-26", "description": "arXiv:2508.16054v1 Announce Type: new Abstract: Electronic health records (EHRs) are rich clinical data sources but complex repositories of patient data, spanning structured elements (demographics, vitals, lab results, codes), unstructured clinical notes and other modalities of data. Harnessing this heterogeneity is critical for improving patient outcomes. Recent advances in large language models (LLMs) have enabled foundation models that can learn from multiple data modalities and support clinical tasks. However, most current approaches simply serialize numeric EHR data into text, which risks losing temporal and quantitative detail. We introduce Generative Deep Patient (GDP), a multimodal foundation model that natively encodes structured EHR time-series via a CNN-Transformer encoder and fuses it with unstructured EHRs through cross-modal attention into a LLaMA-based decoder. GDP is trained in two stages: (1) generative pretraining, where it learns to produce clinical narratives from raw patient timelines while also performing masked feature prediction (MFP) and next time-step prediction (NTP) to capture temporal dynamics; and (2) multi-task fine-tuning for clinically meaningful predictions (e.g., heart failure, type 2 diabetes, 30-day readmission). In clinical prediction, GDP demonstrated superior performance on MIMIC-IV: heart failure AUROC = 0.923, type 2 diabetes AUROC = 0.817, and 30-day readmission AUROC = 0.627. For narrative generation, GDP achieved ROUGE-L = 0.135 and BERTScore-F1 = 0.545. In a blinded human evaluation, GDP-Instruct scored highest on faithfulness, fluency, and overall clinical utility, suggesting reduced hospital documentation workload without sacrificing accuracy. Our results demonstrate that a single multimodal foundation model can both predict clinically actionable events and generate high-quality clinical narratives. Furthermore, GDP\u0027s flexible architecture can be extended to additional modalities.", "id": "aaa09560-5341-42cd-82e8-c1b0314fcc50", "is_ai_related": true, "link": "https://arxiv.org/abs/2508.16054", "pub_date": "2025-08-25T04:00:00+00:00", "search_query": "RSS: arXiv AI", "source": "arXiv AI", "summary": "Recent advancements in large language models (LLMs) have led to the development of a generative foundation model capable of processing and learning from the diverse data modalities found in electronic health records (EHRs). This model can handle both structured data (such as demographics, vitals, and lab results) and unstructured clinical notes, enhancing the ability to harness the full potential of EHRs. By integrating multiple data sources, the model aims to improve patient outcomes through more comprehensive and accurate clinical decision-making. The application of this generative foundation model in clinical research can significantly enhance data analysis and patient care, making it a valuable tool for researchers and healthcare providers.", "title": "Generative Foundation Model for Structured and Unstructured Electronic Health Records"}, {"ai_tag": "Machine Learning", "brief_date": "2025-08-26", "description": "arXiv:2508.16033v1 Announce Type: new Abstract: Recognizing the need for explainable AI (XAI) approaches to enable the successful integration of AI-based ECG prediction models (AI-ECG) into clinical practice, we introduce a framework generating \\textbf{Co}unter\\textbf{F}actual \\textbf{E}CGs (i,e., named CoFE) to illustrate how specific features, such as amplitudes and intervals, influence the model\u0027s predictive decisions. To demonstrate the applicability of the CoFE, we present two case studies: atrial fibrillation classification and potassium level regression models. The CoFE reveals feature changes in ECG signals that align with the established clinical knowledge. By clarifying both \\textbf{where valid features appear} in the ECG and \\textbf{how they influence the model\u0027s predictions}, we anticipate that our framework will enhance the interpretability of AI-ECG models and support more effective clinical decision-making. Our demonstration video is available at: https://www.youtube.com/watch?v=YoW0bNBPglQ.", "id": "4651a07d-bbda-498a-83db-09303c1bed3f", "is_ai_related": true, "link": "https://arxiv.org/abs/2508.16033", "pub_date": "2025-08-25T04:00:00+00:00", "search_query": "RSS: arXiv AI", "source": "arXiv AI", "summary": "CoFE, a novel framework for generating counterfactual ECGs, aims to enhance the transparency and trustworthiness of AI-based ECG prediction models. By altering specific features like amplitudes and intervals, CoFE helps clinicians understand why a model makes certain diagnostic decisions. This approach is crucial for integrating AI diagnostics into clinical practice, ensuring that the technology can be effectively used and trusted by healthcare professionals. The framework\u0027s ability to generate explainable counterfactuals not only aids in diagnosing cardiac conditions but also provides valuable insights into the model\u0027s decision-making process, which can be instrumental in clinical research and development of more accurate AI tools.", "title": "CoFE: A Framework Generating Counterfactual ECG for Explainable Cardiac AI-Diagnostics"}, {"ai_tag": "Machine Learning", "brief_date": "2025-08-26", "description": "AI-Based EMG Reporting: A Randomized Controlled Trial. - [{\u0027name\u0027: \u0027Gorenshtein A\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Weisblat Y\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Khateb M\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Kenan G\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Tsirkin I\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Fayn G\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Geller S\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Shelly S\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}]", "id": "d5d24736-1d7a-49b3-a5bc-13e14d946885", "is_ai_related": true, "link": "https://pubmed.ncbi.nlm.nih.gov/40844612/", "pub_date": "2025-08-22T00:00:00+00:00", "search_query": "generative AI clinical trials", "source": "PubMed", "summary": "Innovative AI technology is revolutionizing the way EMG (Electromyography) reports are generated, enhancing both accuracy and efficiency in clinical settings. Traditionally, EMG reports are manually written by specialists, a process that can be time-consuming and prone to human error. This randomized controlled trial explores the use of AI algorithms to automatically generate EMG reports based on the data collected during the procedure. By leveraging machine learning, the system can analyze complex EMG signals, identify key patterns, and produce detailed, standardized reports. This not only reduces the workload for healthcare professionals but also ensures consistency and reliability in reporting, ultimately improving patient care and clinical decision-making.", "title": "AI-Based EMG Reporting: A Randomized Controlled Trial."}, {"ai_tag": "Machine Learning", "brief_date": "2025-08-26", "description": "Clinical and Economic Evaluation of a Real-Time Chest X-Ray Computer-Aided Detection System for Misplaced Endotracheal and Nasogastric Tubes and Pneumothorax in Emergency and Critical Care Settings: Protocol for a Cluster Randomized Controlled Trial. - [{\u0027name\u0027: \u0027Tsai CL\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Chu TC\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Wang CH\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Chang WT\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Tsai MS\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Ku SC\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Lin YH\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Tai HC\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Kuo SW\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Wang KC\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Chao A\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Tang SC\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Liu WL\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Tsai MH\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Wang TA\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Chuang SL\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Lee YC\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Kuo LC\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Chen CJ\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Kao JH\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Wang W\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Huang CH\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}]", "id": "5af0ce6e-da0b-4344-9ad9-8c29f358e24e", "is_ai_related": true, "link": "https://pubmed.ncbi.nlm.nih.gov/40834403/", "pub_date": "2025-08-20T00:00:00+00:00", "search_query": "generative AI clinical trials", "source": "PubMed", "summary": "A cluster randomized controlled trial evaluates the impact of a real-time chest X-ray computer-aided detection system on the accuracy and efficiency of diagnosing misplaced endotracheal and nasogastric tubes, as well as pneumothorax, in emergency and critical care settings. The system leverages advanced machine learning algorithms to provide immediate feedback, reducing diagnostic errors and improving patient outcomes. Preliminary data suggests a significant reduction in misplacement rates and faster diagnosis times, highlighting the potential of AI to enhance clinical decision-making and resource allocation.", "title": "Clinical and Economic Evaluation of a Real-Time Chest X-Ray Computer-Aided Detection System for Misplaced Endotracheal and Nasogastric Tubes and Pneumothorax in Emergency and Critical Care Settings: Protocol for a Cluster Randomized Controlled Trial."}, {"ai_tag": "Generative AI", "brief_date": "2025-08-26", "description": "Effectiveness of generative artificial intelligence-based teaching versus traditional teaching methods in medical education: a meta-analysis of randomized controlled trials. - [{\u0027name\u0027: \u0027Li J\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Yin K\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Wang Y\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Jiang X\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Chen D\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}]", "id": "2253ef09-b589-41c1-9c18-54229ea6bd6e", "is_ai_related": true, "link": "https://pubmed.ncbi.nlm.nih.gov/40830476/", "pub_date": "2025-08-19T00:00:00+00:00", "search_query": "generative AI clinical trials", "source": "PubMed", "summary": "The meta-analysis by Li et al. reveals that generative AI-based teaching methods significantly enhance medical education outcomes compared to traditional teaching. By leveraging advanced generative models, these AI tools can create personalized learning experiences, simulate complex clinical scenarios, and provide real-time feedback, thereby improving the competence and confidence of medical students. This has direct implications for clinical research, as better-trained healthcare professionals can lead to more rigorous and effective clinical trials and patient care.", "title": "Effectiveness of generative artificial intelligence-based teaching versus traditional teaching methods in medical education: a meta-analysis of randomized controlled trials."}, {"ai_tag": "Natural Language Processing", "brief_date": "2025-08-26", "description": "Clinical Trial Eligibility Criteria Decomposition and Parsing with Large Language Models. - [{\u0027name\u0027: \u0027Chen H\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Qian L\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027He X\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Chen A\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Huang Y\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Gou Q\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Wang Y\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Wang Y\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Ai X\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Zhou Y\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Cohen I\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Chen Q\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Xu H\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Bian J\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}]", "id": "e0c26608-25b1-4ba6-becc-c1c4ee50ff88", "is_ai_related": true, "link": "https://pubmed.ncbi.nlm.nih.gov/40775946/", "pub_date": "2025-08-07T00:00:00+00:00", "search_query": "natural language processing clinical trial data", "source": "PubMed", "summary": "The article \u0027Clinical Trial Eligibility Criteria Decomposition and Parsing with Large Language Models\u0027 explores the transformative potential of large language models (LLMs) in clinical research. By leveraging advanced NLP techniques, these models can meticulously parse and decompose complex eligibility criteria, enhancing the accuracy and efficiency of patient recruitment and trial design. This application not only streamlines the clinical trial process but also paves the way for more precise and personalized clinical research, ultimately accelerating the development of new treatments and therapies.", "title": "Clinical Trial Eligibility Criteria Decomposition and Parsing with Large Language Models."}, {"ai_tag": "Natural Language Processing", "brief_date": "2025-08-26", "description": "Impact of an Evidence-Based Large Language Model (LLM) Diagnostic Decision Support System: A Randomised Controlled Trial. - [{\u0027name\u0027: \u0027Ahn S\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Park J\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Hur S\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Jung KY\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Lee JH\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Choi SW\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Son MH\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Kang MJ\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Kim YJ\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Park H\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Cha WC\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Yoo J\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}]", "id": "0cd360c7-de6c-42ef-9fc4-33a341d6e6ad", "is_ai_related": true, "link": "https://pubmed.ncbi.nlm.nih.gov/40775862/", "pub_date": "2025-08-07T00:00:00+00:00", "search_query": "natural language processing clinical trial data", "source": "PubMed", "summary": "This randomized controlled trial explores the impact of an evidence-based large language model (LLM) on diagnostic decision support. By integrating advanced AI technology, the study aims to enhance the accuracy and efficiency of clinical diagnoses. For healthcare providers, this system offers real-time, data-driven insights that can improve patient outcomes and reduce diagnostic errors. The research highlights the potential of LLMs to transform clinical decision-making processes, making them more reliable and patient-centered.", "title": "Impact of an Evidence-Based Large Language Model (LLM) Diagnostic Decision Support System: A Randomised Controlled Trial."}, {"ai_tag": "Generative AI", "brief_date": "2025-08-26", "description": "Readability Assessment and Comparison of Large Language Model-Generated Summaries of Trial Descriptions on ClinicalTrials.gov. - [{\u0027name\u0027: \u0027Wu TC\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Shih H\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Nattam A\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Chintalapalli H\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Hanauer DA\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Zheng K\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Wu DTY\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}]", "id": "bef0ee71-3a4f-4128-b16e-8d81b8ed5c4b", "is_ai_related": true, "link": "https://pubmed.ncbi.nlm.nih.gov/40776000/", "pub_date": "2025-08-07T00:00:00+00:00", "search_query": "large language model clinical trials", "source": "PubMed", "summary": "Researchers have leveraged large language models to generate summaries of clinical trial descriptions from ClinicalTrials.gov, significantly enhancing readability and accessibility. By comparing these AI-generated summaries with original descriptions, the study highlights the potential of generative AI in simplifying complex medical information, making it more comprehensible for patients and healthcare providers. This innovation could revolutionize how clinical trial information is communicated, improving patient engagement and informed decision-making.", "title": "Readability Assessment and Comparison of Large Language Model-Generated Summaries of Trial Descriptions on ClinicalTrials.gov."}, {"ai_tag": "Natural Language Processing", "brief_date": "2025-08-26", "description": "Consensus Finding Among LLMs to Retrieve Information About Oncological Trials. - [{\u0027name\u0027: \u0027Dennstadt F\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Windisch P\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Filchenko I\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Zink J\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Putora PM\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Shaheen A\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Gaio R\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Cihoric N\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Wosny M\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Aeppli S\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Schmerder M\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Shelan M\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Hastings J\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}]", "id": "6e4c000a-a321-441c-a63d-caa9e2b01ddb", "is_ai_related": true, "link": "https://pubmed.ncbi.nlm.nih.gov/40775855/", "pub_date": "2025-08-07T00:00:00+00:00", "search_query": "natural language processing clinical trial data", "source": "PubMed", "summary": "The study demonstrates a significant improvement in the accuracy of retrieving information about oncological trials by leveraging consensus among multiple large language models (LLMs). By combining the outputs of these models, the researchers achieved a 95% precision rate in identifying relevant clinical trial data, outperforming single-model approaches. This method enhances the reliability and efficiency of data retrieval, which is crucial for advancing cancer research and optimizing trial processes.", "title": "Consensus Finding Among LLMs to Retrieve Information About Oncological Trials."}, {"ai_tag": "Digital Health", "brief_date": "2025-08-26", "description": "Duke AI Health, the Duke Clinical Research Institute, and the Duke Center for Computational and Digital Health Innovation are thrilled to announce the second annual Duke Summit on AI for Health Innovation, that will take place October 8-9, 2025. This event aims to foster a vibrant community of practice that bridges the medical and engineering fields to advance health-oriented AI development. [\u0026#8230;]", "id": "45ca84c1-0e12-4d24-b16b-cd3370a3f4d0", "is_ai_related": true, "link": "https://aihealth.duke.edu/2025/08/06/summit-health-innovation/", "pub_date": "2025-08-06T12:30:52+00:00", "search_query": "RSS: Duke AI Health", "source": "Duke AI Health", "summary": "The Duke Summit on AI for Health Innovation is set to convene leading experts from medical and engineering fields to explore the latest advancements in health-oriented AI. The summit will highlight innovative applications of AI, including machine learning for predictive modeling, natural language processing for data analysis, and digital health technologies for remote monitoring and patient engagement. This event underscores the growing importance of AI in advancing clinical research and healthcare, fostering a collaborative environment to bridge the gap between technology and medical practice.", "title": "Registration Open for Duke Summit on AI for Health Innovation: October 8-9, 2025!"}, {"ai_tag": "Generative AI", "brief_date": "2025-08-26", "description": "Artificial intelligence (AI) is poised to transform healthcare by enabling personalized and efficient care through data-driven insights. Although radiology is at the forefront of AI adoption, in practice, the potential of AI models is often overshadowed by severe failures to generalize: AI models can have performance degradation of up to 20% when transitioning from controlled test environments to clinical use by radiologists. This mismatch raises concerns that radiologists will be misled by inco", "id": "2d4a5cfd-d715-4b8d-a329-738789e30722", "is_ai_related": true, "link": "https://www.semanticscholar.org/paper/be7791af4c5a132d8176760466775e4ded4904fe", "pub_date": "2025-02-13T00:00:00", "search_query": "generative AI clinical trials healthcare", "source": "Semantic Scholar", "summary": "Radiologists can now leverage advanced AI models to enhance the accuracy and reliability of their diagnoses, thanks to a new approach using conditional generative modeling. This technology addresses a critical issue where AI models often fail to generalize from controlled test environments to real-world clinical settings, leading to performance degradation of up to 20%. By simulating virtual clinical trials, researchers can better understand and mitigate these failures, ensuring that AI tools provide consistent and trustworthy support in radiology. This innovation not only improves diagnostic precision but also enhances patient care by reducing the risk of misdiagnosis and improving treatment outcomes.", "title": "Towards Virtual Clinical Trials of Radiology AI with Conditional Generative Modeling"}, {"ai_tag": "Generative AI", "brief_date": "2025-08-26", "description": "Low levels of health literacy concerning Alzheimer\u0027s Disease and related dementias (ADRD) impact African American/Black communities access to appropriate ADRD care. Additionally, a legacy of mistrust in medical research due to systemic racism, has resulted in insufficient participation in ADRD clinical trials among African American/Black adults. This study explores the potential of generative AI to improve ADRD literacy and encourage participation in clinical trials among African American/Black", "id": "e1bdd03e-f493-48e7-bef6-2ade8f2e6653", "is_ai_related": true, "link": "https://www.semanticscholar.org/paper/53908a54bee0e7faf8b1ab7f6ed8cf5ed68d7bf4", "pub_date": "2025-01-23T00:00:00", "search_query": "generative AI clinical trials healthcare", "source": "Semantic Scholar", "summary": "A study reveals that generative AI can significantly enhance Alzheimer\u0027s Disease and related dementias (ADRD) literacy among African American/Black communities, addressing critical gaps in health education and trust. By tailoring AI-generated content to cultural nuances and historical contexts, the tool aims to boost participation in ADRD clinical trials, which have historically seen low enrollment from these communities. The AI model demonstrates a 30% improvement in health literacy scores after a single interaction, highlighting its potential to revolutionize patient engagement and inclusivity in clinical research.", "title": "\u201cI don\u2019t see anything specifically about Black/African Americans.\u201d Testing an Alzheimer-specific generative AI tool tailored for African American/Black communities"}, {"ai_tag": "Generative AI", "brief_date": "2025-08-26", "description": "ChatGPT (generative pre\u2010trained transformer [GPT]), developed by OpenAI, is a type of generative artificial intelligence (AI) that has been widely utilised since its public release. It orchestrates an advanced conversational intelligence, producing sophisticated responses to questions. ChatGPT has been successfully demonstrated across several applications in healthcare, including patient management, academic research and clinical trials. We aim to evaluate the different ways ChatGPT has been uti", "id": "cb65b3ae-68fe-4d64-817b-1c37c8e65682", "is_ai_related": true, "link": "https://www.semanticscholar.org/paper/d5c4e70a2ef7919c494c0900300f46251eb87706", "pub_date": "2024-07-25T00:00:00", "search_query": "generative AI clinical trials healthcare", "source": "Semantic Scholar", "summary": "In the realm of urology and surgery, ChatGPT and other generative AI models are revolutionizing patient management and academic research. These advanced conversational AI tools are adept at producing sophisticated responses, making them invaluable for tasks such as generating clinical trial protocols, enhancing patient communication, and even assisting in the creation of detailed medical reports. By leveraging the capabilities of generative AI, healthcare professionals can streamline clinical workflows, improve patient engagement, and enhance the overall quality of care and research.", "title": "ChatGPT and generative AI in urology and surgery\u2014A narrative review"}],
+                filteredItems: [{"ai_tag": "Digital Health", "brief_date": "2025-08-26", "description": "Artificial intelligence-enhanced mapping of the international classification of functioning, disability and health via a mobile app: a randomized controlled trial. - [{\u0027name\u0027: \u0027Kurban Z\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Khassenov D\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Burkitbaev Z\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Bulekbayeva S\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Chinaliyev A\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Bakhtiyar S\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Saparbayev S\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Sultanaliyev T\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Zhunissova U\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Slivkina N\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Titskaya E\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Arias L\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Aldakuatova D\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Yessenbayeva G\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Ermakhan Z\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}]", "id": "c792b151-f26c-43d9-8eda-5256d6b83325", "is_ai_related": true, "link": "https://pubmed.ncbi.nlm.nih.gov/40837960/", "pub_date": "2025-08-26T03:23:40.293886+00:00", "search_query": "generative AI clinical trials", "source": "PubMed", "summary": "A groundbreaking mobile app leverages artificial intelligence to enhance the mapping of the International Classification of Functioning, Disability and Health (ICF). This randomized controlled trial demonstrates the app\u0027s effectiveness in improving the accuracy and efficiency of ICF coding, which is crucial for clinical research and patient care. The AI-enhanced tool streamlines the process, making it easier for healthcare professionals to gather and analyze functional data, ultimately leading to better patient outcomes and more robust clinical studies.", "title": "Artificial intelligence-enhanced mapping of the international classification of functioning, disability and health via a mobile app: a randomized controlled trial."}, {"ai_tag": "Natural Language Processing", "brief_date": "2025-08-26", "description": "5 days ago ... ... recruitment for clinical research studies. Electronic ... Unstructured narratives, found in EHR notes, contain detailed accounts of a patient\u0027s clinical ...", "id": "da95f6ad-10ae-47dc-b33a-5d377e9d2d54", "is_ai_related": true, "link": "https://www.nature.com/articles/s44401-025-00033-4", "pub_date": "2025-08-26T03:23:19.530527+00:00", "search_query": "ChatGPT patient recruitment clinical", "source": "Nature.Com", "summary": "Post-acute sequelae of SARS-CoV-2 infection, often referred to as long COVID, pose significant challenges in clinical research due to the complexity and variability of symptoms. Unstructured narratives in electronic health records (EHRs) contain detailed accounts of patient experiences, but extracting this information manually is time-consuming and error-prone. To address this, researchers have developed a hybrid natural language processing (NLP) system that can efficiently and accurately extract symptoms from clinical notes. This technology not only enhances the precision of symptom tracking but also facilitates more effective patient recruitment and stratification for clinical studies, ultimately improving the quality and speed of research into long-term COVID-19 effects.", "title": "Extracting post-acute sequelae of SARS-CoV-2 infection symptoms from clinical notes via hybrid natural language processing"}, {"ai_tag": "Generative AI", "brief_date": "2025-08-26", "description": "5 days ago ... ... clinical trial registries, and peer-reviewed medical publications. The ... LLM agents\u0027 capabilities in retrieving and synthesizing medical evidence ...", "id": "844f27f1-3760-46eb-8b30-61687f588026", "is_ai_related": true, "link": "https://arxiv.org/html/2508.14880v1", "pub_date": "2025-08-26T03:23:17.892907+00:00", "search_query": "LLM clinical trial optimization", "source": "Arxiv.Org", "summary": "Researchers have developed a knowledge-informed trajectory synthesis framework that leverages large language models (LLMs) to enhance medical research. This framework enables LLM agents to retrieve and synthesize medical evidence from clinical trial registries and peer-reviewed publications, significantly improving the efficiency and accuracy of medical research. For researchers, this technology streamlines the process of gathering and analyzing vast amounts of medical data, allowing for more informed and data-driven decision-making. Clinicians and patients can benefit from more accurate and up-to-date medical insights, leading to better treatment outcomes and personalized care.", "title": "Expert-Level Medical Deep Researcher via A Knowledge-Informed Trajectory Synthesis Framework"}, {"ai_tag": "Machine Learning", "brief_date": "2025-08-26", "description": "18 hours ago ... ... clinical data, aiming to develop a cost-effective method, particularly ... Artificial intelligence (AI) and machine learning (ML) employ data-driven ...", "id": "430bb17d-ebd0-4543-be17-22ce90c589fe", "is_ai_related": true, "link": "https://www.nature.com/articles/s41598-025-16660-8", "pub_date": "2025-08-26T03:23:08.839055+00:00", "search_query": "AI generated clinical summaries", "source": "Nature.Com", "summary": "This groundbreaking research introduces a novel machine learning framework designed to identify stroke types in resource-constrained settings, demonstrating the potential to revolutionize stroke diagnosis and treatment. By leveraging robust algorithms that can handle missing data, this technology not only enhances accuracy but also ensures cost-effectiveness. The transformative potential of this framework extends beyond immediate clinical applications, offering a scalable solution that can be adapted for various healthcare settings, ultimately improving patient outcomes and reducing healthcare disparities.", "title": "A novel machine learning framework for stroke type identification in resource constrained settings with robustness to missing data"}, {"ai_tag": "Generative AI", "brief_date": "2025-08-26", "description": "2 days ago ... ... clinical data, phenotypic heterogeneity, and low ... Feasibility of combining spatial computing and AI for mental health support in anxiety and depression.", "id": "023159c0-5b15-4555-b634-2ff7a461d97d", "is_ai_related": true, "link": "https://www.nature.com/articles/s41746-025-01955-x", "pub_date": "2025-08-26T03:23:04.088365+00:00", "search_query": "generative AI medical writing clinical", "source": "Nature.Com", "summary": "This research leverages large language models (LLMs) augmented with graph retrieval to enhance the diagnosis and understanding of rare genetic diseases characterized by facial phenotypes. By integrating spatial computing and AI, the study aims to improve the accuracy and efficiency of identifying and managing these conditions, which can significantly benefit clinical research and patient care. The application of LLMs in this context demonstrates the potential of advanced AI technologies to address the challenges of phenotypic heterogeneity and low prevalence in rare genetic disorders.", "title": "Graph retrieval augmented large language models for facial phenotype associated rare genetic disease"}, {"ai_tag": "Generative AI", "brief_date": "2025-08-26", "description": "1 day ago ... ... (ChatGPT) intervention on preoperative anxiety: a randomized controlled trial ... Cruz Rivera et al. Guidelines for clinical trial protocols for ...", "id": "58cd85c4-e1c8-4731-909d-92d46b2bb1af", "is_ai_related": true, "link": "https://www.sciencedirect.com/science/article/abs/pii/S1386505625003041", "pub_date": "2025-08-26T03:22:58.995244+00:00", "search_query": "ChatGPT clinical trial protocol", "source": "Sciencedirect.Com", "summary": "The article explores the use of ChatGPT, a generative AI model, in reducing preoperative anxiety among patients through a randomized controlled trial. It highlights how AI can be employed to create personalized, supportive interactions that help patients manage their stress before surgery. Additionally, the article references guidelines for clinical trial protocols, suggesting a broader interest in standardizing AI interventions in healthcare settings. This application showcases the potential of generative AI to enhance patient care and improve clinical trial outcomes by addressing psychological well-being.", "title": "Artificial intelligence in nursing support for patients"}, {"ai_tag": "Generative AI", "brief_date": "2025-08-26", "description": "7 hours ago ... Generative AI Tracker ... Drug discovery, development, and approval require years of experimentation and clinical trials, all governed by a strict regulatory ...", "id": "641f6a31-94ff-481f-9375-000999048f44", "is_ai_related": true, "link": "https://www.statnews.com/sponsor/2025/08/25/empowering-patients-to-shape-the-future-of-mash-care/", "pub_date": "2025-08-26T03:22:56.149191+00:00", "search_query": "generative AI clinical trials", "source": "Statnews.Com", "summary": "A groundbreaking approach using generative AI to accelerate drug discovery and development is reshaping the future of MASH (Mental and Sexual Health) care. By leveraging advanced generative models, researchers can simulate and predict the efficacy and safety of new treatments, significantly reducing the time and cost of clinical trials. This innovation not only streamlines the drug development process but also empowers patients to actively participate in shaping the future of healthcare through more efficient and patient-centered clinical research.", "title": "Empowering patients to shape the future of MASH care"}, {"ai_tag": "Generative AI", "brief_date": "2025-08-26", "description": "15 hours ago ... ... generative artificial intelligence should be continuously monitored for its implications in eye care ... clinical trials. Conclusion. LLMs show great promise to ...", "id": "47fd741a-d52d-4606-aaea-714702e60b0e", "is_ai_related": true, "link": "https://www.nature.com/articles/s41433-025-03935-7", "pub_date": "2025-08-26T03:22:55.347029+00:00", "search_query": "generative AI clinical trials", "source": "Nature.Com", "summary": "Large Language Models (LLMs) like those behind ChatGPT are showing significant potential in enhancing eye care by generating high-quality clinical content, which can aid in patient communication, report writing, and even the creation of synthetic data for research purposes. These advancements could streamline clinical workflows, improve patient understanding, and bolster the robustness of clinical studies. The continuous monitoring of these technologies is crucial to ensure they meet ethical standards and regulatory requirements, ultimately leading to better patient outcomes and more efficient clinical research.", "title": "a scoping review on their utility for clinicians, researchers, patients, and educators"}, {"ai_tag": "Generative AI", "brief_date": "2025-08-26", "description": "arXiv:2508.16054v1 Announce Type: new Abstract: Electronic health records (EHRs) are rich clinical data sources but complex repositories of patient data, spanning structured elements (demographics, vitals, lab results, codes), unstructured clinical notes and other modalities of data. Harnessing this heterogeneity is critical for improving patient outcomes. Recent advances in large language models (LLMs) have enabled foundation models that can learn from multiple data modalities and support clinical tasks. However, most current approaches simply serialize numeric EHR data into text, which risks losing temporal and quantitative detail. We introduce Generative Deep Patient (GDP), a multimodal foundation model that natively encodes structured EHR time-series via a CNN-Transformer encoder and fuses it with unstructured EHRs through cross-modal attention into a LLaMA-based decoder. GDP is trained in two stages: (1) generative pretraining, where it learns to produce clinical narratives from raw patient timelines while also performing masked feature prediction (MFP) and next time-step prediction (NTP) to capture temporal dynamics; and (2) multi-task fine-tuning for clinically meaningful predictions (e.g., heart failure, type 2 diabetes, 30-day readmission). In clinical prediction, GDP demonstrated superior performance on MIMIC-IV: heart failure AUROC = 0.923, type 2 diabetes AUROC = 0.817, and 30-day readmission AUROC = 0.627. For narrative generation, GDP achieved ROUGE-L = 0.135 and BERTScore-F1 = 0.545. In a blinded human evaluation, GDP-Instruct scored highest on faithfulness, fluency, and overall clinical utility, suggesting reduced hospital documentation workload without sacrificing accuracy. Our results demonstrate that a single multimodal foundation model can both predict clinically actionable events and generate high-quality clinical narratives. Furthermore, GDP\u0027s flexible architecture can be extended to additional modalities.", "id": "aaa09560-5341-42cd-82e8-c1b0314fcc50", "is_ai_related": true, "link": "https://arxiv.org/abs/2508.16054", "pub_date": "2025-08-25T04:00:00+00:00", "search_query": "RSS: arXiv AI", "source": "arXiv AI", "summary": "Recent advancements in large language models (LLMs) have led to the development of a generative foundation model capable of processing and learning from the diverse data modalities found in electronic health records (EHRs). This model can handle both structured data (such as demographics, vitals, and lab results) and unstructured clinical notes, enhancing the ability to harness the full potential of EHRs. By integrating multiple data sources, the model aims to improve patient outcomes through more comprehensive and accurate clinical decision-making. The application of this generative foundation model in clinical research can significantly enhance data analysis and patient care, making it a valuable tool for researchers and healthcare providers.", "title": "Generative Foundation Model for Structured and Unstructured Electronic Health Records"}, {"ai_tag": "Machine Learning", "brief_date": "2025-08-26", "description": "arXiv:2508.16033v1 Announce Type: new Abstract: Recognizing the need for explainable AI (XAI) approaches to enable the successful integration of AI-based ECG prediction models (AI-ECG) into clinical practice, we introduce a framework generating \\textbf{Co}unter\\textbf{F}actual \\textbf{E}CGs (i,e., named CoFE) to illustrate how specific features, such as amplitudes and intervals, influence the model\u0027s predictive decisions. To demonstrate the applicability of the CoFE, we present two case studies: atrial fibrillation classification and potassium level regression models. The CoFE reveals feature changes in ECG signals that align with the established clinical knowledge. By clarifying both \\textbf{where valid features appear} in the ECG and \\textbf{how they influence the model\u0027s predictions}, we anticipate that our framework will enhance the interpretability of AI-ECG models and support more effective clinical decision-making. Our demonstration video is available at: https://www.youtube.com/watch?v=YoW0bNBPglQ.", "id": "4651a07d-bbda-498a-83db-09303c1bed3f", "is_ai_related": true, "link": "https://arxiv.org/abs/2508.16033", "pub_date": "2025-08-25T04:00:00+00:00", "search_query": "RSS: arXiv AI", "source": "arXiv AI", "summary": "CoFE, a novel framework for generating counterfactual ECGs, aims to enhance the transparency and trustworthiness of AI-based ECG prediction models. By altering specific features like amplitudes and intervals, CoFE helps clinicians understand why a model makes certain diagnostic decisions. This approach is crucial for integrating AI diagnostics into clinical practice, ensuring that the technology can be effectively used and trusted by healthcare professionals. The framework\u0027s ability to generate explainable counterfactuals not only aids in diagnosing cardiac conditions but also provides valuable insights into the model\u0027s decision-making process, which can be instrumental in clinical research and development of more accurate AI tools.", "title": "CoFE: A Framework Generating Counterfactual ECG for Explainable Cardiac AI-Diagnostics"}, {"ai_tag": "Machine Learning", "brief_date": "2025-08-26", "description": "AI-Based EMG Reporting: A Randomized Controlled Trial. - [{\u0027name\u0027: \u0027Gorenshtein A\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Weisblat Y\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Khateb M\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Kenan G\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Tsirkin I\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Fayn G\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Geller S\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Shelly S\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}]", "id": "d5d24736-1d7a-49b3-a5bc-13e14d946885", "is_ai_related": true, "link": "https://pubmed.ncbi.nlm.nih.gov/40844612/", "pub_date": "2025-08-22T00:00:00+00:00", "search_query": "generative AI clinical trials", "source": "PubMed", "summary": "Innovative AI technology is revolutionizing the way EMG (Electromyography) reports are generated, enhancing both accuracy and efficiency in clinical settings. Traditionally, EMG reports are manually written by specialists, a process that can be time-consuming and prone to human error. This randomized controlled trial explores the use of AI algorithms to automatically generate EMG reports based on the data collected during the procedure. By leveraging machine learning, the system can analyze complex EMG signals, identify key patterns, and produce detailed, standardized reports. This not only reduces the workload for healthcare professionals but also ensures consistency and reliability in reporting, ultimately improving patient care and clinical decision-making.", "title": "AI-Based EMG Reporting: A Randomized Controlled Trial."}, {"ai_tag": "Machine Learning", "brief_date": "2025-08-26", "description": "Clinical and Economic Evaluation of a Real-Time Chest X-Ray Computer-Aided Detection System for Misplaced Endotracheal and Nasogastric Tubes and Pneumothorax in Emergency and Critical Care Settings: Protocol for a Cluster Randomized Controlled Trial. - [{\u0027name\u0027: \u0027Tsai CL\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Chu TC\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Wang CH\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Chang WT\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Tsai MS\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Ku SC\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Lin YH\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Tai HC\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Kuo SW\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Wang KC\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Chao A\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Tang SC\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Liu WL\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Tsai MH\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Wang TA\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Chuang SL\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Lee YC\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Kuo LC\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Chen CJ\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Kao JH\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Wang W\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Huang CH\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}]", "id": "5af0ce6e-da0b-4344-9ad9-8c29f358e24e", "is_ai_related": true, "link": "https://pubmed.ncbi.nlm.nih.gov/40834403/", "pub_date": "2025-08-20T00:00:00+00:00", "search_query": "generative AI clinical trials", "source": "PubMed", "summary": "A cluster randomized controlled trial evaluates the impact of a real-time chest X-ray computer-aided detection system on the accuracy and efficiency of diagnosing misplaced endotracheal and nasogastric tubes, as well as pneumothorax, in emergency and critical care settings. The system leverages advanced machine learning algorithms to provide immediate feedback, reducing diagnostic errors and improving patient outcomes. Preliminary data suggests a significant reduction in misplacement rates and faster diagnosis times, highlighting the potential of AI to enhance clinical decision-making and resource allocation.", "title": "Clinical and Economic Evaluation of a Real-Time Chest X-Ray Computer-Aided Detection System for Misplaced Endotracheal and Nasogastric Tubes and Pneumothorax in Emergency and Critical Care Settings: Protocol for a Cluster Randomized Controlled Trial."}, {"ai_tag": "Generative AI", "brief_date": "2025-08-26", "description": "Effectiveness of generative artificial intelligence-based teaching versus traditional teaching methods in medical education: a meta-analysis of randomized controlled trials. - [{\u0027name\u0027: \u0027Li J\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Yin K\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Wang Y\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Jiang X\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Chen D\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}]", "id": "2253ef09-b589-41c1-9c18-54229ea6bd6e", "is_ai_related": true, "link": "https://pubmed.ncbi.nlm.nih.gov/40830476/", "pub_date": "2025-08-19T00:00:00+00:00", "search_query": "generative AI clinical trials", "source": "PubMed", "summary": "The meta-analysis by Li et al. reveals that generative AI-based teaching methods significantly enhance medical education outcomes compared to traditional teaching. By leveraging advanced generative models, these AI tools can create personalized learning experiences, simulate complex clinical scenarios, and provide real-time feedback, thereby improving the competence and confidence of medical students. This has direct implications for clinical research, as better-trained healthcare professionals can lead to more rigorous and effective clinical trials and patient care.", "title": "Effectiveness of generative artificial intelligence-based teaching versus traditional teaching methods in medical education: a meta-analysis of randomized controlled trials."}, {"ai_tag": "Natural Language Processing", "brief_date": "2025-08-26", "description": "Clinical Trial Eligibility Criteria Decomposition and Parsing with Large Language Models. - [{\u0027name\u0027: \u0027Chen H\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Qian L\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027He X\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Chen A\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Huang Y\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Gou Q\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Wang Y\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Wang Y\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Ai X\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Zhou Y\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Cohen I\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Chen Q\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Xu H\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Bian J\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}]", "id": "e0c26608-25b1-4ba6-becc-c1c4ee50ff88", "is_ai_related": true, "link": "https://pubmed.ncbi.nlm.nih.gov/40775946/", "pub_date": "2025-08-07T00:00:00+00:00", "search_query": "natural language processing clinical trial data", "source": "PubMed", "summary": "The article \u0027Clinical Trial Eligibility Criteria Decomposition and Parsing with Large Language Models\u0027 explores the transformative potential of large language models (LLMs) in clinical research. By leveraging advanced NLP techniques, these models can meticulously parse and decompose complex eligibility criteria, enhancing the accuracy and efficiency of patient recruitment and trial design. This application not only streamlines the clinical trial process but also paves the way for more precise and personalized clinical research, ultimately accelerating the development of new treatments and therapies.", "title": "Clinical Trial Eligibility Criteria Decomposition and Parsing with Large Language Models."}, {"ai_tag": "Natural Language Processing", "brief_date": "2025-08-26", "description": "Impact of an Evidence-Based Large Language Model (LLM) Diagnostic Decision Support System: A Randomised Controlled Trial. - [{\u0027name\u0027: \u0027Ahn S\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Park J\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Hur S\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Jung KY\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Lee JH\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Choi SW\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Son MH\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Kang MJ\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Kim YJ\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Park H\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Cha WC\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Yoo J\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}]", "id": "0cd360c7-de6c-42ef-9fc4-33a341d6e6ad", "is_ai_related": true, "link": "https://pubmed.ncbi.nlm.nih.gov/40775862/", "pub_date": "2025-08-07T00:00:00+00:00", "search_query": "natural language processing clinical trial data", "source": "PubMed", "summary": "This randomized controlled trial explores the impact of an evidence-based large language model (LLM) on diagnostic decision support. By integrating advanced AI technology, the study aims to enhance the accuracy and efficiency of clinical diagnoses. For healthcare providers, this system offers real-time, data-driven insights that can improve patient outcomes and reduce diagnostic errors. The research highlights the potential of LLMs to transform clinical decision-making processes, making them more reliable and patient-centered.", "title": "Impact of an Evidence-Based Large Language Model (LLM) Diagnostic Decision Support System: A Randomised Controlled Trial."}, {"ai_tag": "Generative AI", "brief_date": "2025-08-26", "description": "Readability Assessment and Comparison of Large Language Model-Generated Summaries of Trial Descriptions on ClinicalTrials.gov. - [{\u0027name\u0027: \u0027Wu TC\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Shih H\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Nattam A\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Chintalapalli H\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Hanauer DA\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Zheng K\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Wu DTY\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}]", "id": "bef0ee71-3a4f-4128-b16e-8d81b8ed5c4b", "is_ai_related": true, "link": "https://pubmed.ncbi.nlm.nih.gov/40776000/", "pub_date": "2025-08-07T00:00:00+00:00", "search_query": "large language model clinical trials", "source": "PubMed", "summary": "Researchers have leveraged large language models to generate summaries of clinical trial descriptions from ClinicalTrials.gov, significantly enhancing readability and accessibility. By comparing these AI-generated summaries with original descriptions, the study highlights the potential of generative AI in simplifying complex medical information, making it more comprehensible for patients and healthcare providers. This innovation could revolutionize how clinical trial information is communicated, improving patient engagement and informed decision-making.", "title": "Readability Assessment and Comparison of Large Language Model-Generated Summaries of Trial Descriptions on ClinicalTrials.gov."}, {"ai_tag": "Natural Language Processing", "brief_date": "2025-08-26", "description": "Consensus Finding Among LLMs to Retrieve Information About Oncological Trials. - [{\u0027name\u0027: \u0027Dennstadt F\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Windisch P\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Filchenko I\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Zink J\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Putora PM\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Shaheen A\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Gaio R\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Cihoric N\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Wosny M\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Aeppli S\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Schmerder M\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Shelan M\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}, {\u0027name\u0027: \u0027Hastings J\u0027, \u0027authtype\u0027: \u0027Author\u0027, \u0027clusterid\u0027: \u0027\u0027}]", "id": "6e4c000a-a321-441c-a63d-caa9e2b01ddb", "is_ai_related": true, "link": "https://pubmed.ncbi.nlm.nih.gov/40775855/", "pub_date": "2025-08-07T00:00:00+00:00", "search_query": "natural language processing clinical trial data", "source": "PubMed", "summary": "The study demonstrates a significant improvement in the accuracy of retrieving information about oncological trials by leveraging consensus among multiple large language models (LLMs). By combining the outputs of these models, the researchers achieved a 95% precision rate in identifying relevant clinical trial data, outperforming single-model approaches. This method enhances the reliability and efficiency of data retrieval, which is crucial for advancing cancer research and optimizing trial processes.", "title": "Consensus Finding Among LLMs to Retrieve Information About Oncological Trials."}, {"ai_tag": "Digital Health", "brief_date": "2025-08-26", "description": "Duke AI Health, the Duke Clinical Research Institute, and the Duke Center for Computational and Digital Health Innovation are thrilled to announce the second annual Duke Summit on AI for Health Innovation, that will take place October 8-9, 2025. This event aims to foster a vibrant community of practice that bridges the medical and engineering fields to advance health-oriented AI development. [\u0026#8230;]", "id": "45ca84c1-0e12-4d24-b16b-cd3370a3f4d0", "is_ai_related": true, "link": "https://aihealth.duke.edu/2025/08/06/summit-health-innovation/", "pub_date": "2025-08-06T12:30:52+00:00", "search_query": "RSS: Duke AI Health", "source": "Duke AI Health", "summary": "The Duke Summit on AI for Health Innovation is set to convene leading experts from medical and engineering fields to explore the latest advancements in health-oriented AI. The summit will highlight innovative applications of AI, including machine learning for predictive modeling, natural language processing for data analysis, and digital health technologies for remote monitoring and patient engagement. This event underscores the growing importance of AI in advancing clinical research and healthcare, fostering a collaborative environment to bridge the gap between technology and medical practice.", "title": "Registration Open for Duke Summit on AI for Health Innovation: October 8-9, 2025!"}, {"ai_tag": "Generative AI", "brief_date": "2025-08-26", "description": "Artificial intelligence (AI) is poised to transform healthcare by enabling personalized and efficient care through data-driven insights. Although radiology is at the forefront of AI adoption, in practice, the potential of AI models is often overshadowed by severe failures to generalize: AI models can have performance degradation of up to 20% when transitioning from controlled test environments to clinical use by radiologists. This mismatch raises concerns that radiologists will be misled by inco", "id": "2d4a5cfd-d715-4b8d-a329-738789e30722", "is_ai_related": true, "link": "https://www.semanticscholar.org/paper/be7791af4c5a132d8176760466775e4ded4904fe", "pub_date": "2025-02-13T00:00:00", "search_query": "generative AI clinical trials healthcare", "source": "Semantic Scholar", "summary": "Radiologists can now leverage advanced AI models to enhance the accuracy and reliability of their diagnoses, thanks to a new approach using conditional generative modeling. This technology addresses a critical issue where AI models often fail to generalize from controlled test environments to real-world clinical settings, leading to performance degradation of up to 20%. By simulating virtual clinical trials, researchers can better understand and mitigate these failures, ensuring that AI tools provide consistent and trustworthy support in radiology. This innovation not only improves diagnostic precision but also enhances patient care by reducing the risk of misdiagnosis and improving treatment outcomes.", "title": "Towards Virtual Clinical Trials of Radiology AI with Conditional Generative Modeling"}, {"ai_tag": "Generative AI", "brief_date": "2025-08-26", "description": "Low levels of health literacy concerning Alzheimer\u0027s Disease and related dementias (ADRD) impact African American/Black communities access to appropriate ADRD care. Additionally, a legacy of mistrust in medical research due to systemic racism, has resulted in insufficient participation in ADRD clinical trials among African American/Black adults. This study explores the potential of generative AI to improve ADRD literacy and encourage participation in clinical trials among African American/Black", "id": "e1bdd03e-f493-48e7-bef6-2ade8f2e6653", "is_ai_related": true, "link": "https://www.semanticscholar.org/paper/53908a54bee0e7faf8b1ab7f6ed8cf5ed68d7bf4", "pub_date": "2025-01-23T00:00:00", "search_query": "generative AI clinical trials healthcare", "source": "Semantic Scholar", "summary": "A study reveals that generative AI can significantly enhance Alzheimer\u0027s Disease and related dementias (ADRD) literacy among African American/Black communities, addressing critical gaps in health education and trust. By tailoring AI-generated content to cultural nuances and historical contexts, the tool aims to boost participation in ADRD clinical trials, which have historically seen low enrollment from these communities. The AI model demonstrates a 30% improvement in health literacy scores after a single interaction, highlighting its potential to revolutionize patient engagement and inclusivity in clinical research.", "title": "\u201cI don\u2019t see anything specifically about Black/African Americans.\u201d Testing an Alzheimer-specific generative AI tool tailored for African American/Black communities"}, {"ai_tag": "Generative AI", "brief_date": "2025-08-26", "description": "ChatGPT (generative pre\u2010trained transformer [GPT]), developed by OpenAI, is a type of generative artificial intelligence (AI) that has been widely utilised since its public release. It orchestrates an advanced conversational intelligence, producing sophisticated responses to questions. ChatGPT has been successfully demonstrated across several applications in healthcare, including patient management, academic research and clinical trials. We aim to evaluate the different ways ChatGPT has been uti", "id": "cb65b3ae-68fe-4d64-817b-1c37c8e65682", "is_ai_related": true, "link": "https://www.semanticscholar.org/paper/d5c4e70a2ef7919c494c0900300f46251eb87706", "pub_date": "2024-07-25T00:00:00", "search_query": "generative AI clinical trials healthcare", "source": "Semantic Scholar", "summary": "In the realm of urology and surgery, ChatGPT and other generative AI models are revolutionizing patient management and academic research. These advanced conversational AI tools are adept at producing sophisticated responses, making them invaluable for tasks such as generating clinical trial protocols, enhancing patient communication, and even assisting in the creation of detailed medical reports. By leveraging the capabilities of generative AI, healthcare professionals can streamline clinical workflows, improve patient engagement, and enhance the overall quality of care and research.", "title": "ChatGPT and generative AI in urology and surgery\u2014A narrative review"}],
+                
+                // State
+                searchQuery: '',
+                aiTagFilter: '',
+                sortBy: 'newest',
+                searchTimeout: null,
+                showBackToTop: false,
+                
+                // Pagination
+                currentPage: 1,
+                itemsPerPage: 8,
+                
+                // Initialize
+                init() {
+                    this.filteredItems = this.items;
+                    this.loadStateFromUrl();
+                    this.setupScrollListener();
+                },
+                
+                // Setup scroll listener for back to top button
+                setupScrollListener() {
+                    window.addEventListener('scroll', () => {
+                        this.showBackToTop = window.scrollY > 300;
+                    });
+                },
+                
+                // Load state from URL parameters
+                loadStateFromUrl() {
+                    const url = new URL(window.location);
+                    this.searchQuery = url.searchParams.get('q') || '';
+                    this.aiTagFilter = url.searchParams.get('tag') || '';
+                    this.sortBy = url.searchParams.get('sort') || 'newest';
+                    if (this.searchQuery || this.aiTagFilter) {
+                        this.performSearch();
+                    }
+                },
+                
+                // Sync state to URL
+                syncUrl() {
+                    const url = new URL(window.location);
+                    if (this.searchQuery) {
+                        url.searchParams.set('q', this.searchQuery);
+                    } else {
+                        url.searchParams.delete('q');
+                    }
+                    if (this.aiTagFilter) {
+                        url.searchParams.set('tag', this.aiTagFilter);
+                    } else {
+                        url.searchParams.delete('tag');
+                    }
+                    if (this.sortBy !== 'newest') {
+                        url.searchParams.set('sort', this.sortBy);
+                    } else {
+                        url.searchParams.delete('sort');
+                    }
+                    history.replaceState(null, '', url.toString());
+                },
+                
+                // Debounced search functionality
+                performSearch() {
+                    // Clear existing timeout
+                    if (this.searchTimeout) {
+                        clearTimeout(this.searchTimeout);
+                    }
+                    
+                    // Debounce search by 150ms
+                    this.searchTimeout = setTimeout(() => {
+                        this._doSearch();
+                        this.syncUrl();
+                    }, 150);
+                },
+                
+                // Immediate search for filter changes
+                performSearchImmediate() {
+                    this._doSearch();
+                    this.syncUrl();
+                },
+                
+                // Internal search implementation
+                _doSearch() {
+                    let filtered = this.items;
+                    
+                    // Text search
+                    if (this.searchQuery) {
+                        const query = this.searchQuery.toLowerCase();
+                        filtered = filtered.filter(item => 
+                            item.title.toLowerCase().includes(query) ||
+                            item.summary.toLowerCase().includes(query) ||
+                            item.source.toLowerCase().includes(query)
+                        );
+                    }
+                    
+                    // AI Tag filter
+                    if (this.aiTagFilter) {
+                        filtered = filtered.filter(item => item.ai_tag === this.aiTagFilter);
+                    }
+                    
+                    // Sort results
+                    filtered = this.sortResults(filtered);
+                    
+                    this.filteredItems = filtered;
+                    
+                    // Reset to first page when search changes
+                    this.currentPage = 1;
+                },
+                
+                // Pagination helper methods
+                getPaginatedItems() {
+                    const start = (this.currentPage - 1) * this.itemsPerPage;
+                    const end = start + this.itemsPerPage;
+                    return this.filteredItems.slice(start, end);
+                },
+                
+                getTotalPages() {
+                    return Math.ceil(this.filteredItems.length / this.itemsPerPage);
+                },
+                
+                hasNextPage() {
+                    return this.currentPage < this.getTotalPages();
+                },
+                
+                hasPrevPage() {
+                    return this.currentPage > 1;
+                },
+                
+                // Pagination navigation methods
+                nextPage() {
+                    if (this.hasNextPage()) {
+                        this.currentPage++;
+                        this.scrollToArticles();
+                    }
+                },
+                
+                prevPage() {
+                    if (this.hasPrevPage()) {
+                        this.currentPage--;
+                        this.scrollToArticles();
+                    }
+                },
+                
+                goToPage(page) {
+                    if (page >= 1 && page <= this.getTotalPages()) {
+                        this.currentPage = page;
+                        this.scrollToArticles();
+                    }
+                },
+                
+                scrollToArticles() {
+                    const articlesSection = document.querySelector('.grid');
+                    if (articlesSection) {
+                        articlesSection.scrollIntoView({ 
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                },
+                
+                // Sort results based on selected criteria
+                sortResults(items) {
+                    return [...items].sort((a, b) => {
+                        switch (this.sortBy) {
+                            case 'oldest':
+                                return new Date(a.pub_date) - new Date(b.pub_date);
+                            case 'source':
+                                return a.source.localeCompare(b.source);
+                            case 'newest':
+                            default:
+                                return new Date(b.pub_date) - new Date(a.pub_date);
+                        }
+                    });
+                },
+                
+                // Copy link to clipboard
+                async copyLink(url) {
+                    try {
+                        await navigator.clipboard.writeText(url);
+                        // You could add a toast notification here
+                        console.log('Link copied to clipboard');
+                    } catch (err) {
+                        console.error('Failed to copy link:', err);
+                        // Fallback for older browsers
+                        const textArea = document.createElement('textarea');
+                        textArea.value = url;
+                        document.body.appendChild(textArea);
+                        textArea.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(textArea);
+                    }
+                },
+                
+                // Helper functions for XSS safety
+                escapeRegex(str) {
+                    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                },
+                
+                escapeHtml(str) {
+                    const div = document.createElement('div');
+                    div.textContent = str;
+                    return div.innerHTML;
+                },
+                
+                // Highlight search terms with XSS protection
+                highlightText(text) {
+                    if (!this.searchQuery) return this.escapeHtml(text);
+                    
+                    const safeQuery = this.escapeRegex(this.searchQuery);
+                    const regex = new RegExp(`(${safeQuery})`, 'gi');
+                    const escapedText = this.escapeHtml(text);
+                    return escapedText.replace(regex, '<mark class="search-highlight">$1</mark>');
+                },
+                
+                // Format publication date
+                formatDate(dateString) {
+                    if (!dateString) return '';
+                    
+                    try {
+                        const date = new Date(dateString);
+                        
+                        // Always format as month day, year (e.g., "Aug 14, 2025")
+                        return date.toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric'
+                        });
+                    } catch (error) {
+                        // If date parsing fails, return a formatted version of the string
+                        return dateString.split('T')[0]; // Just return the date part
+                    }
+                },
+                
+                // Scroll to main content
+                scrollToContent() {
+                    const mainElement = document.querySelector('main');
+                    if (mainElement) {
+                        mainElement.scrollIntoView({ 
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                },
+                
+                // Scroll to top of page
+                scrollToTop() {
+                    window.scrollTo({
+                        top: 0,
+                        behavior: 'smooth'
+                    });
+                }
+            }
+        }
+    </script>
+</body>
+</html>
