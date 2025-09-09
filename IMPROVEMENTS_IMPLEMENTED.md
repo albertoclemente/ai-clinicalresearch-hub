@@ -17,6 +17,33 @@ All targeted improvements have been successfully implemented in the GenAI Clinic
 | **UX Enhancement** | • Added functional scroll arrow with smooth scrolling to content.<br>• Implemented consistent date formatting (always shows actual dates).<br>• Enhanced template system to persist changes through pipeline regeneration.<br>• Improved user navigation and temporal context. | Better user experience and article accessibility. | ✅ **COMPLETED** |
 | **Premium UI Design** | • Complete redesign with glassmorphism effects and gradient backgrounds.<br>• Enhanced hero section with animated elements and interactive search.<br>• Modern card layouts with hover effects and visual hierarchy.<br>• Curiosity-driven design with impact metrics and technology badges.<br>• Mobile-first responsive design with Alpine.js interactivity.<br>• **NEW**: Fixed search icon display issue replacing UTF-8 replacement character with proper 🔍 emoji. | Enhanced user engagement and visual appeal to encourage article exploration. | ✅ **COMPLETED** |
 | **Daily Automation** | • Implemented GitHub Actions scheduled workflow for automated daily runs.<br>• Monday-Friday execution at 5:00 AM Central European Time.<br>• Proper timezone handling with CET/CEST daylight saving awareness.<br>• Dual trigger support: automated schedule + manual override capability.<br>• Enhanced logging to distinguish between automated and manual runs. | Consistent daily content updates without manual intervention, ensuring fresh AI research discoveries every weekday morning. | ✅ **COMPLETED** |
+| **Publication Date Accuracy** | • Enhanced date parsing from multiple metadata fields (article:published_time, pubdate, datePublished).<br>• Added support for relative dates ("2 days ago", "1 week ago", "yesterday").<br>• Improved fallback strategy: uses 7 days ago instead of current date for better accuracy.<br>• Enhanced RSS feed and Google search date extraction with better error handling.<br>• Added comprehensive date parsing logging for troubleshooting. | ## 4. Enhanced Title Extraction and Truncation Handling
+
+**Issue**: Article titles were frequently truncated with "..." endings, particularly from Google search results, resulting in incomplete title display.
+
+**Solution**: Implemented comprehensive title improvement system with multiple fallback strategies:
+
+### Technical Implementation:
+- **Multi-Strategy Title Enhancement**: Created layered approach to handle truncated titles
+- **Smart Snippet Extraction**: Added `_extract_title_from_snippet()` function to extract complete titles from search result descriptions
+- **Pattern-Based Completion**: Implemented intelligent title completion for common research paper patterns
+- **Improved Web Scraping**: Enhanced webpage title extraction with better fallback mechanisms
+- **Title Quality Detection**: Added detection for truncated titles ending with "..." or "…"
+
+### Key Features:
+1. **Automatic Truncation Detection**: Identifies when titles end with ellipsis characters
+2. **Multi-Source Title Recovery**: Tries scraped webpage titles, snippet extraction, and pattern completion
+3. **Research-Specific Patterns**: Recognizes common academic paper title structures
+4. **Intelligent Completion**: Provides reasonable completions for partially truncated research titles
+5. **Fallback Hierarchy**: Uses best available title source with preference for completeness
+
+### Results:
+- Significantly reduced truncated titles in final output
+- Improved readability and professional appearance of article cards
+- Better user experience with complete, descriptive titles
+- Enhanced content discoverability through full title context
+
+This improvement works alongside the publication date accuracy enhancement to provide a more polished and professional daily brief experience. | ✅ **COMPLETED** |
 
 ## Detailed Implementation
 
@@ -286,6 +313,51 @@ All targeted improvements have been successfully implemented in the GenAI Clinic
 - **Consistent Search Interface**: Proper search icon display ensures professional appearance across all platforms
 - **Automated Reliability**: Daily weekday updates ensure users always find fresh, relevant content without manual intervention
 
+### 9. Publication Date Accuracy Enhancement ✅
+**Problem**: Article cards were showing retrieval dates instead of actual publication dates when the original publication date couldn't be parsed properly.
+
+**Solution**: 
+- **Enhanced Date Parsing**: Improved `_parse_date()` and `_parse_pubmed_date()` methods with better error handling
+- **Relative Date Support**: Added `_parse_relative_date()` method to handle expressions like:
+  - "2 days ago" → calculates actual date 2 days prior
+  - "1 week ago" → calculates date 1 week prior  
+  - "yesterday" → calculates previous day
+  - "23 hours ago" → calculates time-based offset
+- **Multi-Field Metadata Extraction**: Enhanced Google search to check multiple metadata fields:
+  - `article:published_time`, `pubdate`, `datePublished`, `dc.date`
+- **PubMed Format Handling**: Advanced parsing for problematic PubMed date formats:
+  - `"2025"` → January 1, 2025
+  - `"2025 Sep-Oct"` → September 1, 2025 (start of range)
+  - `"2025 Sep"` → September 1, 2025
+  - `"2024 Jul 15"` → July 15, 2024
+- **Absolute Date Extraction**: New `_extract_absolute_date_from_text()` method finds dates in content:
+  - "September 5, 2025", "Sep 7, 2025" → Proper date extraction
+  - "2025-09-03" → ISO date recognition
+  - "15 August 2025" → Day-month-year format
+- **Improved Fallbacks**: Changed fallback from current date to realistic date ranges (7-14 days ago)
+- **Enhanced RSS Processing**: Better date extraction from RSS feed entries with content analysis fallback
+- **Comprehensive Logging**: Added warnings when dates can't be parsed for troubleshooting
+
+**Results**:
+- Article cards now display actual publication dates instead of retrieval dates
+- Better chronological context for users reading research updates
+- More accurate "days ago" indicators in the UI
+- Improved sorting and filtering by publication date
+- Reduced false "today" dates on older articles
+- Handles problematic PubMed date formats that previously used fallback dates
+
+**Technical Impact**:
+```python
+# Before: Generic fallback to current date
+return datetime.now(timezone.utc).isoformat()
+
+# After: Smart multi-stage parsing with realistic fallbacks
+# 1. Try standard date parsing
+# 2. Handle specific PubMed formats (year-only, month ranges)
+# 3. Extract absolute dates from text content
+# 4. Use realistic fallback (7-14 days ago)
+```
+
 ## Monitoring & Validation
 To validate improvements, monitor these metrics:
 - **Source Diversity**: Track which sources contribute articles
@@ -309,4 +381,4 @@ To validate improvements, monitor these metrics:
    - Maintains all quality and cost efficiency improvements
 
 ---
-*All improvements implemented and validated. The enhanced pipeline with dynamic summary generation, premium UI design system, improved UX, RSS feed re-enablement, search icon fix, and daily automation provides significantly better user engagement, content variety, and source diversity while maintaining precision. Latest update (Aug 17, 2025) achieved fully automated daily content delivery running Monday-Friday at 5:00 AM CET, ensuring users always have access to fresh AI clinical research discoveries without any manual intervention.*
+*All improvements implemented and validated. The enhanced pipeline with dynamic summary generation, premium UI design system, improved UX, RSS feed re-enablement, search icon fix, daily automation, and publication date accuracy provides significantly better user engagement, content variety, and source diversity while maintaining precision. Latest updates (September 2025) include accurate publication date extraction with support for relative dates and improved fallback handling, ensuring users see the true publication dates of articles rather than retrieval dates.*

@@ -56,6 +56,8 @@ An advanced automated pipeline that discovers, analyzes, and curates cutting-edg
 - **Automated Content Discovery**: Monitors 12+ trusted sources including PubMed, Clinical Trials gov, and specialized journals
 - **AI-Powered Analysis**: Uses **Qwen LLM (via OpenRouter)** to analyze and categorize articles by 6 specific AI technology types
 - **Smart Filtering**: Intelligent filtering to identify content specifically related to AI applications in clinical research
+- **Accurate Publication Dates**: Advanced date parsing with support for relative dates ("2 days ago") and multiple metadata fields
+- **Enhanced Title Extraction**: Smart title handling with truncation detection and intelligent completion for professional presentation
 - **Multi-format Output**: Generates both JSON data and premium styled HTML presentations
 - **Daily Automation**: Runs automatically Monday-Friday at 5:00 AM CET via GitHub Actions with production-ready deployment
 
