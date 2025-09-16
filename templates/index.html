@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>AI Clinical Research Daily Brief - {{ brief_date }}</title>
     <meta name="description" content="Daily updates on AI breakthroughs in clinical research and healthcare. Automatically curated news, studies, and innovations in medical AI technology.">
     
@@ -87,6 +87,19 @@
     
     <!-- Custom styles -->
     <style>
+        /* Safe-area utilities for iOS notch and home indicator */
+        .pt-safe {
+            padding-top: max(12px, constant(safe-area-inset-top));
+            padding-top: max(12px, env(safe-area-inset-top));
+        }
+        .pb-safe {
+            padding-bottom: max(12px, constant(safe-area-inset-bottom));
+            padding-bottom: max(12px, env(safe-area-inset-bottom));
+        }
+        .horizontal-scroll {
+            -webkit-overflow-scrolling: touch;
+            scroll-snap-type: x proximity;
+        }
         .gradient-bg {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
@@ -308,6 +321,11 @@
                 font-size: 0.875rem;
             }
         }
+        
+        .horizontal-scroll {
+            -webkit-overflow-scrolling: touch;
+            scroll-snap-type: x mandatory;
+        }
     </style>
 </head>
 <body class="min-h-screen font-sans antialiased overflow-x-hidden neural-pattern" x-data="clinicalBrief()">
@@ -316,7 +334,7 @@
     <a href="#main-content" class="skip-link">Skip to content</a>
     
     <!-- Hero Header with Enhanced Gradient and Animations -->
-    <header class="relative min-h-[80vh] md:min-h-screen flex items-center justify-center overflow-hidden px-4 sm:px-6" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%); background-size: 400% 400%; animation: gradientShift 15s ease infinite;">
+    <header class="w-full relative min-h-[80vh] sm:min-h-[85vh] flex items-center justify-center overflow-visible px-4 sm:px-6 py-8 sm:py-20" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%); background-size: 400% 400%; animation: gradientShift 15s ease infinite;">
         
         <!-- Contrast overlay for better text readability -->
         <div class="absolute inset-0 bg-black/20"></div>
@@ -330,89 +348,85 @@
         </div>
         
         <!-- Main Hero Content -->
-        <div class="relative z-10 text-center px-4 sm:px-6 max-w-5xl mx-auto">
-            <div class="opacity-100 mb-8">
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs sm:text-sm font-medium bg-white/20 text-white mb-4 sm:mb-6">✨ Daily insights on AI in clinical research</span>
-                <h1 class="text-4xl sm:text-5xl lg:text-7xl font-light text-white mb-4 sm:mb-6 tracking-tight">
+    <div class="relative z-10 text-center px-4 sm:px-6 max-w-5xl mx-auto pb-6 sm:pb-10 w-full">
+            <div class="opacity-100 mb-6 sm:mb-10 space-y-3 sm:space-y-4 px-1">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs sm:text-sm font-medium bg-white/25 text-white shadow-sm">✨ Daily insights on AI in clinical research</span>
+                <h1 class="text-3xl sm:text-4xl lg:text-6xl font-semibold text-white tracking-tight">
                     <span class="font-mono text-blue-200">AI-Powered</span>
                 </h1>
-                <h2 class="text-2xl sm:text-3xl lg:text-5xl font-light text-white/90 mb-6 sm:mb-8 tracking-wide">
+                <h2 class="text-lg sm:text-2xl lg:text-4xl font-light text-white/90 tracking-wide">
                     Clinical Research <span class="bg-gradient-to-r from-yellow-300 to-pink-300 bg-clip-text text-transparent font-semibold">Intelligence Hub</span>
                 </h2>
-                <p class="text-base sm:text-lg lg:text-2xl text-white/80 mb-8 sm:mb-12 font-light max-w-3xl mx-auto leading-relaxed">
+                <p class="text-sm sm:text-lg lg:text-xl text-white/85 font-light max-w-3xl mx-auto leading-relaxed">
                     Your daily source for the latest AI breakthroughs in clinical research. Automatically curated, summarized, and organized so you never miss what matters
                 </p>
             </div>
             
             <!-- Enhanced Search Interface -->
-            <div class="opacity-100 mb-8 w-full">
-                <div class="bg-white/20 backdrop-blur-md rounded-3xl p-6 sm:p-8 w-full max-w-3xl mx-auto border border-white/30">
-                    <div class="relative mb-5 sm:mb-6">
+            <div class="opacity-100 mb-6 sm:mb-10 w-full">
+                <div class="bg-white/90 sm:bg-white/20 rounded-2xl sm:rounded-3xl p-3 sm:p-8 w-full max-w-lg sm:max-w-3xl mx-auto border border-white/40 sm:border-white/20 shadow-lg sm:shadow-2xl space-y-2 sm:space-y-4 backdrop-blur-sm"">
+                    <div class="relative mb-3 sm:mb-6">
                         <input 
                             type="text" 
                             placeholder="🔍 Search AI research news..." 
                             aria-label="Search articles about AI in clinical research"
                             role="searchbox"
-                            class="w-full px-6 sm:px-8 py-4 sm:py-5 text-base sm:text-lg bg-white/95 backdrop-blur-sm rounded-2xl border-0 focus:outline-none focus:ring-4 focus:ring-white/50 transition-all duration-300 text-gray-800 placeholder-gray-500 shadow-lg"
+                            class="w-full px-4 sm:px-8 py-3 sm:py-5 text-base sm:text-lg bg-white rounded-xl border border-white/60 focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all duration-300 text-gray-800 placeholder-gray-500 shadow"
                             x-model="searchQuery"
                             @input="performSearch"
                         >
-                        <div class="absolute right-4 sm:right-6 top-1/2 transform -translate-y-1/2">
-                            <svg class="w-5 h-5 sm:w-6 sm:h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="absolute right-3 sm:right-6 top-1/2 transform -translate-y-1/2">
+                            <svg class="w-4 h-4 sm:w-6 sm:h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                             </svg>
                         </div>
                     </div>
                     
                     <!-- Category Filter Pills -->
-                    <div class="flex flex-nowrap sm:flex-wrap overflow-x-auto sm:overflow-visible justify-start sm:justify-center gap-2 sm:gap-3 pb-1 minimal-scrollbar" role="group" aria-label="Filter articles by AI technology category">
-                        <button @click="aiTagFilter = ''; performSearch()" aria-label="Show all AI technology articles" class="px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium bg-white/30 text-white hover:bg-white/40 transition-all duration-200 border border-white/20 whitespace-nowrap" :class="{'bg-white/50': !aiTagFilter}">
+                    <div class="overflow-x-auto horizontal-scroll px-3 sm:px-0">
+                        <div class="flex gap-2 sm:gap-3 mt-1 sm:mt-2 min-w-max pb-2 pr-3" role="group" aria-label="Filter articles by AI technology category">
+                        <button @click="aiTagFilter = ''; performSearch()" aria-label="Show all AI technology articles" class="px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 transition-all duration-200 shadow-sm" :class="{'brightness-110': !aiTagFilter}">
                             🌟 All Technologies
                         </button>
-                        <button @click="aiTagFilter = 'Generative AI'; performSearch()" aria-label="Filter by Generative AI articles" class="px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium bg-white/30 text-white hover:bg-white/40 transition-all duration-200 border border-white/20 whitespace-nowrap" :class="{'bg-white/50': aiTagFilter === 'Generative AI'}">
+                        <button @click="aiTagFilter = 'Generative AI'; performSearch()" aria-label="Filter by Generative AI articles" class="px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium bg-white/30 text-white hover:bg-white/45 transition-all duration-200 shadow-sm" :class="{'bg-white/60 text-blue-900': aiTagFilter === 'Generative AI'}">
                             🤖 Generative AI
                         </button>
-                        <button @click="aiTagFilter = 'Machine Learning'; performSearch()" aria-label="Filter by Machine Learning articles" class="px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium bg-white/30 text-white hover:bg-white/40 transition-all duration-200 border border-white/20 whitespace-nowrap" :class="{'bg-white/50': aiTagFilter === 'Machine Learning'}">
+                        <button @click="aiTagFilter = 'Machine Learning'; performSearch()" aria-label="Filter by Machine Learning articles" class="px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium bg-white/30 text-white hover:bg-white/45 transition-all duration-200 shadow-sm" :class="{'bg-white/60 text-blue-900': aiTagFilter === 'Machine Learning'}">
                             🧠 Machine Learning
                         </button>
-                        <button @click="aiTagFilter = 'Natural Language Processing'; performSearch()" aria-label="Filter by Natural Language Processing articles" class="px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium bg-white/30 text-white hover:bg-white/40 transition-all duration-200 border border-white/20 whitespace-nowrap" :class="{'bg-white/50': aiTagFilter === 'Natural Language Processing'}">
+                        <button @click="aiTagFilter = 'Natural Language Processing'; performSearch()" aria-label="Filter by Natural Language Processing articles" class="px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium bg-white/30 text-white hover:bg-white/45 transition-all duration-200 shadow-sm" :class="{'bg-white/60 text-blue-900': aiTagFilter === 'Natural Language Processing'}">
                             💬 NLP
                         </button>
-                        <button @click="aiTagFilter = 'Digital Health'; performSearch()" aria-label="Filter by Digital Health articles" class="px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium bg-white/30 text-white hover:bg-white/40 transition-all duration-200 border border-white/20 whitespace-nowrap" :class="{'bg-white/50': aiTagFilter === 'Digital Health'}">
+                        <button @click="aiTagFilter = 'Digital Health'; performSearch()" aria-label="Filter by Digital Health articles" class="px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium bg-white/30 text-white hover:bg-white/45 transition-all duration-200 shadow-sm" :class="{'bg-white/60 text-blue-900': aiTagFilter === 'Digital Health'}">
                             📱 Digital Health
                         </button>
-                        <button @click="aiTagFilter = 'Trial Optimization'; performSearch()" aria-label="Filter by Trial Optimization articles" class="px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium bg-white/30 text-white hover:bg-white/40 transition-all duration-200 border border-white/20 whitespace-nowrap" :class="{'bg-white/50': aiTagFilter === 'Trial Optimization'}">
+                        <button @click="aiTagFilter = 'Trial Optimization'; performSearch()" aria-label="Filter by Trial Optimization articles" class="px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium bg-white/30 text-white hover:bg-white/45 transition-all duration-200 shadow-sm" :class="{'bg-white/60 text-blue-900': aiTagFilter === 'Trial Optimization'}">
                             🎯 Trial Optimization
                         </button>
-                        <button @click="aiTagFilter = 'AI Ethics'; performSearch()" aria-label="Filter by AI Ethics articles" class="px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium bg-white/30 text-white hover:bg-white/40 transition-all duration-200 border border-white/20 whitespace-nowrap" :class="{'bg-white/50': aiTagFilter === 'AI Ethics'}">
+                        <button @click="aiTagFilter = 'AI Ethics'; performSearch()" aria-label="Filter by AI Ethics articles" class="px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium bg-white/30 text-white hover:bg-white/45 transition-all duration-200 shadow-sm" :class="{'bg-white/60 text-blue-900': aiTagFilter === 'AI Ethics'}">
                             ⚖️ AI Ethics
                         </button>
+                        </div>
                     </div>
                 </div>
             </div>
             
             <!-- Statistics Display -->
-            <div class="flex flex-col sm:flex-row items-center justify-center sm:space-x-8 space-y-4 sm:space-y-0 text-white/70">
+            <div class="flex flex-col sm:flex-row items-center justify-center sm:space-x-8 space-y-4 sm:space-y-0 text-white/70 mt-4 sm:mt-8">
                 <div class="text-center">
-                    <div class="text-2xl sm:text-3xl font-semibold text-white">{{ total_items }}</div>
+                    <div class="text-xl sm:text-3xl font-semibold text-white">{{ total_items }}</div>
                     <div class="text-xs sm:text-sm">Stories Today</div>
                 </div>
                 <div class="hidden sm:block w-px h-8 bg-white/30"></div>
                 <div class="text-center">
-                    <div class="text-2xl sm:text-3xl font-semibold text-white">{{ brief_date }}</div>
+                    <div class="text-xl sm:text-3xl font-semibold text-white">{{ brief_date }}</div>
                     <div class="text-xs sm:text-sm">Last Updated</div>
                 </div>
             </div>
         </div>
         
         <!-- Enhanced Scroll Indicator -->
-        <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce cursor-pointer group" @click="document.querySelector('#main-content').scrollIntoView({ behavior: 'smooth', block: 'start' })">
-            <div class="p-3 bg-white/20 rounded-full backdrop-blur-sm border border-white/30 group-hover:bg-white/30 transition-all duration-300">
-                <svg class="w-6 h-6 text-white/80 group-hover:text-white transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
-                </svg>
-            </div>
-        </div>
+        <!-- Removed top-down arrow scroll indicator -->
     </header>
     
     <!-- Main Content Section -->
@@ -853,6 +867,7 @@
                     this.searchTimeout = setTimeout(() => {
                         this._doSearch();
                         this.syncUrl();
+                        this.scrollToArticles();
                     }, 150);
                 },
                 
@@ -860,6 +875,7 @@
                 performSearchImmediate() {
                     this._doSearch();
                     this.syncUrl();
+                    this.scrollToArticles();
                 },
                 
                 // Internal search implementation
