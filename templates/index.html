@@ -316,7 +316,7 @@
     <a href="#main-content" class="skip-link">Skip to content</a>
     
     <!-- Hero Header with Enhanced Gradient and Animations -->
-    <header class="relative min-h-screen flex items-center justify-center overflow-hidden" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%); background-size: 400% 400%; animation: gradientShift 15s ease infinite;">
+    <header class="relative min-h-[80vh] md:min-h-screen flex items-center justify-center overflow-hidden px-4 sm:px-6" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%); background-size: 400% 400%; animation: gradientShift 15s ease infinite;">
         
         <!-- Contrast overlay for better text readability -->
         <div class="absolute inset-0 bg-black/20"></div>
@@ -330,60 +330,61 @@
         </div>
         
         <!-- Main Hero Content -->
-        <div class="relative z-10 text-center px-6 max-w-6xl mx-auto">
+        <div class="relative z-10 text-center px-4 sm:px-6 max-w-5xl mx-auto">
             <div class="opacity-100 mb-8">
-                <h1 class="text-6xl md:text-8xl font-light text-white mb-6 tracking-tight">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs sm:text-sm font-medium bg-white/20 text-white mb-4 sm:mb-6">✨ Daily insights on AI in clinical research</span>
+                <h1 class="text-4xl sm:text-5xl lg:text-7xl font-light text-white mb-4 sm:mb-6 tracking-tight">
                     <span class="font-mono text-blue-200">AI-Powered</span>
                 </h1>
-                <h2 class="text-3xl md:text-5xl font-light text-white/90 mb-8 tracking-wide">
+                <h2 class="text-2xl sm:text-3xl lg:text-5xl font-light text-white/90 mb-6 sm:mb-8 tracking-wide">
                     Clinical Research <span class="bg-gradient-to-r from-yellow-300 to-pink-300 bg-clip-text text-transparent font-semibold">Intelligence Hub</span>
                 </h2>
-                <p class="text-xl md:text-2xl text-white/80 mb-12 font-light max-w-4xl mx-auto leading-relaxed">
+                <p class="text-base sm:text-lg lg:text-2xl text-white/80 mb-8 sm:mb-12 font-light max-w-3xl mx-auto leading-relaxed">
                     Your daily source for the latest AI breakthroughs in clinical research. Automatically curated, summarized, and organized so you never miss what matters
                 </p>
             </div>
             
             <!-- Enhanced Search Interface -->
-            <div class="opacity-100 mb-8">
-                <div class="bg-white/20 backdrop-blur-md rounded-3xl p-8 w-full max-w-3xl mx-auto border border-white/30">
-                    <div class="relative mb-6">
+            <div class="opacity-100 mb-8 w-full">
+                <div class="bg-white/20 backdrop-blur-md rounded-3xl p-6 sm:p-8 w-full max-w-3xl mx-auto border border-white/30">
+                    <div class="relative mb-5 sm:mb-6">
                         <input 
                             type="text" 
                             placeholder="🔍 Search AI research news..." 
                             aria-label="Search articles about AI in clinical research"
                             role="searchbox"
-                            class="w-full px-8 py-5 text-lg bg-white/95 backdrop-blur-sm rounded-2xl border-0 focus:outline-none focus:ring-4 focus:ring-white/50 transition-all duration-300 text-gray-800 placeholder-gray-500 shadow-lg"
+                            class="w-full px-6 sm:px-8 py-4 sm:py-5 text-base sm:text-lg bg-white/95 backdrop-blur-sm rounded-2xl border-0 focus:outline-none focus:ring-4 focus:ring-white/50 transition-all duration-300 text-gray-800 placeholder-gray-500 shadow-lg"
                             x-model="searchQuery"
                             @input="performSearch"
                         >
-                        <div class="absolute right-6 top-1/2 transform -translate-y-1/2">
-                            <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="absolute right-4 sm:right-6 top-1/2 transform -translate-y-1/2">
+                            <svg class="w-5 h-5 sm:w-6 sm:h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                             </svg>
                         </div>
                     </div>
                     
                     <!-- Category Filter Pills -->
-                    <div class="flex flex-wrap justify-center gap-3" role="group" aria-label="Filter articles by AI technology category">
-                        <button @click="aiTagFilter = ''; performSearch()" aria-label="Show all AI technology articles" class="px-4 py-2 rounded-full text-sm font-medium bg-white/30 text-white hover:bg-white/40 transition-all duration-200 border border-white/20" :class="{'bg-white/50': !aiTagFilter}">
+                    <div class="flex flex-nowrap sm:flex-wrap overflow-x-auto sm:overflow-visible justify-start sm:justify-center gap-2 sm:gap-3 pb-1 minimal-scrollbar" role="group" aria-label="Filter articles by AI technology category">
+                        <button @click="aiTagFilter = ''; performSearch()" aria-label="Show all AI technology articles" class="px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium bg-white/30 text-white hover:bg-white/40 transition-all duration-200 border border-white/20 whitespace-nowrap" :class="{'bg-white/50': !aiTagFilter}">
                             🌟 All Technologies
                         </button>
-                        <button @click="aiTagFilter = 'Generative AI'; performSearch()" aria-label="Filter by Generative AI articles" class="px-4 py-2 rounded-full text-sm font-medium bg-white/30 text-white hover:bg-white/40 transition-all duration-200 border border-white/20" :class="{'bg-white/50': aiTagFilter === 'Generative AI'}">
+                        <button @click="aiTagFilter = 'Generative AI'; performSearch()" aria-label="Filter by Generative AI articles" class="px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium bg-white/30 text-white hover:bg-white/40 transition-all duration-200 border border-white/20 whitespace-nowrap" :class="{'bg-white/50': aiTagFilter === 'Generative AI'}">
                             🤖 Generative AI
                         </button>
-                        <button @click="aiTagFilter = 'Machine Learning'; performSearch()" aria-label="Filter by Machine Learning articles" class="px-4 py-2 rounded-full text-sm font-medium bg-white/30 text-white hover:bg-white/40 transition-all duration-200 border border-white/20" :class="{'bg-white/50': aiTagFilter === 'Machine Learning'}">
+                        <button @click="aiTagFilter = 'Machine Learning'; performSearch()" aria-label="Filter by Machine Learning articles" class="px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium bg-white/30 text-white hover:bg-white/40 transition-all duration-200 border border-white/20 whitespace-nowrap" :class="{'bg-white/50': aiTagFilter === 'Machine Learning'}">
                             🧠 Machine Learning
                         </button>
-                        <button @click="aiTagFilter = 'Natural Language Processing'; performSearch()" aria-label="Filter by Natural Language Processing articles" class="px-4 py-2 rounded-full text-sm font-medium bg-white/30 text-white hover:bg-white/40 transition-all duration-200 border border-white/20" :class="{'bg-white/50': aiTagFilter === 'Natural Language Processing'}">
+                        <button @click="aiTagFilter = 'Natural Language Processing'; performSearch()" aria-label="Filter by Natural Language Processing articles" class="px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium bg-white/30 text-white hover:bg-white/40 transition-all duration-200 border border-white/20 whitespace-nowrap" :class="{'bg-white/50': aiTagFilter === 'Natural Language Processing'}">
                             💬 NLP
                         </button>
-                        <button @click="aiTagFilter = 'Digital Health'; performSearch()" aria-label="Filter by Digital Health articles" class="px-4 py-2 rounded-full text-sm font-medium bg-white/30 text-white hover:bg-white/40 transition-all duration-200 border border-white/20" :class="{'bg-white/50': aiTagFilter === 'Digital Health'}">
+                        <button @click="aiTagFilter = 'Digital Health'; performSearch()" aria-label="Filter by Digital Health articles" class="px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium bg-white/30 text-white hover:bg-white/40 transition-all duration-200 border border-white/20 whitespace-nowrap" :class="{'bg-white/50': aiTagFilter === 'Digital Health'}">
                             📱 Digital Health
                         </button>
-                        <button @click="aiTagFilter = 'Trial Optimization'; performSearch()" aria-label="Filter by Trial Optimization articles" class="px-4 py-2 rounded-full text-sm font-medium bg-white/30 text-white hover:bg-white/40 transition-all duration-200 border border-white/20" :class="{'bg-white/50': aiTagFilter === 'Trial Optimization'}">
+                        <button @click="aiTagFilter = 'Trial Optimization'; performSearch()" aria-label="Filter by Trial Optimization articles" class="px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium bg-white/30 text-white hover:bg-white/40 transition-all duration-200 border border-white/20 whitespace-nowrap" :class="{'bg-white/50': aiTagFilter === 'Trial Optimization'}">
                             🎯 Trial Optimization
                         </button>
-                        <button @click="aiTagFilter = 'AI Ethics'; performSearch()" aria-label="Filter by AI Ethics articles" class="px-4 py-2 rounded-full text-sm font-medium bg-white/30 text-white hover:bg-white/40 transition-all duration-200 border border-white/20" :class="{'bg-white/50': aiTagFilter === 'AI Ethics'}">
+                        <button @click="aiTagFilter = 'AI Ethics'; performSearch()" aria-label="Filter by AI Ethics articles" class="px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium bg-white/30 text-white hover:bg-white/40 transition-all duration-200 border border-white/20 whitespace-nowrap" :class="{'bg-white/50': aiTagFilter === 'AI Ethics'}">
                             ⚖️ AI Ethics
                         </button>
                     </div>
@@ -391,15 +392,15 @@
             </div>
             
             <!-- Statistics Display -->
-            <div class="flex items-center justify-center space-x-8 text-white/70">
+            <div class="flex flex-col sm:flex-row items-center justify-center sm:space-x-8 space-y-4 sm:space-y-0 text-white/70">
                 <div class="text-center">
-                    <div class="text-3xl font-semibold text-white">{{ total_items }}</div>
-                    <div class="text-sm">Stories Today</div>
+                    <div class="text-2xl sm:text-3xl font-semibold text-white">{{ total_items }}</div>
+                    <div class="text-xs sm:text-sm">Stories Today</div>
                 </div>
-                <div class="w-px h-8 bg-white/30"></div>
+                <div class="hidden sm:block w-px h-8 bg-white/30"></div>
                 <div class="text-center">
-                    <div class="text-3xl font-semibold text-white">{{ brief_date }}</div>
-                    <div class="text-sm">Last Updated</div>
+                    <div class="text-2xl sm:text-3xl font-semibold text-white">{{ brief_date }}</div>
+                    <div class="text-xs sm:text-sm">Last Updated</div>
                 </div>
             </div>
         </div>
@@ -416,28 +417,28 @@
     
     <!-- Main Content Section -->
     <main class="relative bg-gradient-to-br from-gray-50 to-blue-50/30 min-h-screen py-20" id="main-content">
-        <div class="max-w-7xl mx-auto px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             
             <!-- Section Header with Insights -->
-            <div class="text-center mb-16 section-fade">
-                <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+            <div class="text-center mb-12 sm:mb-16 section-fade px-2">
+                <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4 sm:mb-6">
                     Today's AI <span class="bg-gradient-to-r from-blue-600 to-emerald-600 bg-clip-text text-transparent">Discoveries</span>
                 </h2>
-                <p class="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
+                <p class="text-base sm:text-lg text-gray-600 max-w-2xl sm:max-w-3xl mx-auto mb-6 sm:mb-8">
                     Fresh insights from the world of AI-powered healthcare research, updated daily
                 </p>
             </div>
             
             <!-- Enhanced Filter Bar -->
-            <div class="section-fade mb-16">
-                <div class="glass-card rounded-3xl p-6 max-w-5xl mx-auto border border-white/30">
-                    <div class="flex flex-col lg:flex-row items-center justify-between gap-6">
-                        <div class="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6">
-                            <label class="text-sm font-semibold text-gray-700 whitespace-nowrap">🔬 Filter by AI Technology:</label>
+            <div class="section-fade mb-12 sm:mb-16">
+                <div class="glass-card rounded-3xl p-5 sm:p-6 max-w-5xl mx-auto border border-white/30">
+                    <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-5 sm:gap-6">
+                        <div class="flex flex-col sm:flex-row sm:items-center w-full space-y-3 sm:space-y-0 sm:space-x-4">
+                            <label class="text-xs sm:text-sm font-semibold text-gray-700 whitespace-nowrap">🔬 Filter by AI Technology:</label>
                             <select 
                                 x-model="aiTagFilter"
                                 @change="performSearchImmediate"
-                                class="px-4 py-3 bg-white/80 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-200 text-gray-700 min-w-[200px]"
+                                class="px-3 sm:px-4 py-2.5 sm:py-3 bg-white/80 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-200 text-gray-700 w-full sm:w-auto"
                                 aria-label="Filter articles by AI technology"
                             >
                                 <option value="">🌟 All Technologies</option>
@@ -449,11 +450,11 @@
                                 <option value="AI Ethics">⚖️ AI Ethics</option>
                             </select>
                             
-                            <label class="text-sm font-semibold text-gray-700 whitespace-nowrap">📊 Sort by:</label>
+                            <label class="text-xs sm:text-sm font-semibold text-gray-700 whitespace-nowrap">📊 Sort by:</label>
                             <select 
                                 x-model="sortBy"
                                 @change="performSearchImmediate"
-                                class="px-4 py-3 bg-white/80 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-200 text-gray-700 min-w-[150px]"
+                                class="px-3 sm:px-4 py-2.5 sm:py-3 bg-white/80 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-200 text-gray-700 w-full sm:w-auto"
                                 aria-label="Sort articles"
                             >
                                 <option value="newest">🆕 Newest First</option>
@@ -462,14 +463,14 @@
                             </select>
                         </div>
                         
-                        <div class="flex items-center space-x-4">
-                            <div class="text-sm text-gray-600">
+                        <div class="flex items-center space-x-4 w-full lg:w-auto justify-between lg:justify-end">
+                            <div class="text-xs sm:text-sm text-gray-600">
                                 <span class="font-semibold text-blue-600" x-text="filteredItems.length"></span> 
                                 <span>of</span> 
                                 <span class="font-semibold">{{ total_items }}</span> 
                                 <span>articles</span>
                                 <template x-if="getTotalPages() > 1">
-                                    <span class="ml-2 text-xs text-gray-500">
+                                    <span class="ml-2 text-[11px] sm:text-xs text-gray-500">
                                         (Page <span x-text="currentPage"></span> of <span x-text="getTotalPages()"></span>)
                                     </span>
                                 </template>
@@ -511,19 +512,19 @@
             </div>
             
             <!-- Enhanced Articles Grid -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
                 <template x-for="(item, index) in getPaginatedItems()" :key="item.id">
-                    <article class="group glass-card rounded-3xl p-8 hover-lift transition-all duration-500 border border-white/40 hover:border-blue-200 relative overflow-hidden">
+                    <article class="group glass-card rounded-3xl p-6 sm:p-8 hover-lift transition-all duration-500 border border-white/40 hover:border-blue-200 relative overflow-hidden">
                         
                         <!-- Gradient Accent -->
                         <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-emerald-500 to-purple-500"></div>
                         
                         <!-- Article Header -->
-                        <div class="flex items-start justify-between mb-6">
+                        <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 sm:gap-0 mb-5 sm:mb-6">
                             <div class="flex items-center space-x-3">
                                 <!-- AI Technology Badge -->
                                 <span 
-                                    class="inline-flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-semibold text-white"
+                                    class="inline-flex items-center space-x-2 px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-semibold text-white"
                                     :aria-label="`Category: ${item.ai_tag}`"
                                     :class="{
                                         'bg-gradient-to-r from-purple-500 to-pink-500': item.ai_tag === 'Generative AI',
@@ -543,15 +544,15 @@
                             </div>
                             
                             <!-- Source and Date with better semantics -->
-                            <div class="flex flex-col items-end space-y-2">
-                                <div class="text-xs text-gray-500 font-mono bg-gray-100 px-3 py-1 rounded-full" x-text="item.source"></div>
-                                <time :datetime="item.pub_date" class="text-xs text-gray-400 font-medium" x-text="formatDate(item.pub_date)"></time>
+                            <div class="flex flex-col items-start sm:items-end space-y-1.5 sm:space-y-2">
+                                <div class="text-[11px] sm:text-xs text-gray-500 font-mono bg-gray-100 px-3 py-1 rounded-full" x-text="item.source"></div>
+                                <time :datetime="item.pub_date" class="text-[11px] sm:text-xs text-gray-400 font-medium" x-text="formatDate(item.pub_date)"></time>
                             </div>
                         </div>
                         
                         <!-- Title with Curiosity Hook -->
-                        <div class="mb-6">
-                            <h3 class="text-xl lg:text-2xl font-bold text-gray-900 mb-3 leading-tight group-hover:text-blue-600 transition-colors duration-300">
+                        <div class="mb-5 sm:mb-6">
+                            <h3 class="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-3 leading-tight group-hover:text-blue-600 transition-colors duration-300">
                                 <a 
                                     :href="item.link" 
                                     target="_blank" 
@@ -562,7 +563,7 @@
                             </h3>
                             
                             <!-- Key Insight Teaser -->
-                            <div class="flex items-center space-x-2 text-sm font-medium text-blue-600 mb-4">
+                            <div class="flex items-center space-x-2 text-xs sm:text-sm font-medium text-blue-600 mb-3 sm:mb-4">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                                 </svg>
@@ -571,8 +572,8 @@
                         </div>
                         
                         <!-- Enhanced Summary -->
-                        <div class="mb-8">
-                            <p class="text-gray-700 leading-relaxed text-base" x-html="highlightText(item.summary)"></p>
+                        <div class="mb-6 sm:mb-8">
+                            <p class="text-gray-700 leading-relaxed text-sm sm:text-base" x-html="highlightText(item.summary)"></p>
                             
                             <!-- Impact Metrics (if available) -->
                             <div class="mt-4 flex flex-wrap gap-2" x-show="item.summary.includes('%') || item.summary.includes('accuracy') || item.summary.includes('improvement')">
@@ -589,7 +590,7 @@
                         </div>
                         
                         <!-- Enhanced Footer -->
-                        <div class="flex items-center justify-between pt-6 border-t border-gray-100">
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-5 sm:pt-6 border-t border-gray-100">
                             <div class="flex items-center space-x-4">
                                 <!-- Research Type Indicator -->
                                 <div class="flex items-center space-x-1 text-xs text-gray-500">
@@ -607,7 +608,7 @@
                                 :href="item.link" 
                                 target="_blank" 
                                 rel="noopener noreferrer" 
-                                class="group/cta inline-flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-emerald-600 text-white px-5 py-2.5 rounded-xl hover:from-blue-700 hover:to-emerald-700 transition-all duration-200 text-sm font-semibold hover:shadow-lg"
+                                class="group/cta inline-flex items-center justify-center space-x-2 bg-gradient-to-r from-blue-600 to-emerald-600 text-white px-5 py-2.5 rounded-xl hover:from-blue-700 hover:to-emerald-700 transition-all duration-200 text-sm font-semibold hover:shadow-lg w-full sm:w-auto"
                             >
                                 <span>Explore Study</span>
                                 <svg class="w-4 h-4 group-hover/cta:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
