@@ -12,7 +12,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     {% if GOATCOUNTER_URL %}
     <!-- GoatCounter analytics -->
-    <script data-goatcounter="https://albertoclemente.goatcounter.com/count"
+    <script data-goatcounter="{{ GOATCOUNTER_URL }}"
         async src="//gc.zgo.at/count.js"></script>
     {% endif %}
     
@@ -755,12 +755,20 @@
         // Alpine.js stores for global state
         document.addEventListener('alpine:init', () => {
             Alpine.store('search', {
+                component: null,
+                register(component) {
+                    this.component = component;
+                },
                 clear() {
-                    const component = Alpine.findClosest(document.body, x => x.$data);
-                    if (component) {
-                        component.searchQuery = '';
-                        component.aiTagFilter = '';
-                        component.performSearch();
+                    if (!this.component) {
+                        return;
+                    }
+                    this.component.searchQuery = '';
+                    this.component.aiTagFilter = '';
+                    if (typeof this.component.performSearchImmediate === 'function') {
+                        this.component.performSearchImmediate();
+                    } else if (typeof this.component.performSearch === 'function') {
+                        this.component.performSearch();
                     }
                 }
             });
@@ -786,6 +794,10 @@
                 // Initialize
                 init() {
                     this.filteredItems = this.items;
+                    const searchStore = Alpine.store('search');
+                    if (searchStore && typeof searchStore.register === 'function') {
+                        searchStore.register(this);
+                    }
                     this.loadStateFromUrl();
                     this.setupScrollListener();
                 },

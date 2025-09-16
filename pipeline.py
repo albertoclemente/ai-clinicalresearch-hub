@@ -432,18 +432,34 @@ class FeedProcessor:
         }
         
     def _setup_logging(self, log_file: str) -> logging.Logger:
-        """Set up JSON logging as specified in PRD."""
+        """Set up JSON logging as specified in PRD without duplicating handlers."""
         logger = logging.getLogger('clinical_brief')
         logger.setLevel(logging.INFO)
-        
+
         # Create log directory if it doesn't exist
         Path(log_file).parent.mkdir(parents=True, exist_ok=True)
-        
-        handler = logging.FileHandler(log_file)
-        formatter = logging.Formatter('%(message)s')
-        handler.setFormatter(formatter)
-        logger.addHandler(handler)
-        
+
+        log_path = Path(log_file).resolve()
+        handler_exists = False
+        for handler in logger.handlers:
+            if not isinstance(handler, logging.FileHandler):
+                continue
+            base_filename = getattr(handler, 'baseFilename', None)
+            if not base_filename:
+                continue
+            try:
+                if Path(base_filename).resolve() == log_path:
+                    handler_exists = True
+                    break
+            except FileNotFoundError:
+                continue
+
+        if not handler_exists:
+            handler = logging.FileHandler(log_file)
+            formatter = logging.Formatter('%(message)s')
+            handler.setFormatter(formatter)
+            logger.addHandler(handler)
+
         return logger
     
     def _log_feed_request(self, url: str, status: int, timestamp: str, error: Optional[str] = None):
@@ -978,14 +994,19 @@ class FeedProcessor:
         title_candidates = []
         title_sources = [
             item.get('title', ''),
+            item.get('htmlTitle', ''),
             item.get('pagemap', {}).get('metatags', [{}])[0].get('og:title', ''),
             item.get('pagemap', {}).get('metatags', [{}])[0].get('twitter:title', ''),
             item.get('pagemap', {}).get('article', [{}])[0].get('headline', ''),
             item.get('pagemap', {}).get('metatags', [{}])[0].get('citation_title', ''),
         ]
-        
+
         for title in title_sources:
             if title and isinstance(title, str):
+                # htmlTitle often includes emphasis tags - strip them before sanitising
+                if title is item.get('htmlTitle'):
+                    title = bleach.clean(title, tags=[], strip=True)
+
                 clean_title = self._sanitize_text(title)
                 if is_potentially_good_title(clean_title):
                     # Clean separated titles immediately
@@ -1024,6 +1045,7 @@ class FeedProcessor:
             should_scrape = True
         
         scraped_title = ""
+        snippet_title = ""
         if should_scrape:
             scraped_title = self._extract_title_from_webpage(link, self._extract_domain(link))
             if scraped_title:
@@ -1031,9 +1053,9 @@ class FeedProcessor:
 
         # Enhanced title improvement for truncated cases
         final_title = best_meta_title
-        
+
         # If we have a truncated title, try multiple improvement strategies
-        if best_meta_title and (best_meta_title.endswith('...') or best_meta_title.endswith('…')):
+        if best_meta_title and ('...' in best_meta_title or '…' in best_meta_title):
             improvement_found = False
             
             # Strategy 1: Use scraped title if it's significantly longer
@@ -1080,11 +1102,23 @@ class FeedProcessor:
                         final_title = title_base + ' Medical Research'
 
         # Choose the best available title
+        # Prefer non-truncated alternatives even if the length is similar
+        if final_title and ('...' in final_title or '…' in final_title):
+            if scraped_title and not (scraped_title.endswith('...') or scraped_title.endswith('…')):
+                return scraped_title
+            if snippet_title and not (snippet_title.endswith('...') or snippet_title.endswith('…')):
+                return snippet_title
+
         if scraped_title and len(scraped_title) > len(final_title):
             return scraped_title
         elif scraped_title and not final_title:
             return scraped_title
         elif final_title:
+            # Trim stray trailing ellipsis to avoid visibly truncated strings if we could not extend
+            if final_title.endswith('...'):
+                return final_title[:-3].strip()
+            if final_title.endswith('…'):
+                return final_title[:-1].strip()
             return final_title
         elif scraped_title:
             return scraped_title
@@ -1577,8 +1611,15 @@ class FeedProcessor:
                 'synonym': 'true'
             }
             
-            response = requests.get(url, params=params, timeout=30)
-            response.raise_for_status()
+            self.general_throttle.consume(1)
+            response = request_with_retries(
+                self.session,
+                'GET',
+                url,
+                params=params,
+                retry_config=self.retry_config,
+                timeout=30
+            )
             data = response.json()
             
             for result in data.get('resultList', {}).get('result', []):
@@ -1625,8 +1666,15 @@ class FeedProcessor:
                 'fields': 'title,abstract,url,year,publicationDate,venue'
             }
             
-            response = requests.get(url, params=params, timeout=30)
-            response.raise_for_status()
+            self.general_throttle.consume(1)
+            response = request_with_retries(
+                self.session,
+                'GET',
+                url,
+                params=params,
+                retry_config=self.retry_config,
+                timeout=30
+            )
             data = response.json()
             
             for paper in data.get('data', []):
@@ -2299,6 +2347,7 @@ class FeedProcessor:
                     }}
                     """
                     
+                    self.api_costs['qwen_calls'] += 1
                     response = self.qwen_client.chat.completions.create(
                         model="qwen/qwen-2.5-72b-instruct",
                         messages=[{"role": "user", "content": prompt}],
@@ -2557,7 +2606,7 @@ class SiteGenerator:
         except Exception as e:
             logging.error(f"Failed to generate HTML: {e}")
             # Don't re-raise - allow pipeline to continue
-            f.write(html_content)
+            return
 
 
 def main():
