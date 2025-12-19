@@ -2,16 +2,9 @@
 
 An advanced automated pipeline that discovers, analyzes, and curates cutting-edge AI applications in clinical research using **Qwen LLM** (via OpenRouter), featuring a premium glassmorphism web interface with comprehensive UI/UX enhancements.
 
-## 🚀 Recent Major Updates (August 17, 2025)
+## 🚀 Recent Major Updates
 
-### **⏰ Automated Daily Scheduling**
-- **Weekday Automation**: Pipeline now runs automatically Monday-Friday at 5:00 AM Central European Time
-- **GitHub Actions Integration**: Scheduled workflow ensures daily content updates without manual intervention
-- **Timezone Awareness**: Proper CET/CEST handling for consistent 5 AM local time execution
-- **Dual Trigger Support**: Maintains manual trigger option alongside automated scheduling
-- **Enhanced Logging**: Clear distinction between automated and manual runs in deployment logs
-
-### **🔧 Previous Refinements & Production Optimization** (August 16, 2025)
+### **🔧 Refinements & Production Optimization** (August 16, 2025)
 - **Search Interface Polish**: Fixed search icon display issue replacing UTF-8 replacement character (�) with proper 🔍 emoji
 - **Production Pipeline Run**: Successfully processed 180 articles, identified 16 AI-relevant discoveries with excellent cost efficiency ($0.10)
 - **Enhanced Content Curation**: Qwen LLM filtering achieved 8.9% precision rate from comprehensive source network
@@ -63,7 +56,6 @@ An advanced automated pipeline that discovers, analyzes, and curates cutting-edg
 - **Accurate Publication Dates**: Advanced date parsing with support for relative dates ("2 days ago") and multiple metadata fields
 - **Enhanced Title Extraction**: Smart title handling with truncation detection and intelligent completion for professional presentation
 - **Multi-format Output**: Generates both JSON data and premium styled HTML presentations
-- **Daily Automation**: Runs automatically Monday-Friday at 5:00 AM CET via GitHub Actions with production-ready deployment
 
 ### Premium Web Interface
 - **Glassmorphism Design**: Modern UI with frosted glass effects, animated gradients, and floating elements
@@ -191,44 +183,36 @@ Note: The pipeline automatically generates the HTML interface, so there's no nee
 - **Mobile Excellence**: Fully responsive with iOS safe-area support, horizontal scrolling, and momentum scrolling
 - **Touch Optimized**: Enhanced mobile interactions with proper viewport handling and reduced motion support
 
-## 📅 Deployment & Automation
-
-### Automated Daily Runs
-The pipeline runs automatically **Monday through Friday at 5:00 AM Central European Time** via GitHub Actions.
-
-**Schedule Details:**
-- **Frequency**: Weekdays only (Monday-Friday)
-- **Time**: 5:00 AM CET/CEST (3:00 AM UTC)
-- **Timezone**: Central European Time with daylight saving awareness
-- **Output**: Fresh daily brief with latest AI clinical research discoveries
+## 📅 Deployment
 
 ### Manual Deployment (GitHub Pages)
 
-For manual runs or initial setup:
+To deploy the site manually:
 
 1) Enable Pages
 - Settings → Pages → Source: "Deploy from a branch"
 - Branch: `gh-pages`, Folder: `/ (root)`
 
-2) Add repository secrets (Settings → Secrets and variables → Actions)
-- `OPENROUTER_API_KEY` (required)
-- `GOOGLE_API_KEY` (optional)
-- `GOOGLE_CX` (preferred) or `GOOGLE_CSE_ID` (optional)
-- `GOATCOUNTER_URL` (optional, for analytics; format: https://YOURCODE.goatcounter.com/count)
+2) Set up environment variables (export in your shell or add to .env file):
+```bash
+export OPENROUTER_API_KEY="your-openrouter-api-key"
+export GOOGLE_API_KEY="your-google-api-key"  # optional
+export GOOGLE_CX="your-google-cse-id"  # optional
+export GOATCOUNTER_URL="https://YOURCODE.goatcounter.com/count"  # optional
+```
 
-3) Run the workflow manually (if needed)
-- Go to the Actions tab → "🔬 AI Clinical Research Intelligence Hub - Daily Automation" → Run workflow
+3) Run the pipeline:
+```bash
+python pipeline.py
+```
 
-The workflow generates the brief, builds `site/index.html`, and publishes to the `gh-pages` branch.
+4) Publish the generated `site/` directory to the `gh-pages` branch:
+```bash
+git subtree push --prefix site origin gh-pages
+```
+
 Your site will be available at:
 https://albertoclemente.github.io/ai-clinicalresearch-hub/
-
-**Automated vs Manual Runs:**
-- **Automated**: Runs daily at 5 AM CET Monday-Friday automatically
-- **Manual**: Can be triggered anytime via GitHub Actions interface
-- **Both**: Generate identical output with clear logging of trigger type
-
-Note: The workflow uses Python 3.9 and installs dependencies from `requirements.txt` on each run.
 
 ## 📈 Analytics (optional, GoatCounter)
 
@@ -263,8 +247,6 @@ ai-clinicalresearch-hub/
 ├── templates/              # Jinja2 templates (main UI)
 │   ├── index.html
 │   └── pdf.html
-├── .github/workflows/
-│   └── deploy.yml          # Manual GitHub Pages deployment workflow
 ├── pipeline.py             # Main processing script
 ├── qwen_client.py          # Qwen LLM client wrapper (OpenRouter)
 ├── requirements.txt        # Python dependencies
@@ -283,13 +265,6 @@ ai-clinicalresearch-hub/
 4. **iOS Safe-Area Support**: Added viewport-fit=cover and safe-area padding for seamless iPhone experience  
 5. **Touch Interaction Optimization**: Enhanced mobile touch targets and scroll behavior for improved usability
 6. **Cross-Device Testing**: Comprehensive mobile DevTools validation ensuring consistent experience across all screen sizes
-
-### August 17, 2025 - Daily Automation & Scheduling
-1. **Automated Weekday Runs**: GitHub Actions scheduled for Monday-Friday at 5:00 AM CET
-2. **Timezone Handling**: Proper CET/CEST awareness with daylight saving time support
-3. **Dual Trigger Support**: Maintains both automated schedule and manual trigger options
-4. **Enhanced Workflow**: Updated deployment messages and logging for automated runs
-5. **Production Ready**: Fully automated daily content generation and deployment
 
 ### August 16, 2025 - Search Interface Polish & Production Optimization
 1. **Search Icon Fix**: Resolved UTF-8 replacement character (�) with proper 🔍 emoji display
