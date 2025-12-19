@@ -193,11 +193,13 @@ To deploy the site manually:
 - Settings → Pages → Source: "Deploy from a branch"
 - Branch: `gh-pages`, Folder: `/ (root)`
 
-2) Set up environment variables:
-- `OPENROUTER_API_KEY` (required)
-- `GOOGLE_API_KEY` (optional)
-- `GOOGLE_CX` (preferred) or `GOOGLE_CSE_ID` (optional)
-- `GOATCOUNTER_URL` (optional, for analytics; format: https://YOURCODE.goatcounter.com/count)
+2) Set up environment variables (export in your shell or add to .env file):
+```bash
+export OPENROUTER_API_KEY="your-openrouter-api-key"
+export GOOGLE_API_KEY="your-google-api-key"  # optional
+export GOOGLE_CX="your-google-cse-id"  # optional
+export GOATCOUNTER_URL="https://YOURCODE.goatcounter.com/count"  # optional
+```
 
 3) Run the pipeline:
 ```bash
