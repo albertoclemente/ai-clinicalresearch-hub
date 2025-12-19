@@ -193,18 +193,21 @@ To deploy the site manually:
 - Settings → Pages → Source: "Deploy from a branch"
 - Branch: `gh-pages`, Folder: `/ (root)`
 
-2) Set up environment variables for local runs:
+2) Set up environment variables:
 - `OPENROUTER_API_KEY` (required)
 - `GOOGLE_API_KEY` (optional)
 - `GOOGLE_CX` (preferred) or `GOOGLE_CSE_ID` (optional)
 - `GOATCOUNTER_URL` (optional, for analytics; format: https://YOURCODE.goatcounter.com/count)
 
-3) Run the pipeline locally:
+3) Run the pipeline:
 ```bash
 python pipeline.py
 ```
 
-4) Publish the generated `site/` directory to the `gh-pages` branch.
+4) Publish the generated `site/` directory to the `gh-pages` branch:
+```bash
+git subtree push --prefix site origin gh-pages
+```
 
 Your site will be available at:
 https://albertoclemente.github.io/ai-clinicalresearch-hub/
